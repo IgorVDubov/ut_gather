@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gather</title>
+    <script src="/js/moment-with-locales.min.js" ></script> 
+    <style>
+        .machine{
+            border: 1px solid grey;
+            display: flex;
+            flex-direction: row;
+            width: 18rem;
+        }
+
+        .menu{
+            display: flex;
+            flex-direction: row;
+        }
+        .l2{
+            font-size: 2em;
+            text-align: center;
+        }
+        .l1_5{
+            font-size: 1.5em;
+            text-align: center;
+        }
+        .brd{
+            border: 1px solid grey;
+            display: table-cell;
+        }
+        .w6{
+            width: 6rem;
+        }
+        .w12{
+            width: 12rem;
+        }
+
+    </style>
+</head>
+<body>
+    <div>hello form UTrack gather, {{ user }}</div>
+        <div class= 'machine'>
+        <div class= 'brd l1_5 w6' id="result">-</div>
+        <div class= 'brd l1_5 w12' id="time">-</div>
+    </div>
+    <div class="menu">
+        <div class= 'brd w6 l2' id="off">off</div>
+        <div class= 'brd w6 l2'id="stand">stand</div>
+        <div class= 'brd w6 l2'id="work">work</div>
+    </div>
+</body>
+<script>
+    moment.locale('ru');
+    const WS_SERVER = '{{ wsserv }}';
+    const STATUS_COLORS=['lightGrye','grey','yellow', 'lightGreen']
+    const STATUS_NAMES=['N/A','Откл','Простой', 'Работа']
+    const EMUL_CH=4001
+    const MACHINE_CH=4001
+    const SATATUS_ARG='result'
+    const SUBSCRIBE_CHANNELS=['5001.args.currentState','4001.result']
+    var statusTime;
+    var subscribeChannels;
+    var resultCahnnel=document.getElementById('result');
+    var ws;
+
+   
+
+    async function channelGetRequest(chId){
+        let response = await fetch('/request', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({type: 'get_ch', id:chId})
+                            })
+        return await response.json()
+    }
+    async function channelGetArgRequest(chId, chArg){
+        let response = await fetch('/request', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({type: 'get_ch_arg', id:chId, arg:chArg})
+                            })
+        return await response.json()
+    }
+    async function channelSetRequest(chId, chArg, argValue){
+        let response = await fetch('/request', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({type: 'set_ch', id:chId, arg:chArg, value:argValue})
+                            })
+        return await response.json()
+    }
+    class PerodicalCallback {
+        constructor(callback, delay) {
+          this.callback = callback;
+          this.delay=delay;
+          this.remaining = delay;
+          this.resume();
+        }
+        
+        pause() {
+          this.paused = true;
+          window.clearInterval(this.id);
+          this.remaining -= new Date() - this.start;
+        }
+        
+        restart() {
+          this.remaining = this.delay;
+          this.resume();
+        }
+        
+        resume() {
+          this.paused = false;
+          this.start = new Date();
+          window.clearInterval(this.id);
+          this.id = window.setInterval(this.callback, this.remaining);
+        }
+      }
+    const secondsTimer=new PerodicalCallback ("updateTime()", 1000);
+    const dataUpdaterTimer=new PerodicalCallback ("dataUpdater()", 1000);
+    console.log('start')  
+    
+    
+    function wsConnect(WSServer){
+      console.log('Socket opening');
+    //   return new WebSocket("{{ wsserv }}?"+ProjectKey+"="+ProjectID);
+      return new WebSocket(WSServer);
+    }
+
+    function wsEvents(){
+      ws.onmessage = function(evt) {
+              let jsonMsg = JSON.parse(evt.data);
+              console.log(jsonMsg)
+              setElemData(resultCahnnel,jsonMsg[0]['5001.args.currentState'])
+              switch (jsonMsg.type) {
+                //case "mb_data": 
+                    //console.log("mb_data")
+                    //console.log(jsonMsg)
+                    //makeTable(jsonMsg.data)
+
+               // break; 
+                case "mb_change_data":
+                    //console.log(jsonMsg.data)
+                    setDataById(jsonMsg.data)
+                    
+                break;
+                default:
+              }
+        };
+    
+      ws.onclose = function(evt) {
+          console.log(' Server close connection! No data!')
+          //console.log(ws)
+      };
+
+      ws.onopen = function(evt) {
+          console.log(' Connection ok, send subscribe msg: ' + subscribeChannelsList)
+          wsSend(JSON.stringify({type:"subscribe",data:subscribeChannelsList}))
+      };
+    } 
+
+    let wsSend = function(data) {
+          if(!ws.readyState){
+              setTimeout(function (){
+                  wsSend(data);
+              },1000);
+          }else{
+            ws.send(data);
+          }
+    };
+
+    document.getElementById('off').addEventListener('click', function(){
+        channelSetRequest(EMUL_CH, 'result', 0).then(()=>{resetTime();})
+    });
+    document.getElementById('stand').addEventListener('click', function(){
+        channelSetRequest(EMUL_CH, 'result', 2).then(()=>{resetTime();})
+    });
+    document.getElementById('work').addEventListener('click', function(){
+        channelSetRequest(EMUL_CH, 'result', 33).then(()=>{resetTime();})
+    });
+    
+    function resetTime(){
+        statusTime=moment();
+    }
+
+    function setElemData(elem,result){
+        elem.style.backgroundColor=STATUS_COLORS[result];
+        elem.innerText=STATUS_NAMES[result];
+    }
+    function setChannelData(chId, arg){
+        channelGetArgRequest(chId, arg).then((result) => {
+            // console.log(result)  
+            resultCahnnel.style.backgroundColor=STATUS_COLORS[result]
+            resultCahnnel.innerText=STATUS_NAMES[result]
+
+                    // setDataById(result.data);
+                    });
+    }
+    function updateTime(){
+        let d=moment.duration(moment().diff(statusTime),'ms')
+        document.getElementById('time').innerText=  d.hours() + ':' + d.minutes() + ':'+d.seconds()
+    }
+    function dataUpdater(){
+        //setChannelData(MACHINE_CH, SATATUS_ARG)
+    }
+    
+
+    function init(){
+        ws=wsConnect(WS_SERVER);
+        wsEvents();
+        subscribeChannelsList=SUBSCRIBE_CHANNELS
+        resetTime();
+        secondsTimer.restart()
+        // dataUpdaterTimer.restart()
+    }
+    
+    init()
+</script>
+</html>

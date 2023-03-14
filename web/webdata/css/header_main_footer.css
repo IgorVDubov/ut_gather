@@ -1,0 +1,48 @@
+ /* header footer main */
+    html, body {
+        font-family:  "Calibri", sans-serif;
+    }
+    body{        
+        padding-top: 2em;
+        padding-bottom: 1em;
+        padding-left: 0;
+        margin: 0;
+    }
+    .header, .footer{
+        width: 100%;
+        position: fixed;        
+        background: rgb(64, 18, 150);
+        color: #fff;
+        display:table-cell;
+        vertical-align:middle;
+        z-index: 100;
+    }
+    .header{
+        top: 0;
+        height: 2em;
+    }
+    .footer{
+        bottom: 0;
+        height: 1rem;
+        font-size: 0.75em;
+    }    
+    .main{
+      /* padding: 1em; */
+      /* position: fixed; */
+      width: 99.6%;
+      height: calc(100% - 3rem);
+      margin: 0 auto; /* Center the DIV horizontally */
+      /* border: 1px solid gray ; */
+      /* display:flex;
+      flex-direction:column; */
+      
+    }
+    a{
+        outline: none;
+        text-decoration: none;
+        color: inherit;
+        }
+    .userBlock{
+        line-height: 2em;
+        vertical-align: middle;
+        }

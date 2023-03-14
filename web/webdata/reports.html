@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Utrack idle admin</title>
+        <link rel="stylesheet" type="text/css" href="/css/header_main_footer.css"/>
+        <link rel="stylesheet" type="text/css" href="/css/mycsslib.css">
+        
+        <style>
+        body{
+          background-color:rgb(244, 244, 245);
+          font-family: "Segoe UI", "Segoe WP", Arial, sans-serif;
+          /* background-color:black; */
+        }
+        h3 {
+            padding-top:  5px;
+            padding-bottom:  5px;
+            width:100%;
+            margin: 0.2em;
+            text-align: center;
+            background-color: lightblue;
+        }
+        .flexContainerCenterAl{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap
+        }
+        .scrollContainer{
+            overflow:auto;
+            overflow-x: hidden;
+        }
+        .menuButton{
+            margin: 10px;
+        }
+        .cause_item{
+            font-size: 1.5em;
+            padding: 0.5em;
+        }
+        .tables{
+            border: 1px solid gray;
+            border-collapse: collapse; 
+            padding : 0; 
+            border-spacing : 0px;
+            
+        }
+        .rows{
+            border: 1px solid gray;
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+        }
+        .headers{
+            padding-left: inherit;
+            padding-right: inherit;
+            border: 1px solid gray;
+        }
+        .cells{
+            padding-left:inherit;
+            padding-right: inherit;
+            border: 1px solid gray;
+        }
+        .databox{
+          background-color: rgb(102, 103, 171);
+          border-radius: 10px;
+          box-shadow: 2px 2px 5px 0px rgb(107, 107, 107);
+        }
+        .buttonBox{
+          background-color: rgb(102, 140, 171);
+          border-radius: 10px;
+          box-shadow: 2px 2px 5px 0px rgb(107, 107, 107);
+        }
+        .databox:hover{
+          background-color: rgb(82, 83, 163);
+        }
+    </style>
+    <style> /* my style lib*/
+        .flex_milldle_row{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: nowrap;
+        }
+        .flex_milldle_col{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-wrap: nowrap;
+        }
+        .flex_center{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: nowrap;
+        }
+        .flexH{
+        display:flex;
+        flex-direction:row;
+        justify-content: space-evenly;
+        }
+        .flex1{flex:1;}
+        .flex2{flex:2;}
+        .flex3{flex:3;}
+
+        .h_v80{height: 80vh;}
+        .h_v30{height: 30vh;}
+        .h_v20{height: 20vh;}
+        .h_v15{height: 15vh;}
+        .h_v10{height: 10vh;}
+        .w_v70{width:  70vw;}
+        .w_v50{width:  50vw;}
+        .w_v60{width:  60vw;}
+        .w100{
+        width:100%;
+        min-width:300px;
+        margin:5px;
+        }
+        .m1em{
+            margin: 1em;
+        }
+        .w20rem{ width:20rem;}
+
+        .al_l{text-align: left;}
+        .al_r{text-align: right;}
+        .al_c{text-align: center;}
+
+        .h50{min-height: 50px;}
+        .h100{height: 100px;}
+        .fnt_0_5{font-size: 0.5em;}
+        .fnt_0_75{font-size: 0.75em;}
+        .fnt_1{font-size: 1 em;}
+        .fnt_1_25{font-size: 1.25em;}
+        .fnt_1_5{font-size: 1.5em;}
+        .fnt_2{font-size: 2em;}
+        .fnt_3{font-size: 3em;}
+        .fnt_4{font-size: 4em;}
+        .fnt_5{font-size: 5em;}
+        .fnt_r0_75{font-size: 0.75rem;}
+        .fnt_r1_25{font-size: 1.25rem;}
+        .fnt_r1_5{font-size: 1.5rem;}
+        .fnt_r2{font-size: 2rem;}
+        .fnt_r3{font-size: 3rem;}
+        .fnt_r4{font-size: 4rem;}
+        .fnt_r5{font-size: 5rem;}
+
+        .bold{font-weight: bold;}
+
+        .pl1{padding-left: 1em;}
+        .pl2{padding-left: 2em;}
+        .pl3{padding-left: 3em;}
+        .pl0_5{padding-left: 0.5em;}
+        .pr0_5{padding-right: 0.5em;}
+        .pr1{padding-right: 1em;}
+        .pr2{padding-right: 2em;}
+        .pr3{padding-right: 3em;}
+        
+        .img_invert {-webkit-filter: invert(1); filter: invert(1);}
+        .fl_r{float: right;}
+        .fl_l{float: left;}
+        .s1em{width: 1em;height: 1em;
+        }
+        .cWhite{
+        color:white;
+        }
+        .cW{
+        color:#e6a01e;
+        }
+    </style>
+    <style> /*  grids  */
+        .gridSatateBlock {
+          display: grid;
+          grid-template-columns: 2fr 5fr;
+          grid-template-rows: 1fr 1fr 1fr 1fr ;
+          align-content: center;
+          justify-items: center
+
+        }
+        .gridAllRow{
+            grid-column: 1/3;
+            align-content: center;
+
+        }
+    </style>
+    <style>  /*canvas*/
+        .dayChartCanvas{
+            width: 100%;
+            height: 100%;
+        }
+        .dayChartCanvasContainer{
+
+            width: 100%;
+            height: 85%;
+            margin: 10px;
+            background-color: aliceblue;
+        }
+    </style>
+    <style>
+        .box{
+            display: inline-block;
+            height: 0.75rem;
+            width: 1.5rem;
+            border: 1px solid gray;
+            border-radius: 3px;
+          }
+    </style>
+</head>
+<body>
+    <script src="/js/moment-with-locales.min.js" ></script> 
+    <script src="/js/Chart.js"></script>
+
+    <header class="header" >
+        <span class="fnt_1_5 bold pl1"> <a  href="/">UTrack</a></span>
+        <span class="pl1 fnt_0_75"> учет рабочего времени оборудования</span>
+        <span class="userBlock fl_r pr1 ">
+            <span>{{ user }} </span>
+            <a href="/logout"> <img class="img_invert s1em" src="/images/icon-exit.png"> </a>
+        </span>
+     </header>
+    <main class="main">
+        <h3> БД состояний оборудования</h3>
+        <div class="flexContainerCenterAl h_v20" id="dbStatesTable"> </div>
+        <h3> БД причин простоев оборудования</h3>
+        <div class="flexContainerCenterAl h_v30" id="dbCausesTable"> </div>
+        <div class="flexContainerCenterAl h_v20 " id="OnlineElem">
+            <div class="databox h100 cWhite gridSatateBlock">
+                <div class="gridAllRow fnt_1_25 bold" id="statusElem">Простой</div>
+                <div class= "fnt_1 pl0_5 bold" id="statusTimerElem">10:25 </div>
+                <div class= "fnt_1 pr0_5" id="statusTimeElem"> 2023-01-26 10:37:05</div>
+                <div class= "gridAllRow fnt_1_25 bold" id="causeElem"> Плановый простой</div>
+                <div class= "fnt_1 pl0_5 bold" id="causeTimerElem">37:05</div>
+                <div class= "fnt_1 pr0_5" id="causeTimeElem">2023-01-26 10:37:05</div>
+            </div>
+            <div class="databox h100 w_v70 m1em flex_center" id="dayChartElem">
+                <div class="dayChartCanvasContainer">
+                    <canvas id="dayChartCanvasElem" class="dayChartCanvas" ></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="flexContainerCenterAl" >
+            <div class="ChartCanvasContainer">
+                <canvas id="chartCanvasElem1" class="ChartCanvas" ></canvas>
+            </div>
+            <div class="ChartCanvasContainer">
+                <canvas id="chartCanvasElem2" class="ChartCanvas" ></canvas>
+            </div>
+        </div>
+    </main>
+    <footer class='footer'>
+        <span class ="pl1"> Статус: </span> </span>
+        <span class ="pl0_5" id="wsStatus"> </span>
+        <span class ="pl0_5" id="wsLight"> &bull; </span>
+        <span class ="pl0_5" id="info"> </span>
+        <a class="fl_r pr1" >v{{ version }}</a>
+        <a class="fl_r pr1" href="mailto:asu@alfa33.ru">Alfa <span class="fnt_0_6 pr1">решения в области промышленной автоматизации</span> 2023</a>
+    </footer> 
+    <div id="loader"></div>
+</body>
+<script>
+    moment.locale('ru');
+    {% autoescape None %}
+    const MACHINE_ID={{ machine }}
+    const WS_SERVER = '{{ wsserv }}';
+    const IDLE_COUSES={{  idle_couses  }}
+    const STATE_CHANNEL='{{state_channel}}'
+    const CAUSEID_ARG='{{ causeid_arg }}'
+    // const CAUSEID_ARG='17001.args.current_cause'
+    // const CAUSE_TIME_ARG='17001.args.current_cause'
+    const SUBSCRIBE_CHANNELS=[STATE_CHANNEL, CAUSEID_ARG]
+    const STATUS_LIGHT_COLORS=['#e6e6e6','#b4b4b4','#fff134','#03e003']
+     //{-1:'Технологический простой', 0:'Не подтверждена',,1:"Авария", 2:"Нет сырья", 3:"Нет задания", 4:"Плановый простой", 5:'Перерыв'}
+    const CAUSES_LIGHT_COLORS=['#b6e166', '#e6891f', '#ee4a0a', '#1f2ce6', '#c51ee6', '#1ee6c5', '#1ee661', '#7fe61e', '#e6a01e']
+    const STATES =['N/A', 'Откл', 'Простой', 'Работа']
+    const STATES_DB_HEADERS=['ID станка', 'статус', 'начало', 'длительность']
+    const STATES_DB_HEADERS_WIDTH=[4, 8, 10, 8]
+
+    const IDLES_DB_HEADERS=['ID станка', "Оператор", 'Причина', 'Начало', 'Подтверждение', 'Длительность']
+    const IDLES_DB_HEADERS_WIDTH=[4, 7, 15, 10, 10, 8]
+
+    const dbStateTableElem=document.getElementById('dbStateTable')
+    const dbCauseTableElem=document.getElementById('dbCauseTable')
+    const dayChartElem=document.getElementById('dayChart')
+    const chartsElem=document.getElementById('dayChart')
+    const statesContainerElem=document.getElementById('dbStatesTable')
+    const idlesContainerElem=document.getElementById('dbCausesTable')
+    
+    const statusElem=document.getElementById('statusElem')
+    const statusTimerElem=document.getElementById('statusTimerElem')
+    const statusTimeElem=document.getElementById('statusTimeElem')
+    const causeElem=document.getElementById('causeElem')
+    const causeTimerElem=document.getElementById('causeTimerElem')
+    const causeTimeElem=document.getElementById('causeTimeElem')
+    
+    const lineCanvasElem=document.getElementById('dayChartCanvasElem')
+    const chartCanvasElem1=document.getElementById('chartCanvasElem1')
+
+    var statesDb=[]
+    var causesDb=[]
+
+    var statesTableElem
+    var idlesTableElem
+
+    var stateTime
+    var causeTime
+    var currentState
+    var currentCause
+
+    const wsStatus=document.getElementById("wsStatus")
+    const wsIndicator=document.getElementById("wsLight")
+    
+    function flashIndicator(indicator, flashColor,afterColor, pause){
+      indicator.style.color=flashColor
+      setTimeout(function(){indicator.style.color=afterColor},pause)
+    }
+    function block(innerHTML=undefined, classes=[], id=undefined, ){
+      let block=document.createElement('div');
+      if (id !=undefined) block.id=id;
+      if (innerHTML !=undefined) block.innerHTML=innerHTML;
+      block.classList=classes;
+      return block;
+    }
+    class PerodicalCallback {
+        constructor(callback, delay, start=true) {
+          this.callback = callback;
+          this.delay=delay;
+          this.remaining = delay;
+          if (start) this.resume();
+        }
+        
+        pause() {
+          this.paused = true;
+          window.clearInterval(this.id);
+          this.remaining -= new Date() - this.start;
+        }
+        
+        restart() {
+          this.remaining = this.delay;
+          this.resume();
+        }
+        
+        resume() {
+          this.paused = false;
+          this.start = new Date();
+          window.clearInterval(this.id);
+          this.id = window.setInterval(this.callback, this.remaining);
+        }
+      }
+    const UpdateDBTimer = new PerodicalCallback ("UpdateDBRequest()", 1000,false);
+    function wsConnect(WSServer){
+      let ws=new WebSocket(WSServer);
+      wsStatus.textContent='online'
+      wsIndicator.style.color='green'
+      return ws
+    }
+
+    function wsEvents(){
+      ws.onmessage = function(evt) {
+        let msg = JSON.parse(evt.data);
+        console.log('ws message:', msg)
+        switch (msg.type) {
+          case "first_read":
+              initTables(msg.data.states, msg.data.idles)
+              statesDb.push(...msg.data.states)
+              causesDb.push(...msg.data.idles)
+              break;
+              case "update_idles_db":
+                  updateIdles(msg.data)
+                  causesDb.push(...msg.data)
+          break;
+          case "update_states_db":
+              updateState(msg.data)
+              statesDb.push(...msg.data)
+
+          break;
+          default:
+            data=msg[0]
+            if (data[STATE_CHANNEL]!=undefined){
+                updateOnlineStatus(data[STATE_CHANNEL],data.time )
+            }
+            if (data[CAUSEID_ARG]!=undefined){
+                updateOnlineCause(data[CAUSEID_ARG],data.time )
+
+            }
+            
+        };
+        updateCharts(statesDb, causesDb)
+        flashIndicator(wsIndicator,'lightgreen','green',400);
+        return true;
+        }
+        
+        
+    
+      ws.onclose = function(evt) {
+          console.log(' Server close connection! No data!')
+          wsStatus.textContent='offline'
+          wsIndicator.style.color='Red'
+      };
+
+      ws.onopen = function(evt) {
+          console.log(' Connection ok, send subscribe msg: ' )
+          wsSend(JSON.stringify({type:"first_read", id:MACHINE_ID}))
+          wsSend(JSON.stringify({type:"subscribe",data:SUBSCRIBE_CHANNELS}))
+          wsSend(JSON.stringify({type:"get_ch_arg",id:MACHINE_ID, arg:'args.status'}))
+          wsSend(JSON.stringify({type:"get_ch_arg",id:MACHINE_ID, arg:'args.cause'}))
+      };
+    } 
+
+    function updateCharts(sArr, cArr){
+        updateLineChart(sArr, cArr)
+        updateGrChart(sArr, cArr)
+    }
+    const PADDING_SEC=15*60;  
+    const PADDING_BOTTOM=5;
+    const PADDING_TOP=5;
+    const C_PADDING_TOP=70;
+    const PADDING_TEXT=5;
+ 
+    function updateLineChart(statesDb, causesDb){
+        let canvasW=lineCanvasElem.width;
+        let canvasH=lineCanvasElem.height;
+        var ctx=lineCanvasElem.getContext('2d');
+        ctx.clearRect(0, 0, canvasW, canvasH);
+        let minSTime=moment('2100-01-01')
+        let maxSTime=moment('2000-01-01')
+        for (let i=0; i<statesDb.length;i++){
+            let time=moment(statesDb[i].time)
+            let timeLen=(moment(statesDb[i].time).clone()).add(statesDb[i]['length'],'s')
+            if (time.isBefore(minSTime)) 
+                {minSTime=time}
+            if (timeLen.isAfter(maxSTime)) 
+                {maxSTime=timeLen}
+        }
+        stateDeltaT=maxSTime.diff(minSTime, 's')
+
+        var k=canvasW/stateDeltaT
+        ctx.beginPath();
+        ctx.strokeStyle ="grey";
+        ctx.fillStyle="black";
+        ctx.lineWidth=1;
+        let time=minSTime
+        for (let i=0; i<statesDb.length;i++){
+            let rec=statesDb[i]
+            let len=rec.length
+            let start=moment(rec.time).diff(time,'s')
+            ctx.fillStyle=STATUS_LIGHT_COLORS[rec.status];
+            ctx.fillRect((start)*k,PADDING_TOP,(len)*k, canvasH-PADDING_BOTTOM-PADDING_TOP);
+        }
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle ="grey";
+        ctx.fillStyle="black";
+        ctx.lineWidth=1;
+        time=minSTime
+        for (let i=0; i<causesDb.length;i++){
+            let rec=causesDb[i]
+            let len=rec.length
+            let start=moment(rec.cause_time).diff(time,'s')
+            ctx.fillStyle=CAUSES_LIGHT_COLORS[rec.cause+1]; //!!!!!!!!!!!
+            ctx.fillRect((start)*k,C_PADDING_TOP,(len)*k, canvasH-PADDING_BOTTOM-C_PADDING_TOP);
+        }
+        ctx.stroke();
+
+
+    }
+    function updateGrChart(states, causes){
+        causesArr=new Array(Object.keys(IDLE_COUSES).length)
+        causesArr.fill(0)
+        let summ=0
+        for (let i=0; i<causes.length;i++){
+            causesArr[causes[i].cause+1]=causesArr[causes[i].cause+1] + causes[i]['length']
+            summ+=causes[i]['length'];
+        }
+        causesArr=causesArr.map(function(entry){return Math.floor(100*entry/summ)});
+        let grLables=[]
+        for (let i=-1; i<Object.keys(IDLE_COUSES).length-1;i++){
+            grLables.push(IDLE_COUSES[i])
+        }
+        let ctx=chartCanvasElem1.getContext('2d');
+    let  chart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: grLables,
+            datasets: [{
+                //label: '',
+                backgroundColor: CAUSES_LIGHT_COLORS,
+                //borderColor: 'rgb(255, 99, 132)',
+                data: causesArr
+            }]
+        },
+        options: {
+                    legend:false,
+                //    responsive:false,
+                    aspectRatio:1,
+                    maintainAspectRatio: true,
+                    animation: {steps: 50, easing:"easeInOutQuart", scale: false}
+                }
+    });
+        let ctx2=chartCanvasElem2.getContext('2d');
+    let  chart2 = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: grLables,
+            datasets: [{
+                //label: '',
+                backgroundColor: CAUSES_LIGHT_COLORS,
+                //borderColor: 'rgb(255, 99, 132)',
+                data: causesArr
+            }]
+        },
+        options: {
+                    legend:false,
+                //    responsive:false,
+                    aspectRatio:1,
+                    maintainAspectRatio: true,
+                    animation: {steps: 50, easing:"easeInOutQuart", scale: false}
+                }
+    });
+    }
+
+    function updateOnlineStatus(id,time) {
+        statusElem.innerText=STATES[id]
+        statusElem.style.color=STATUS_LIGHT_COLORS[id]
+        currentState=id
+        if (id==3){
+            causeElem.innerText=''
+            causeTimeElem.innerText=''
+            cuaseTimer.pause()
+            causeTimerElem.innerText=''
+        }
+        statusTimeElem.innerText=time
+        stateTime=time
+    }
+    function updateOnlineCause(id,time) {
+        causeElem.innerText=IDLE_COUSES[id]
+        currentCause=id
+        causeTimeElem.innerText=time
+        causeTime=time
+        cuaseTimer.restart()
+    }
+
+    let wsSend = function(data) {
+          if(ws.readyState != 1){
+              setTimeout(function (){
+                  wsSend(data);
+              },1000);
+          }else{
+            ws.send(data);
+          }
+    };
+
+
+
+    function initTables(states, idles){
+        let statesTable=makeTable(makeStateRow, STATES_DB_HEADERS, states)
+        statesContainerElem.append(statesTable)
+        let idlesTable=makeTable(makeIdleRow, IDLES_DB_HEADERS, idles)
+        idlesContainerElem.append(idlesTable)
+        statesTableElem=document.getElementById('statesTable')
+        idlesTableElem=document.getElementById('idlesTable')
+        scrollToTableBottom(statesTableElem)
+        scrollToTableBottom(idlesTableElem)
+    }
+    function updateIdles(data){
+        console.log(data)
+        idlesTableElem.append(makeIdleRow(data[0], IDLES_DB_HEADERS_WIDTH))
+        scrollToTableBottom(idlesTableElem)
+    }
+    function updateState(data){
+        console.log(data)
+        statesTableElem.append(makeStateRow(data[0], STATES_DB_HEADERS_WIDTH))
+        scrollToTableBottom(statesTableElem)
+    }
+
+    function UpdateDBRequest() {
+        wsSend(JSON.stringify({type:"update_data",id:MACHINE_ID}))
+    }
+    function scrollToTableBottom(table){
+        table.scrollIntoView({block: "end", behavior: "smooth"})
+    }
+    function addRow(data, widthArr){
+        let row= document.createElement('tr');
+        row.classList.add('rows');
+        for (i=0; i<data.length; i++){
+            let td= document.createElement('td');
+            td.classList.add('cells')
+            td.style.width=parseInt(widthArr[i])+'em'
+            td.innerHTML=data[i]
+            row.append(td)
+        }
+        return row
+    }
+    function makeIdleRow(data){
+        let colorElem = ' <span class="box" style="background:'+CAUSES_LIGHT_COLORS[data.cause+1]+'"></span>'
+        let dataToTable=[MACHINE_ID, data.operator, IDLE_COUSES[data.cause]+colorElem, data.cause_time, data.cause_set_time, data.length]
+        // updateOnlineCause(data.cause, data.cause_time)
+        // causeTime=data.cause_time
+        return addRow(dataToTable, IDLES_DB_HEADERS_WIDTH)
+    }
+    function makeStateRow(data){
+        let colorElem = ' <span class="box" style="background:'+STATUS_LIGHT_COLORS[data.status]+'"></span>'
+        let dataToTable=[MACHINE_ID, STATES[data['status']]+colorElem, data['time'], data['length']]
+        // updateOnlineStatus(data.status,data.time)
+        // stateTime=data.time
+        return addRow(dataToTable, STATES_DB_HEADERS_WIDTH)
+    }
+
+    function makeTable(rowMaker, headers,data){
+
+        let table= document.createElement('div');
+        let headerTable= document.createElement('table');
+        headerTable.classList.add('tables');
+        let headerRow= document.createElement('tr');
+        headerRow.classList.add('rows');
+        for (let i=0; i<headers.length; i++){
+            let td= document.createElement('th');
+            td.classList.add('headers')
+            switch (rowMaker) {
+                case makeStateRow: td.style.width=parseInt(STATES_DB_HEADERS_WIDTH[i])+'em'
+                break
+                case makeIdleRow: td.style.width=parseInt(IDLES_DB_HEADERS_WIDTH[i])+'em'
+            }
+            td.innerText=headers[i]
+            headerRow.append(td)
+        }
+        headerTable.append(headerRow)
+        let divDataScroll=document.createElement("div");
+        let dataTable= document.createElement('table');
+        switch (rowMaker) {
+            case makeStateRow: dataTable.id='statesTable'
+                                hClass='h_v15'
+            break
+            case makeIdleRow: dataTable.id='idlesTable'
+                                hClass='h_v20'
+        }
+        divDataScroll.classList.add('scrollContainer', hClass)
+        dataTable.classList.add('tables');
+        for (let i=0; i<data.length; i++){
+            let row= rowMaker(data[i]);
+            dataTable.append(row)
+        } 
+        divDataScroll.append(dataTable)
+        table.append(headerTable, divDataScroll)
+        return table
+    }
+    
+    function makePage(){
+
+    }
+    const secondsTimer=new PerodicalCallback ("updateTime()", 1000,false);
+    function updateTime(){
+        updateStatusTimer();
+    }
+    const chartsUpdateTimer=new PerodicalCallback ("chartsUpdate()", 1000,false);
+    
+    function chartsUpdate(){
+        let stateRec=new Object
+        lastRec=statesDb[statesDb.length-1]
+        if (lastRec==undefined) return
+        stateRec.status=currentState
+        bTime=moment(lastRec.time).add(lastRec['length'], 's')
+        stateRec.time=bTime.format('YYYY-MM-DDTHH:mm:ss')
+        stateRec.length=moment().diff(bTime,'s')
+        sArr=[]
+        sArr.push(...statesDb)
+        sArr.push(stateRec)
+        if (currentState==3){
+            updateLineChart(sArr, causesDb)
+            return
+        }
+        let causeRec=new Object
+        lastRec=causesDb[causesDb.length-1]
+        causeRec.cause=currentCause
+        bTime=moment(lastRec.cause_time).add(lastRec['length'], 's')
+        causeRec.cause_time=bTime.format('YYYY-MM-DDTHH:mm:ss')
+        causeRec.length=moment().diff(bTime,'s')
+        cArr=[]
+        cArr.push(...causesDb)
+        cArr.push(causeRec)
+        updateLineChart(sArr, cArr)
+    }
+    const cuaseTimer=new PerodicalCallback ("updateCauseTimer()", 1000,false);
+    function updateStatusTimer(){
+        let d=moment.duration(moment().diff(moment(stateTime)),'ms')
+        statusTimerElem.innerText=  d.days()*24 + d.hours() + ':' + d.minutes() + ':'+d.seconds()
+    }
+    function updateCauseTimer(){
+        let d=moment.duration(moment().diff(moment(causeTime)),'ms')
+        if (currentState!=3){
+            causeTimerElem.innerText=  d.days()*24 + d.hours() + ':' + d.minutes() + ':'+d.seconds()
+        }
+        else{
+            causeTimerElem.innerText=  ''
+        }
+    }
+
+    function init(){
+        // currentState=0
+        makePage()
+        ws=wsConnect(WS_SERVER);
+        
+        // wsSend(JSON.stringify({type:"first_read", id:MACHINE_ID}))
+        wsEvents();
+        UpdateDBTimer.restart();
+        secondsTimer.restart();
+        chartsUpdateTimer.restart();
+    }
+    
+    init()
+</script>
+</html>

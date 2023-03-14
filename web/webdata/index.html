@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utrack Idle service</title>
+
+    <link rel="stylesheet" type="text/css" href="/css/header_main_footer.css"/>
+    <!-- <link rel="stylesheet" type="text/css" href="/css/mycsslib.css"/> -->
+    <script src="/js/moment-with-locales.min.js" ></script> 
+    <style>  /*new style*/
+        body{
+          background-color:rgb(227, 227, 236);
+          /* background-color:black; */
+        }
+        .pageSection1{
+          /* width: 100%;
+          height:100%; */
+          width: 97vw;
+          height: 92vh;
+          display:flex;
+          align-items:center;
+          flex-direction:column;
+        }
+        .mainContainer{
+          font-family: "Segoe UI", "Segoe WP", Arial, sans-serif;
+          /* margin: 10px; */
+          max-width:700px;
+          height:100%;
+          display:flex;
+          flex-direction: column;
+          /* flex-wrap: wrap; */
+          /* flex-direction:column; */
+          align-items:center;
+          justify-content: space-evenly;
+          /* justify-content: space-between; */
+        }
+        .lowerFont{
+          font-size: 0.6em;
+          color:inherit;
+    
+        }
+        .centerPosWrapper{
+          width: 100%;
+          display:flex;
+          align-items:center;
+          flex-direction: column;
+        }
+        .headerbox{
+          /* flex:4; */
+          margin: 5px;
+          width: 100%;
+          height: 50px;
+          color: rgb(102, 103, 171);
+          /* color: whitesmoke; */
+          text-align: center;
+          font-weight: bold;
+          /* font-style: italic; */
+          font-size: 30px;
+        }
+        @keyframes changeColor {
+          0% {
+            background-color: rgb(102, 103, 171);
+          }
+          
+          50% {
+            background-color: rgb(236, 82, 11);
+          }
+          
+          100% {
+            background-color: rgb(102, 103, 171);
+          }
+        }
+
+        .flashBackground {
+            background-color: rgb(236, 82, 11);
+            animation: changeColor ease;
+            animation-iteration-count: infinite;
+            animation-duration: 0.5s;
+            animation-fill-mode: both;
+            }
+        .databox{
+          background-color: rgb(102, 103, 171);
+          border-radius: 10px;
+          box-shadow: 2px 2px 5px 0px rgb(107, 107, 107);
+        }
+        .buttonBox{
+          background-color: rgb(102, 140, 171);
+          border-radius: 10px;
+          box-shadow: 2px 2px 5px 0px rgb(107, 107, 107);
+        }
+        .databox:hover{
+          background-color: rgb(82, 83, 163);
+        }
+        .dataCaption{
+          padding: 5px;
+          text-overflow: clip;
+          text-align: center;
+          font-size: inherit;
+          color:white;
+          height: 40%;
+          width: 100%;
+        }
+        .colorDataCaption{
+          padding: 5px;
+          text-overflow: clip;
+          text-align: center;
+          font-size: inherit;
+          color:rgb(3, 224, 3);
+          height: 40%;
+          width: 100%;
+        }
+        .dataLable{
+          text-align: center;
+          width:100%;
+          font-size: inherit;
+          font-weight: bold;
+          color:white;
+        }
+        .colorDataLable{
+          text-align: center;
+          width:100%;
+          font-size: inherit;
+          font-weight: bold;
+          color:rgb(3, 224, 3);
+        }
+
+        .gridState {
+          display: grid;
+          grid-template-rows: 1fr 1fr 1fr;
+          }
+          .aSlffEnd { align-self: center;}
+          .aSlfStart { align-self: center;}
+          .gr2CellsLftCntr{align-self: center;}
+        
+        @media (min-width: 35em){
+          .gridState {
+          display: grid;
+          grid-template-columns: 3fr 2fr;
+          grid-template-rows: 1fr 1fr;
+        } 
+        .aSlfEnd { align-self: end;}
+        .aSlfStart { align-self: start;}
+        .gr2CellsLftCntr{
+          grid-column: 2/3;
+          grid-row: 1/3;
+          align-self: center;
+        }
+        }
+        .gridCauseBlock {
+          display: grid;
+          grid-template-columns: 3fr 2fr;
+          grid-template-rows: 1fr 1fr;
+          align-content: center;
+        }
+        .gCause{
+          grid-column: 1/3;
+          width: 100%;
+
+        }
+        .gCTimer{align-self: center;}
+        .gCTime{align-self: center;}
+
+        .gridCauseButtons {
+          display: grid;
+          grid-gap:1em;
+          justify-items: center;
+          grid-template-columns: 1fr 1fr;
+          grid-template-rows: 1fr 1fr;
+
+        }
+       
+    </style>
+    <style>
+      .statusContainer{
+        display:flex;
+
+      }
+      .operatorContainer{
+        display: flex; 
+        position: fixed; 
+        z-index: 1; 
+        left: 0;
+        top: 0;
+        width: 100%; 
+        height: 100%; 
+        overflow: auto; /* Enable scroll if needed*/
+        background-color: rgba(0,0,0,0.4); 
+      }
+      .loginWinodow{
+        width: 85%; 
+        height: 80%;
+        background-color:rgba(107, 192, 192, 0.877) ; 
+        font-size: 3rem;
+        color: rgb(22, 17, 56);
+      }
+      .operatorInput{
+        width:7em;
+        font-weight: bold;
+        font-size: 3rem;
+        text-align: center;
+        padding: 0.3em;
+        margin: 0.3em;
+        border-radius: 10px;
+      }
+      
+      .keyScreen{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width:7em;
+        height: 3rem;
+        font-weight: bold;
+        font-size: 4rem;
+        background-color: azure;
+        padding: 0.3em;
+        margin: 0.3em;
+        border-radius: 10px;
+      }
+      .keysContainer{
+        display: grid;
+        /* grid-gap:1em; */
+        justify-items: center;
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-rows: 1fr 1fr;
+      }
+      .key{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 7rem;
+        height: 5rem;
+        font-size: 4rem;
+        margin: 0.3rem;
+        font-weight: bold;
+        background-color: rgb(17, 15, 189);
+        color: azure;
+        border-radius: 5px;
+        
+      }
+
+    </style>
+    <style> /* my style lib*/
+        .flex_milldle_row{
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          flex-wrap: nowrap;
+        }
+        .flex_milldle_col{
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          flex-wrap: nowrap;
+        }
+        .flex_center{
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: nowrap;
+        }
+        .flexH{
+          display:flex;
+          flex-direction:row;
+          justify-content: space-evenly;
+        }
+        .flex1{flex:1;}
+        .flex2{flex:2;}
+        .flex3{flex:3;}
+
+        .h_v80{height: 80vh;}
+        .h_v30{height: 30vh;}
+        .h_v20{height: 20vh;}
+        .h_v10{height: 10vh;}
+
+        .w_v10{width:  10vw;}
+        .w_v20{width:  20vw;}
+        .w_v30{width:  30vw;}
+        .w_v40{width:  40vw;}
+        .w_v50{width:  50vw;}
+        .w_v60{width:  60vw;}
+        .w_v70{width:  70vw;}
+        .w_v80{width:  80vw;}
+        .w100{
+          width:100%;
+          min-width:300px;
+          margin:5px;
+        }
+        .w20rem{ width:20rem;}
+
+        .al_l{text-align: left;}
+        .al_r{text-align: right;}
+        .al_c{text-align: center;}
+
+        .h50{min-height: 50px;}
+        .h100{height: 100px;}
+        .fnt_0_5{font-size: 0.5em;}
+        .fnt_0_75{font-size: 0.75em;}
+        .fnt_1_25{font-size: 1.25em;}
+        .fnt_1_5{font-size: 1.5em;}
+        .fnt_2{font-size: 2em;}
+        .fnt_3{font-size: 3em;}
+        .fnt_4{font-size: 4em;}
+        .fnt_5{font-size: 5em;}
+        .fnt_r0_75{font-size: 0.75rem;}
+        .fnt_r1_25{font-size: 1.25rem;}
+        .fnt_r1_5{font-size: 1.5rem;}
+        .fnt_r2{font-size: 2rem;}
+        .fnt_r3{font-size: 3rem;}
+        .fnt_r4{font-size: 4rem;}
+        .fnt_r5{font-size: 5rem;}
+
+        .bold{font-weight: bold;}
+
+        .pl1{padding-left: 1em;}
+        .pl2{padding-left: 2em;}
+        .pl3{padding-left: 3em;}
+        .pl0_5{padding-left: 0.5em;}
+        .pr1{padding-right: 1em;}
+        .pr2{padding-right: 2em;}
+        .pr3{padding-right: 3em;}
+
+        .m1em{margin:1em;}
+        .m1rem{margin:1rem;}
+        
+        .img_invert {-webkit-filter: invert(1); filter: invert(1);}
+        .fl_r{float: right;}
+        .fl_l{float: left;}
+        .s1em{width: 1em;height: 1em;
+        }
+        .cWhite{color:white;}
+        .cRed{color:red;}
+    
+    </style>
+    <style> /* progress bar */
+      .progressBar {
+        border: solid, rgb(209, 200, 200), 5px;
+        border-radius: 3px;
+        padding-left: 1em;
+        padding-right: 1em;
+        height: 1.5em;
+        text-align: center;
+        }
+
+      .progress {
+        background-color :aquamarine;
+        height: 100%;
+      }
+      .progressValue{
+        color: rgb(201, 23, 23);
+        font-size: 1em;
+      }
+    </style>
+</head>
+<body>
+    <header class="header" >
+        <span class="fnt_1_5 bold pl1"> <a  href="/?m={{machine}}">UTrack</a></span>
+        <span class="pl1 fnt_0_75"> учет рабочего времени оборудования</span>
+        <span class="userBlock fl_r ">
+            <span class='bold fnt_1_25 pr2' id="operator"  onclick=showOperatorLogout()></span>
+            <span class='bold fnt_1_25 pr1' id="serverTime"></span>
+            <!-- <a href="/logout"> <img class="img_invert s1em" src="/images/icon-exit.png"> </a> -->
+        </span>
+      </header>
+      <main class="main">
+        <section class="pageSection1" id="container"></section>
+        <div class="operatorContainer flex_center" id="operatorLoginContainer" tabindex="0">
+          <div class="loginWinodow flex_center">
+              <div class=" flex_milldle_col ">
+                <div class="fnt_r3 m1rem "> введите табельный номер</div>
+                <div class="keyScreen al_c m1rem " id = "operatorId" > </div>
+                <!-- <input class="operatorInput fnt_r3 bold al_c m1rem " type="number" inputmode="numeric" id = "operatorId_" > </input> -->
+                <div class="databox dataLable fnt_1 cRed m1rem" id="noOperatorAllert"> Сотрудник не найден</div>
+                <div class="keysContainer" id="keyboard"> </div>
+                <div id="operatorConfurmContainer">
+                  <div class="databox dataLable fnt_1 m1rem" id="operatorName"> </div>
+                  <div class = "flex_milldle_row">
+                    <div class="h100 w20rem flex_center databox dataLable fnt_1 m1rem" onclick=confirmLogin()> Начать работу</div>
+                    <div class="h100 w20rem flex_center databox dataLable fnt_1 m1rem" onclick=cancelLogin()>Отмена</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+        <div class="operatorContainer flex_center" id="operatorLogoutContainer">
+          <div class="loginWinodow flex_center">
+              <div class=" flex_milldle_col ">
+                  <div class="databox dataLable fnt_1 m1rem" id="operatorLogoutName"> </div>
+                  <div class = "flex_milldle_row">
+                    <div class="h_v20 w20rem flex_center databox dataLable fnt_1 m1rem" onclick=logoutOperator()> Завершить работу</div>
+                    <div class="h_v20 w20rem flex_center databox dataLable fnt_1 m1rem" onclick=cancelLogout()>Отмена</div>
+                  </div>
+                </div>
+            </div>
+        </div>
+        <!-- <div id="container"></div> -->
+        </main>  
+        <footer class='footer'>
+          <span class ="pl1 "></spanclass>{{ user }} </span>
+          <span class ="pl1"> Статус: </span> </span>
+          <span class ="pl0_5" id="wsStatus"> </span>
+          <span class ="pl0_5" id="wsLight"> &bull; </span>
+          <span class ="pl0_5" id="info"> </span>
+          <a class="fl_r pr1" >v{{ version }}</a>
+          <a class="fl_r pr1" href="mailto:asu@alfa33.ru">Alfa <span class="fnt_0_6 pr1">решения в области промышленной автоматизации</span> 2023</a>
+      </footer> 
+      <div id="loader">
+          <script>const loader=document.getElementById("loader");</script>
+          <link rel="stylesheet" type="text/css" href="/css/loader.css"/>
+      </div>
+</body>
+<script>
+    moment.locale('ru');
+    const STATUS_LIGHT_COLORS=['#e6e6e6','#b4b4b4','#fff134','#03e003']
+    const STATES =['N/A', 'Откл', 'Простой', 'Работа']
+    const MACHINE_ID={{ machine }}
+    const WS_SERVER = '{{ wsserv }}';
+    {% autoescape None %}
+    const IDLE_COUSES={{  idle_couses  }}
+    const STATE_CHANNEL='{{state_channel}}'
+    const CAUSEID_ARG='{{ causeid_arg }}'
+    const TECH_IDLE_LENGTH={{ tech_idle }}
+    const SUBSCRIBE_CHANNELS=[STATE_CHANNEL]
+    const WORK_STATE=3
+    const STAND_STATE=2
+    const OFF_STATE=1
+    const NA_STATE=0
+    const TECH_IDLE_ID={{techidle_id}}
+    var initState={{current_state}}
+    var serverTime=moment('{{server_time}}');
+    var firstWsMessageFlag=false;    //при инициализации приходит сообщение о статусе и затирает ранее полученный, его пропускаем
+    var idleTime=TECH_IDLE_LENGTH;
+    var selectedOperator=Object()
+      selectedOperator.id=undefined;
+      selectedOperator.name=undefined;
+    var currentOperator=Object()
+      currentOperator.id=undefined;
+      currentOperator.name=undefined;
+
+    var currentState=Object()
+      currentState.state=initState.state;
+      currentState.stateTime = (initState.begin_time!='None')?initState.begin_time:undefined;
+      currentState.cause = (initState.cause_id!='None')?initState.cause_id:undefined;
+      currentState.causeTime = (initState.cause_time!='None')?initState.cause_time:undefined;
+      currentState.pred
+    var progressBar
+
+    var operatorElem
+    var operatorLoginContainerElem 
+    var operatorLogoutContainerElem
+    var operatorLogoutNameElem 
+    var operatorConfurmContainerElem 
+    var noOperatorAllertElem
+    var operatorNameElem
+    var operatorIdElem
+    var keyboard
+
+    var stateBlockElem
+    var stateValueElem
+    var stateTimerElem
+    var stateTimeElem
+    var flashWaitWarning
+    var causeStatusElem
+    var causeTimeElem
+    var causeTimerElem
+    var causeButtonsContainerElem
+    var changeCauseButtonElem
+    var progressBarElem
+    var progressElem
+    var serverTimeElem
+    var infoElem
+    
+    var ws
+
+
+    const FlashColor='rgb(255, 0, 0)'
+
+    const wsStatus=document.getElementById("wsStatus")
+    const wsIndicator=document.getElementById("wsLight")
+    
+    class PerodicalCallback {
+        constructor(callback, delay, start=true) {
+          this.callback = callback;
+          this.delay=delay;
+          this.remaining = delay;
+          if (start) this.resume();
+        }
+        
+        pause() {
+          this.paused = true;
+          window.clearInterval(this.id);
+          this.remaining -= new Date() - this.start;
+        }
+        
+        restart() {
+          this.remaining = this.delay;
+          this.resume();
+        }
+        
+        resume() {
+          this.paused = false;
+          this.start = new Date();
+          window.clearInterval(this.id);
+          this.id = window.setInterval(this.callback, this.remaining);
+        }
+      }
+    
+    class TimeoutProgressBar {
+      constructor(timeout, container, progressBarClasses, rogressClasses) {
+        this.timeout=timeout;
+        let progressBar=document.createElement('div')
+        progressBar.classList=[progressBarClasses];
+        progressBar.style.display='none';
+        let progress=document.createElement('div')
+        progressBar.append(progress)
+        this.progress=progress;
+        progress.classList=[rogressClasses];
+        this.addKeyframesStyle()
+        progress.style.animation='changeWidth linear'
+        container.append(progressBar)
+        this.progressBar = progressBar;
+      }
+      show(){
+        this.progressBar.style.display='block';
+        if (document.getElementById('prStyle')){
+          this.removeStyle(this.progress, 'prStyle')
+          this.addKeyframesStyle()
+        }
+        this.set()
+      }
+      removeStyle(elem, id){
+        let stdStyle=document.getElementById(id);
+        if (stdStyle){
+        elem.removeChild(stdStyle); 
+        }
+      }
+      addKeyframesStyle(){
+        let styleElem = document.createElement('style');
+        styleElem.id='stdStyle'
+        styleElem.innerHTML='@keyframes changeWidth {from {width: 100%;} to {width: 0%;}}'
+        this.progress.appendChild(styleElem)
+      }
+      showFromPercent(percent){
+        this.progressBar.style.display='block';
+        this.removeStyle(this.progress, 'stdStyle')
+        let styleElem = document.createElement('style');
+        styleElem.id='prStyle'
+        styleElem.innerHTML='@keyframes changeWidth {from {width: '+parseInt((Math.round(100*percent)))+'%;} to {width: 0%;}}'
+        this.progress.style.animationDuration=parseInt(Math.round(this.timeout*percent))+'s'
+        this.progress.appendChild(styleElem)
+      }
+      hide(){
+        this.progressBar.style.display='none';
+        this.reset()
+      }
+      
+      set(){
+        this.progress.style.animationDuration=this.timeout+'s';
+      }
+      reset(){
+        this.progress.style.animationDuration='0s';
+      }
+      isVisible(){
+        if (window.getComputedStyle(this.progressBar).display!='none') { return true } 
+        else { return false }
+      }
+    }
+    
+    function isVisible(elem){
+      if (window.getComputedStyle(elem).display!='none') {
+        return true
+      } else {
+         return false
+      }
+    }
+    function storeAndSetStyle(elem, param, value){
+      elem.dataset['saved'+param]=window.getComputedStyle(elem)[param]
+      elem.style[param]=value
+      }
+    function restoreStyle(elem, param){
+      elem.style[param]=elem.dataset['saved'+param]
+      }
+
+      
+
+    function block(innerHTML=undefined, classes=[], id=undefined, ){
+      let block=document.createElement('div');
+      if (id !=undefined) block.id=id;
+      if (innerHTML !=undefined) block.innerHTML=innerHTML;
+      block.classList=classes;
+      return block;
+    }
+    function labledDataBlock(label, blockClasses=[],labelClasses=[],dataClasses=[], blockID=undefined, labelID=undefined, dataID=undefined){
+        let container=block('',blockClasses,blockID);
+        container.append(block(label,labelClasses,labelID));
+        container.append(block('',dataClasses,dataID));
+        return container
+    }
+    function labled2DataBlock(label, blockClasses=[],labelClasses=[],data1Classes=[], data2Classes=[], blockID=undefined, labelID=undefined, data1ID=undefined, data2ID=undefined, flexDirection='row'){
+        let container=block('',blockClasses,blockID);
+        container.append(block(label,labelClasses,labelID));
+        let flexCls=(flexDirection=='row') ? 'flex_milldle_row':'flex_milldle_col'
+        let dataContainer=block('',[flexCls],'');
+        data1=block('',data1Classes,data1ID)
+        data2=block('',data2Classes,data2ID)
+        dataContainer.append(data1);
+        dataContainer.append(data2);
+        container.append(dataContainer);
+        return container
+    }
+    function flashIndicator(indicator, flashColor,afterColor, pause){
+      indicator.style.color=flashColor
+      setTimeout(function(){indicator.style.color=afterColor},pause)
+    }
+    
+    const secondsTimer=new PerodicalCallback ("updateTime()", 1000,false);
+    const techIdleTimer=new PerodicalCallback ("updateTechIdle()", 250,false);
+    //const progressBar= new TimeoutProgressBar();
+
+    function wsConnect(){
+      let ws=new WebSocket(WS_SERVER);
+      
+      ws.onmessage = function(evt) {
+        let jsonMsg = JSON.parse(evt.data);
+        console.log(jsonMsg)
+        switch (jsonMsg.cmd) {  
+          case "reload":
+            location.reload()
+            break;
+        }
+        switch (jsonMsg.type) {
+          case "curr_operator":
+              if (jsonMsg.data==null){
+                currentOperator.name=null
+                currentOperator.id=null
+              }
+              else{
+                currentOperator.name=jsonMsg.data.name
+                currentOperator.id=jsonMsg.data.id
+              }
+              return true
+          case "set_operator":
+              if (jsonMsg.data==null){
+                selectedOperator.name=null
+                selectedOperator.id=null
+              }
+              else{
+                selectedOperator.name=jsonMsg.data.name
+                selectedOperator.id=jsonMsg.data.id
+              }
+              return true
+          break;
+          default:
+        }
+        if (firstWsMessageFlag){
+          firstWsMessageFlag=false
+        } else {
+          currentState.stateTime=jsonMsg[0].time;                                   //todo взять из запроса
+          currentState.state=jsonMsg[0][STATE_CHANNEL]
+        }
+        flashIndicator(wsIndicator,'lightgreen','green',400);
+        return true;
+      };
+        
+    
+      ws.onclose = function(evt) {
+          console.log(' Server close connection! No data!')
+          wsStatus.textContent='offline'
+          wsIndicator.style.color='Red'
+          // setTimeout(function (){wsConnect()},1000);
+          setTimeout(function (){location.reload()},5000);
+      };
+      ws.onerror = function(evt) {
+          console.log(' Server connection error ')
+          ws.close()
+      };
+
+      ws.onopen = function(evt) {
+          wsStatus.textContent='online'
+          wsIndicator.style.color='green'
+          console.log(' Connection ok, send subscribe msg: ' + SUBSCRIBE_CHANNELS)
+          wsSend(JSON.stringify({type:"subscribe",data:SUBSCRIBE_CHANNELS}))
+          wsSend(JSON.stringify({type:"curr_operator",macine_id:MACHINE_ID}))
+      };
+      return ws
+    } 
+
+    let wsSend = function(data) {
+          if(ws.readyState != 1){
+              setTimeout(function (){
+                wsSend(data);
+              },1000);
+          }else{
+            ws.send(data);
+          }
+    };
+
+    function updateTime(){
+      updateServerTime();
+      updateStatusTimer();
+      updateCauseTimer();
+    }
+    function updateServerTime(){
+      serverTime.add(1,'s');
+      serverTimeElem.innerText=  serverTime.format('HH:mm:ss')
+    }
+
+    currentOperator = new Proxy (currentOperator,{
+      set(target, property, value){
+        // if (value=='None' || value==null){
+        //   value==null;
+        // } 
+        target[property]=value;
+        if (property=='id' ){
+          if (value==null){  
+              showOperatorRequest();
+              showKeyboard();
+            }
+            else{
+              hideOperatorRequest();
+            }
+        }
+        if (property=='name' ){
+          operatorElem.innerHTML=currentOperator.name;
+        }
+      }
+    });
+    
+    function setOperator(){
+      // operatorElem.innerHTML=currentOperator.name;
+      wsSend(JSON.stringify({type:"set_operator",macine_id:MACHINE_ID, operator_id:currentOperator.id}))
+    }
+    
+    function showOperatorRequest(){
+      restoreStyle(operatorLoginContainerElem, 'display')
+      operatorLoginContainerElem.focus()
+      console.log('showOperatorRequest')
+      // operatorElem.innerHTML='' 
+    }
+    
+    function showKeyboard(){
+      restoreStyle(keyboardElem, 'display')
+    }
+    function hideKeyboard(){
+      keyboardElem.style.display='None'
+    }
+    function hideOperatorRequest(){
+      operatorLoginContainerElem.style.display='None'
+    }
+    
+    function showOperatorLogout(){
+      restoreStyle(operatorLogoutContainerElem, 'display')
+
+    }
+    function hideOperatorLogout(){
+      operatorLogoutContainerElem.style.display='None'
+    }
+
+    function logoutOperator(){
+      wsSend(JSON.stringify({type:"logout_operator",macine_id:MACHINE_ID, operator_id:currentOperator.id}))
+      // currentOperator.name=null
+      // currentOperator.id=null
+      hideOperatorLogout()
+
+    }
+    function cancelLogout(){
+      hideOperatorLogout()
+    }
+
+    selectedOperator = new Proxy (selectedOperator,{
+      set(target, property, value){
+        // if (value=='None' || value==null){
+        //   value==null;
+        // } 
+        target[property]=value;
+        if (property=='id' ){
+          if (value==null){  
+              showNoOperatorAllert();
+            }
+            else{
+              showConfirmOperatorContainer();
+            }
+        }
+        if (property=='name' ){
+          operatorNameElem.innerHTML=selectedOperator.name;
+        }
+      }
+    });
+    
+    function showConfirmOperatorContainer(){
+      hideNoOperatorAllert()
+      hideKeyboard()
+      restoreStyle(operatorConfurmContainerElem, 'display')
+    }
+    function hideConfirmOperatorContainer(){
+      operatorConfurmContainerElem.style.display='None'
+    }
+    function showNoOperatorAllert(){
+      hideConfirmOperatorContainer()
+      restoreStyle(noOperatorAllertElem, 'display')
+    }
+    function hideNoOperatorAllert(){
+      noOperatorAllertElem.style.display='None'
+    }
+
+    function enterOperatorId(id){
+      wsSend(JSON.stringify({type:"get_operator", macine_id:id, operator_id:Number(operatorIdElem.innerText) }))
+    }
+
+    function confirmLogin(){
+      currentOperator.name=selectedOperator.name
+      currentOperator.id=selectedOperator.id
+      setOperator()
+      operatorIdElem.innerText=''
+      selectedOperator.name=null
+      selectedOperator.id=null
+      hideNoOperatorAllert()
+      hideConfirmOperatorContainer()
+
+      // hideOperatorRequest()
+    }
+    function cancelLogin(){
+      operatorIdElem.innerText=''
+      hideConfirmOperatorContainer()
+      showKeyboard()
+    }
+
+    
+    
+    currentState = new Proxy(currentState, {
+      set(target, property, value){
+        if (value=='None'){
+          value==undefined;
+        } 
+        target[property]=value;
+        if (property=='state'){
+            changeState()
+        }
+        if (property=='cause'){
+            changeCause()
+        }
+        return true
+      }
+      });
+    
+
+    function changeState(){
+      setStatus(currentState.state, moment(currentState.stateTime).format('DD.MM.YY HH:mm:ss'))
+      if (currentState.state==WORK_STATE){
+        if (currentState.cause==TECH_IDLE_ID){
+          resetTechIdle();
+        }
+        currentState.cause=undefined;
+        currentState.causeTime=undefined;
+        displayWorkMode();
+      } else{
+        displayIdleMode();
+        if (currentState.cause==undefined){ 
+          if (TECH_IDLE_LENGTH>0 && 
+              moment.duration(serverTime.diff(currentState.stateTime,'seconds')).seconds()<TECH_IDLE_LENGTH) {
+            currentState.cause=TECH_IDLE_ID;
+          } else {
+            displayWaitCauseMode()
+          }
+        }; 
+        if (currentState.cause==0){ 
+          displayWaitCauseMode()
+        }
+      }
+    }
+
+    function changeCause(){
+        switch (currentState.cause){
+          case undefined: 
+          case 0: displayWaitCauseMode();
+          break
+          case TECH_IDLE_ID: setTechIdle();
+                            setCause();
+          break
+          default: {
+            setCause();
+            sendCause(currentState.cause);
+          }
+        }
+    }
+
+    function setStatus(result, time){
+      stateValueElem.style.color=STATUS_LIGHT_COLORS[result];
+      stateValueElem.innerText=STATES[result];
+      stateTimeElem.innerText=time;
+    }
+    function setCause(){
+      let causeTime = (currentState.causeTime==undefined) ?  serverTime : currentState.causeTime
+      currentState.causeTime=moment(causeTime).format('YYYY-MM-DDTHH:mm:ss');
+      displayCauseStatus();
+      displayIdleMode();
+    }
+    function displayCauseStatus(){
+      if (currentState.cause!=undefined){
+        causeStatusElem.innerText=IDLE_COUSES[currentState.cause]
+      }
+      if (currentState.causeTime!=undefined){
+        causeTimeElem.innerText=moment(currentState.causeTime).format('DD.MM.YY HH:mm:ss')
+      }
+    }
+    
+    function setWaitCauseStatus(couseID,causeTime){
+      causeStatusElem.innerText=''
+      causeTimeElem.innerText=''
+    }
+    
+    function sendCause(couseID){
+      wsSend(JSON.stringify({type:"set",arg:CAUSEID_ARG, val:parseInt(couseID)}))
+    }
+    
+    function resetCause(){
+      if (currentState.cause==TECH_IDLE_ID) {
+        resetTechIdle();
+      }
+      sendCause(0);
+      currentState.cause=0;
+      currentState.causeTime=moment(serverTime).format('YYYY-MM-DDTHH:mm:ss');
+    }
+
+    function setCauseID(id){
+      currentState.cause=id;
+    }
+
+    function showTechIdleProgress(){
+      progressBar.show()
+    }
+    function hideTechIdleProgress(){
+        progressBar.hide()
+    }
+
+    function showCauseStatusContainer(){
+      restoreStyle(causeStatusBlockElem, 'display')
+    }
+    function hideCauseStatusContainer(){
+      if (isVisible(causeStatusBlockElem)) {storeAndSetStyle(causeStatusBlockElem, 'display', 'none')}
+    }
+    function updateStatusTimer(){
+        let d=moment.duration(serverTime.diff(currentState.stateTime),'ms')
+        stateTimerElem.innerText=  d.days()*24 + d.hours() + ':' + d.minutes() + ':'+d.seconds()
+    }
+    function updateCauseTimer(){
+        let d=moment.duration(serverTime.diff(moment(currentState.causeTime)),'ms')
+        causeTimerElem.innerText=  d.days()*24 + d.hours() + ':' + d.minutes() + ':'+d.seconds()
+    }
+
+    function showCauseButtons(){
+      restoreStyle(causeButtonsContainerElem, 'display')
+    }
+    function hideCauseButtons(){
+      if (isVisible(causeButtonsContainerElem)) {storeAndSetStyle(causeButtonsContainerElem, 'display', 'none')}
+    }
+    function showChangeCauseButton(){
+      restoreStyle(changeCauseButtonElem, 'display')
+    }
+    function hideChangeCauseButton(){
+      if (isVisible(changeCauseButtonElem)) {storeAndSetStyle(changeCauseButtonElem, 'display', 'none')}
+    }
+
+    function showFlashWaitWarning(){
+      restoreStyle(flashWaitWarning, 'display')
+    }
+    function hideFlashWaitWarning(){
+      if (isVisible(flashWaitWarning)) {storeAndSetStyle(flashWaitWarning, 'display', 'none')}
+    }
+    
+    function setProgress(progress,value){
+      progressElem.style.width=progress.toString()+'%'
+    }
+    function resetTechIdle(){
+      hideTechIdleProgress()
+      techIdleTimer.pause();
+    }
+    function setTechIdle(){
+      idleTime=TECH_IDLE_LENGTH;
+      showTechIdleProgress();
+      techIdleTimer.restart();
+    }
+    function updateTechIdle(){
+      idleTime= idleTime - 0.25;
+      if (idleTime<1){
+        resetTechIdle();
+        currentState.cause=0;
+        // currentState.cause=undefined;
+        currentState.causeTime=moment(serverTime).format('YYYY-MM-DDTHH:mm:ss');
+        //resetCause();
+      } 
+    }
+
+
+
+    function displayWorkMode(){
+      hideFlashWaitWarning();
+      hideCauseButtons();
+      hideCauseStatusContainer();
+      hideChangeCauseButton();
+      displayBigStaus();
+    }
+    function displayIdleMode(){
+      hideFlashWaitWarning();
+      hideCauseButtons();
+      displaySmallStaus();
+      showCauseStatusContainer();
+      showChangeCauseButton();
+    }
+    
+    function displayWaitCauseMode(){
+      displaySmallStaus();
+      hideCauseStatusContainer();
+      hideChangeCauseButton();
+      showFlashWaitWarning();
+      showCauseButtons();
+    }
+
+    function displayBigStaus(){
+      stateBlockElem.classList.remove('h_v20')
+      stateBlockElem.classList.remove('fnt_3')
+      stateBlockElem.classList.add('h_v80')
+      stateBlockElem.classList.add('fnt_5')
+    }
+    function displaySmallStaus(){
+      stateBlockElem.classList.remove('h_v80')
+      stateBlockElem.classList.remove('fnt_5')
+      stateBlockElem.classList.add('h_v20')
+      stateBlockElem.classList.add('fnt_3')
+    }
+
+    
+    function clickHandler(event){
+      setCauseID(parseInt(event.target.dataset.id));
+    }
+    function changeCauseclickHandler(){
+      resetCause();
+    }
+    
+    function makePage(){
+        let page= document.getElementById('container');
+        page.innerHTML='';
+        let container=document.createElement('div');
+        container.classList=['mainContainer'];
+        page.append(container);
+        //        state block
+        let stateBlock=block('',['databox w_v80 gridState'],'stateBlock');
+        let stateValue=block('', ['dataLable aSlfEnd'], 'state_'+MACHINE_ID)
+        let stateTimerValue=block('', ['dataLable gr2CellsLftCntr'], 'stateTimer_'+MACHINE_ID)
+        let stateTimeValue=block('', ['dataLable aSlfStart fnt_0_5 '], 'stateTime_'+MACHINE_ID)
+        stateBlock.append( stateValue, stateTimerValue, stateTimeValue)
+        container.append(stateBlock)
+        //      Cause block
+        let causeBlock=block('',['databox w_v80 gridCauseBlock '],'causeStatus');
+        let causeContainer=block('',['gCause'],'')
+        let causeStatus=block('', ['dataLable  fnt_3'], 'cause_'+MACHINE_ID)
+        // let progressBar=block('',['progressBar gCProgress'],'causeProgressBar')
+        // let progress=block('',['progress'],'causeProgress');
+        // progressBar.append(progress)
+        causeContainer.append(causeStatus);
+        progressBar=new TimeoutProgressBar(TECH_IDLE_LENGTH,causeContainer,'progressBar gCProgress', 'progress' )
+        let causeTimerValue=block('', ['dataLable gCTimer fnt_3'], 'causeTimer_'+MACHINE_ID)
+        let causeTimeValue=block('', ['dataLable gCTime fnt_1_5 '], 'causeTime_'+MACHINE_ID)
+        
+        
+        causeBlock.append( causeContainer, causeTimeValue, causeTimerValue)
+        container.append(causeBlock)
+        //     flash warning
+        let flashWaitWarning=block('Необходимо указать причину простоя',['databox flex_center w_v80 h_v10 fnt_2 bold cWhite flashBackground'],'flashWaitWarning')
+        container.append(flashWaitWarning)
+
+        
+
+        const causeButtonsContainer = block('',['w_v80 gridCauseButtons'],'causeButtonsContainer');
+        for (i=0; i<Object.keys(IDLE_COUSES).length;i++){
+          let id=Object.keys(IDLE_COUSES)[i]
+          if (id<=0) continue;          //пока так, отделяем зарезервированные причины (id < 0 ) от доступных
+          let cause=IDLE_COUSES[id]
+          button=block(cause,['h100 w20rem flex_center databox dataLable fnt_2'],'buttonsContainer');
+          button.dataset.id=id
+          button.addEventListener('click', clickHandler);
+          causeButtonsContainer.append(button)
+        }
+        container.append(causeButtonsContainer);
+        let changeCauseButton=block('изменить причину простоя',['buttonBox flex_center w_v80 h_v20 fnt_3 bold cWhite'],'changeCauseButton')
+        changeCauseButton.addEventListener('click', changeCauseclickHandler);
+        container.append(changeCauseButton);
+    }
+
+    function firstCurrentStateInit(){
+      currentState.state=currentState.state;
+      if (currentState.state!=WORK_STATE){
+        switch(currentState.cause) {
+          case 0 :
+          case undefined : displayWaitCauseMode()
+          break
+          case TECH_IDLE_ID : {
+            let timeDelta=serverTime.diff(currentState.stateTime,'seconds')
+            if (timeDelta>TECH_IDLE_LENGTH){
+                          resetTechIdle();
+                          currentState.cause=undefined
+                          currentState.causeTime=undefined
+                          displayWaitCauseMode();
+                        }else{
+                          displayCauseStatus();
+                          displayIdleMode();
+                          idleTime=TECH_IDLE_LENGTH-timeDelta;
+                          techIdleTimer.restart();
+                          progressBar.showFromPercent((TECH_IDLE_LENGTH-timeDelta)/TECH_IDLE_LENGTH)
+                        }
+                      }
+          break
+          default : setCause();
+        }
+      }
+    }
+    
+    function makeNumKeyboard(gridContainer, keyClass){
+      function makeKey(code, keyClass, txt){
+        let key=block(code, keyClass, 'key_'+parseInt(i))
+        key.dataset.code=code
+        key.onclick=function(){pushButton(this.dataset.code)}
+        key.innerText=txt
+        return key
+      }
+      for(let i=1; i<=5; i++){
+        let key=makeKey(i, 'key', i)
+        gridContainer.append(key)
+      }
+      let key=makeKey(-1, 'key', '<-')
+        gridContainer.append(key)
+      for(let i=6; i<=9; i++){
+        let key=makeKey(i, 'key', i)
+        gridContainer.append(key)
+      }
+      key=makeKey(0, 'key', 0)
+        gridContainer.append(key)
+      key=makeKey(13, 'key', 'Ok')
+        gridContainer.append(key)
+    }
+    function pushButton(code){
+
+      if (code>=0 && code< 10){
+        operatorIdElem.innerText+= code
+      }
+      else if (code==-1){  //-<
+        operatorIdElem.innerText= operatorIdElem.innerText.slice(0, -1);
+      }
+      else if (code==13){ //enter
+        enterOperatorId(Number(operatorIdElem.innerText))
+      }
+    }
+
+    function keyDownListener(e){
+          if(e.keyCode >= 49 && e.keyCode<=57){
+              pushButton(e.keyCode- 48)
+            }
+          else if(e.keyCode >= 97 && e.keyCode <= 105){
+              pushButton(e.keyCode - 96)
+            }
+          else if(e.keyCode == 48 || e.keyCode == 96){
+              pushButton(0)
+            }
+          else if(e.keyCode == 13 ){
+              pushButton(13)
+            }
+          else if(e.keyCode == 8 ){
+              pushButton(-1)
+            }
+    }
+
+    function init(){
+        makePage()
+        console.log('start')  
+        infoElem=document.getElementById('info')
+        serverTimeElem=document.getElementById('serverTime')
+        operatorElem=document.getElementById('operator')
+        operatorLogoutContainerElem=document.getElementById('operatorLogoutContainer')
+        storeAndSetStyle(operatorLogoutContainerElem, 'display', 'None')
+        operatorLogoutNameElem=document.getElementById('operatorLogoutName')
+        operatorLoginContainerElem=document.getElementById('operatorLoginContainer')
+        storeAndSetStyle(operatorLoginContainerElem, 'display', 'None')
+        
+        noOperatorAllertElem=document.getElementById('noOperatorAllert')
+        storeAndSetStyle(noOperatorAllertElem, 'display', 'None')
+        operatorConfurmContainerElem=document.getElementById('operatorConfurmContainer')
+        storeAndSetStyle(operatorConfurmContainerElem, 'display', 'None')
+        operatorNameElem=document.getElementById('operatorName')
+        operatorIdElem=document.getElementById('operatorId')
+        keyboardElem=document.getElementById('keyboard')
+        storeAndSetStyle(keyboardElem, 'display', 'None')
+
+        hideOperatorLogout()
+        hideOperatorRequest()
+        hideNoOperatorAllert()
+        hideConfirmOperatorContainer()
+        
+        makeNumKeyboard(keyboardElem,'key')
+        // operatorLoginContainerElem.onkeydown = function(e){
+        operatorLoginContainerElem.addEventListener('keydown', keyDownListener)
+
+        stateBlockElem=document.getElementById('stateBlock')
+        stateValueElem=document.getElementById('state_'+parseInt(MACHINE_ID))
+        stateTimerElem=document.getElementById('stateTimer_'+parseInt(MACHINE_ID))
+        stateTimeElem=document.getElementById('stateTime_'+parseInt(MACHINE_ID))
+        flashWaitWarning=document.getElementById('flashWaitWarning')
+        causeStatusBlockElem=document.getElementById('causeStatus')
+        causeStatusElem=document.getElementById('cause_'+parseInt(MACHINE_ID))
+        causeTimeElem=document.getElementById('causeTime_'+parseInt(MACHINE_ID))
+        causeTimerElem=document.getElementById('causeTimer_'+parseInt(MACHINE_ID))
+        causeButtonsContainerElem=document.getElementById('causeButtonsContainer')
+        changeCauseButtonElem=document.getElementById('changeCauseButton')
+        // progressBarElem=document.getElementById('causeProgressBar');
+        // progressElem=document.getElementById('causeProgress');
+        stateTime=moment(currentState.begin_time);
+        secondsTimer.restart();
+        ws=wsConnect();
+        firstCurrentStateInit();
+
+        
+    }
+    
+    init()
+  </script>
+</html>

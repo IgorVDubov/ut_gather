@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utrack idle admin</title>
+    <link rel="stylesheet" type="text/css" href="/css/header_main_footer.css"/>
+    <link rel="stylesheet" type="text/css" href="/css/mycsslib.css"/>
+    <style>
+        body{
+          background-color:rgb(244, 244, 245);
+          font-family: "Segoe UI", "Segoe WP", Arial, sans-serif;
+          /* background-color:black; */
+        }
+        h2 {
+            padding-top:  10px;
+            padding-bottom:  10px;
+            width:100%;
+            
+            text-align: center;
+            background-color: lightblue;
+        }
+        .flexContainerCenterAl{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .menuButton{
+            margin: 10px;
+        }
+        .cause_item{
+            font-size: 1.5em;
+            padding: 0.5em;
+        }
+    </style>
+</head>
+<body>
+    <header class="header" >
+        <span class="fnt_1_5 bold pl1"> <a  href="/">UTrack</a></span>
+        <span class="pl1 fnt_0_75"> учет рабочего времени оборудования</span>
+        <span class="userBlock fl_r pr1 ">
+            <span>{{ user }} </span>
+            <a href="/logout"> <img class="img_invert s1em" src="/images/icon-exit.png"> </a>
+        </span>
+     </header>
+    <main class="main">
+        <h2> Администрирование учета причин простоев оборудования</h2>
+        <h2> Причины простоя {{user}}<input type="button" class="menuButton" value="перезагрузка клиента" onclick="resetClient()"></h2>
+        <div class="flexContainerCenterAl"> 
+            <input type="button" class="menuButton" id= "cAddButton" value="Создать" onclick="causeAdd()">
+            <input type="text" class="menuButton" id= "causeInput" value="" style="display:none" >
+            <input type="button" class="menuButton" id= "cSaveButton" value="Сохранить" style="display:none" onclick="causeSave()">
+            <input type="button" class="menuButton" id= "cCancelButton" value="Отменить" style="display:none" onclick="causeCancel()"> 
+            <input type="button" class="menuButton" id= "cCahangeButton" value="Изменить"  onclick="causeEdit()">
+            <input type="button" class="menuButton" id= "cDelButton" value="Удалить"onclick="causeDel()">
+        </div>
+        <div class="flexContainerCenterAl">
+            <select id="causesContainer" class="menuButton" ></select>
+        </div>
+    </main>
+    <footer class='footer'>
+        <a class="fl_r pr1" >v{{ version }}</a>
+        <a class="fl_r pr1" href="mailto:asu@alfa33.ru">Alfa <span class="fnt_0_6 pr1">решения в области промышленной автоматизации</span> 2022</a>
+    </footer> 
+    <div id="loader"></div>
+</body>
+<script>
+    {% autoescape None %}
+    var IDLE_COUSES={{  idle_couses  }}
+
+    var causeContainer;
+    
+    async function addCauseRequest(cuaseValue){
+        let response = await fetch('/arequest', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({type: "addCause",cause:cuaseValue})
+                        });
+        return await response.json();
+    }
+    async function cmdRequest(command){
+        let response = await fetch('/arequest', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({type: "cmd",cmd:command})
+                        });
+        return await response.json();
+    }
+    function storeAndSetStyle(elem, param, value){
+      elem.dataset['saved'+param]=window.getComputedStyle(elem)[param]
+      elem.style[param]=value
+      }
+    function restoreStyle(elem, param){
+      elem.style[param]=elem.dataset['saved'+param]
+      }
+    function resetClient(){
+        cmdRequest('resetClient')
+    }
+    function makeCausesContainer(container){
+        let counter=0
+        for (i=0; i<Object.keys(IDLE_COUSES).length;i++){
+          let id=Object.keys(IDLE_COUSES)[i]
+          if (id<=0) continue;          //пока так, отделяем зарезервированные причины (id < 0 ) от доступных
+          let option=document.createElement("option")
+          option.classList.add('cause_item')
+          option.innerText=IDLE_COUSES[id]
+          container.append(option);
+          counter++;
+        }
+        container.size=counter;
+    }
+
+    function causeAdd(){
+        document.getElementById('causeInput').style.display='block'
+        document.getElementById('cSaveButton').style.display='block'
+        document.getElementById('cCancelButton').style.display='block'
+        document.getElementById('cCahangeButton').style.display='none'
+        document.getElementById('cDelButton').style.display='none'
+    }
+    function causeSave(){
+        document.getElementById('causeInput').style.display='none'
+        document.getElementById('cSaveButton').style.display='none'
+        document.getElementById('cCancelButton').style.display='none'
+        document.getElementById('cCahangeButton').style.display='block'
+        document.getElementById('cDelButton').style.display='block'
+        causeContainer.size++;
+        let option=document.createElement("option")
+        option.classList.add('cause_item')
+        let newCause=document.getElementById('causeInput').value
+        if (newCause && newCause!=''){
+            option.innerText=newCause
+            document.getElementById('causeInput').value=''
+            causeContainer.append(option)
+            addCauseRequest(newCause)
+        }
+    }
+    function causeCancel(){
+        document.getElementById('causeInput').value=''
+        document.getElementById('causeInput').style.display='none'
+        document.getElementById('cSaveButton').style.display='none'
+        document.getElementById('cCancelButton').style.display='none'
+        document.getElementById('cCahangeButton').style.display='block'
+        document.getElementById('cDelButton').style.display='block'
+    }
+    function causeDel(){
+
+    }
+    function causeEdit(){
+        console.log(causeContainer.selectedOptions[0])
+    }
+
+    function makePage(){
+        causeContainer=document.getElementById('causesContainer')
+        makeCausesContainer(document.getElementById('causesContainer'))  
+    }
+    makePage()
+</script>
+</html>

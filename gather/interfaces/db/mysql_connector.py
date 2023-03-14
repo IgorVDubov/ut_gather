@@ -1,16 +1,20 @@
 '''
 Connection and SQL script funcs to MySql DB
 '''
-from typing import Callable
+import struct
+
+from numpy import iterable
+from dbinterface import DBInterface
+from typing import Callable, Sequence
 
 import mysql.connector
 from mysql.connector import CMySQLConnection, MySQLConnection
 from loguru import logger
 
-from . import myexceptions
+from ... import myexceptions
 
 
-class MySQLConnector:
+class MySQLConnector(DBInterface):
     '''
     connection to MySQL base on 
     https://dev.mysql.com/doc/connector-python/en/
@@ -52,19 +56,22 @@ class MySQLConnector:
     @connection
     def exec_querry_func(self,connection:MySQLConnection, func:Callable, params:dict={}):
         return func(connection, params)
-
+    
     @connection
-    def querry(self, connection:MySQLConnection, sql:str, params:tuple=()):
-        '''
-        base querry
-        sql: sql string as "select * from ... where ..=%s and .=%s"
-        params: None or list of %s..%sN params [param1,...,paramN] by order in sql
-        '''
+    def exec_fetch_sql_querry(self, connection:MySQLConnection, sql:str, params:dict={}):
         cur = connection.cursor()
         cur.execute(sql,params)
         result = cur.fetchall()
         cur.close()
         return result 
+    
+    @connection
+    def exec_commit_sql_querry(self, connection:MySQLConnection, sql:str, values:dict={}):
+        cur = connection.cursor()
+        cur.execute(sql,values)
+        connection.commit()
+        cur.close()
+
 
     @connection
     def insertManyToTable(self, connection:MySQLConnection, table:str, values_list:list[tuple]):    #TODO liast of tuples + executemany для нескольких записей
@@ -73,7 +80,7 @@ class MySQLConnector:
         
         table: table name in sql string as INSERT INTO TABLE VALUES ( %s... %s )
         values:list of tuples (%s..%sN) values by order in sql [(p1,p2)...,(p1,p2)]
-         
+        
         Values nunber = table fields number!!!
         '''
         if len(values_list):
@@ -89,67 +96,3 @@ class MySQLConnector:
                 logger.error(f'Empty value tuple in isert querry to table:{table}, values:{values} ')
         else:
                 logger.error(f'Empty value tuple in isert querry to table:{table}, values:{values_list} ')
-    
-    @connection
-    def insert(self,connection:MySQLConnection, table:str, values:tuple):    
-        '''
-        insert querry of values list. 
-        
-        table: table name in sql string as INSERT INTO TABLE VALUES ( %s... %s )
-        values:list of tuples (%s..%sN) values by order in sql [(p1,p2)...,(p1,p2)]
-         
-        Values nunber = table fields number!!!
-        '''
-        if length:=len(values):
-            cur = connection.cursor()
-            sql=f'INSERT INTO {table} VALUES( {", ".join(["%s"] * length)})'
-            cur.execute(sql,values)
-            connection.commit()
-            cur.close()
-        else:
-                logger.error(f'Empty value tuple in isert querry to table:{table}, values:{values} ')
-       
-    @connection
-    def update(self,connection:MySQLConnection, sql:str, params:tuple=()):
-        '''
-        update querry. 
-        
-        sql: sql string as UPDATE table_name SET name = %s WHERE id = %s
-        params: tuple (%s..%sN) sql params by order in sql param1..paramN
-        '''
-        if len(params):
-            cur = connection.cursor()
-            cur.execute(sql,params)
-            connection.commit()
-            cur.close()
-        else:
-            logger.error(f'Empty value list in isert querry:{sql}')
-    
-    @connection
-    def delete(self,connection:MySQLConnection, sql:str,params:tuple=()):
-        '''
-        delete querry.
-        sql: sql string as DELETE FROM table_name WHERE id=%s AND profile_id=%s'
-        params: list of tuples (%s..%sN) sql params by order in sql param1..paramN
-        '''
-        if len(params):
-            cur = connection.cursor()
-            cur.execute(sql,params)
-            connection.commit()
-            cur.close()
-        else:
-            logger.error(f'Empty value list in isert querry:{sql}')
-
-   
-
-if __name__ == '__main__':
-    pass
-    # import defaults
-    # connection = mysql.connector.connect(**globals.MySQLServerParams)
-    # cursor =connection.cursor()
-    # cursor.execute(query,tuple(10021))
-    # for rec in cursor:
-    #     print(rec)
-    # cursor.close()
-    # connection.close()
-  

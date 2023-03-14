@@ -3,10 +3,12 @@
 Connection and SQL script funcs to Sqlite3 DB
 '''
 import sqlite3
+
 from loguru import logger
 from myexceptions import DBException
 
-def connection(func):
+
+def connection(func)->sqlite3.Connection|None:
     def makeConn(self,*args, **kwargs):
         ctx=self.connect()
         try:
@@ -34,7 +36,7 @@ class Sqlight3Connector(object):
         '''
         self.params=dbParams
         
-    def _connect(self):
+    def _connect(self)->sqlite3.Connection|None:
         try:
             cnx =sqlite3.connect(self.params)
             if cnx.cursor():                        #проверка подключения (проверить тестами сколько занимает времени)
@@ -59,7 +61,9 @@ class Sqlight3Connector(object):
                     if ctx.is_connected():
                         ctx.close()
         return makeConn
-
+    @connection
+    def exec_querry_func(self,connection:MySQLConnection, func:Callable, params:dict={}):
+        return func(connection, params)
 
     @connection
     def querry(self,connection,sql:str,params:tuple=()):

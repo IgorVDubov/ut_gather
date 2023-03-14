@@ -56,7 +56,7 @@ class ModbusExchangeServer(ExchangeServer):
     def _mbGetIdValue(self,channel_attr):
         return self.server.getValue(channel_attr)
 
-def MBServerAdrMapInit(channelBase:channelbase.ChannelsBase,addrMaping:dict)->tuple():
+def MBServerAdrMapInit(channelBase:channelbase.ChannelsBase,addrMaping:list)->tuple():
     '''
     привязка атрибутов каналов из addrMaping к атрибутам каналов из channelBase
     return

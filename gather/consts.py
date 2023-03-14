@@ -1,22 +1,29 @@
 from pymodbus.interfaces import Singleton
-AI=1
-DI=2
-LIST=0
-FLOAT=1
-INT=2
-BIT=3
-BYTE=4
-WORD=5
 
-class Consts(Singleton):
+class Formats(Singleton):
+    DATE_FORMAT_DB='%Y-%d-%m %H:%M:%S'
+
+class ValTypes(Singleton):
+    AI=0
+    DI=1
+    LIST=2
+    FLOAT=3
+    INT=4
+    BIT=5
+    BYTE=6
+    WORD=7
+
+class DeviceProtocol(Singleton):
     MODBUS='ModBus'
+
+class DbNames(Singleton):
+    DBC='db_connector'
     MYSQL='MySql'
     SQLIGHT3='Sqlight3'
     SELECT='select'
     INSERT='insert'
     UPDATE='update'
     DELETE='delete'
-    DBC='dbc'
-    DATE_FORMAT_DB='%Y-%d-%m %H:%M:%S'
+
 
 

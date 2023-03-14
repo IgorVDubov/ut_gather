@@ -2,31 +2,32 @@
 
 import asyncio
 import sys
-from loguru import logger
 
 import logger as loggerLib
+from loguru import logger
 
-if sys.platform == 'win32':
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  #Если запускаем из под win    
+if sys.platform == 'win32': #Если запускаем из под win   
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())   
 
 
 import config
-import settings
 import scadaconfig as scada_config
+import settings
 import web.handlers as project_webserver_handlers
+
 try:
     import init as project_init
 except ModuleNotFoundError:
     project_init=None
 
-from gather import db_interface
 from gather.channels.channelbase import channel_base_init
+from gather.db_interface import DBInterface
 from gather.exchangeserver import MBServerAdrMapInit, ModbusExchangeServer
 from gather.mainloop import MainLoop
-from gather.mutualcls import ChannelSubscriptionsList, DataContainer, EList, SubscriptChannelArg, WSClient
+from gather.mutualcls import (ChannelSubscriptionsList, DataContainer, EList,
+                              SubscriptChannelArg)
 from gather.sourcepool import SourcePool
-from gather.webserver.webconnector import setHTTPServer
-
+from gather.webserver.webconnector import setHTTPServer, CURR_HTTP_SERVER_TYPE
 
 
 def init():
@@ -50,25 +51,21 @@ def init():
     http_params=config.http_server_params
     http_params.update(settings.web_server_path_params)
 
- # type: ignore    
-    subscrptions:ChannelSubscriptionsList[SubscriptChannelArg]=ChannelSubscriptionsList()
+    subscrptions:ChannelSubscriptionsList=ChannelSubscriptionsList()
     ws_clients:EList=EList()
-    http_server=setHTTPServer(  http_params, 
+    http_server:CURR_HTTP_SERVER_TYPE=setHTTPServer(  http_params,
                                 project_webserver_handlers.handlers,
                                 DataContainer(
                                         config.users,
-                                        channel_base, 
-                                        subscrptions, 
+                                        channel_base,
+                                        subscrptions,
                                         ws_clients)
                             )
-    DBInterface=db_interface.DBInterface(config.DB_TYPE, config.DB_PARAMS)
-    #HTTPServer=None
+    db_interface=DBInterface(config.DB_TYPE, config.DB_PARAMS)
     print ('Sources')
     print (source_pool)
     print ('Channels:')
     print(channel_base)
-    # import json
-    # print(json.dumps([channel_base.nodesToDictFull()], sort_keys=True, indent=4))
     print(f'Modbus Exchange Server: {config.modbus_server_params["host"]}, {config.modbus_server_params["port"]}')
     print('ExchangeBindings')
     print(exchange_bindings)
@@ -80,17 +77,16 @@ def init():
                         channel_base, 
                         modbus_exchange_server, 
                         http_server, 
-                        DBInterface)
+                        db_interface)
     logger.info ('init done')
     return main_loop
-
+print('',)
 
 def main():
     loggerLib.loggerInit('ERROR')
     logger.info('Starting........')
     main_loop=init()
     main_loop.start()
-    
 
 if __name__=='__main__':
     main()

@@ -1,26 +1,39 @@
 import asyncio
 import json
-from time import time
-from typing import List
 from datetime import datetime
+from time import time
+from typing import List, Optional
+
 
 from . import defaults
 from .channels import channels
 from .channels.channelbase import ChannelsBase
-from .consts import Consts
+from .consts import DbNames
+from .db_interface import DBInterface
 from .exchangeserver import ExchangeServer
 from .logger import logger
 from .mutualcls import SubscriptChannelArg
 from .sourcepool import SourcePool
+from .webserver.webconnector import CURR_HTTP_SERVER_TYPE
 
 
 class MainLoop():
+    loop:asyncio.AbstractEventLoop
+    source_pool:SourcePool|None
+    channel_base:ChannelsBase
+    exchange_server:ExchangeServer|None
+    HTTP_server:CURR_HTTP_SERVER_TYPE|None
+    db_interface:DBInterface|None
+    db_quie:asyncio.Queue
+    subsriptions
+    ws_clients
+    
     def __init__(self,  loop:asyncio.AbstractEventLoop, 
                         source_pool:SourcePool|None, 
                         channel_base:ChannelsBase,
                         exchange_server:ExchangeServer|None=None, 
-                        HTTP_server=None,
-                        db_interface=None):
+                        HTTP_server:CURR_HTTP_SERVER_TYPE|None=None,
+                        db_interface:(DBInterface|None)=None):
         '''
         source_pool: source pool
         channeBlase: channe Blase
@@ -32,7 +45,7 @@ class MainLoop():
         self.cancelEvent=asyncio.Event()
         self.source_pool=source_pool
         self.channel_base=channel_base
-        if source_pool:       
+        if self.source_pool:       
             self.source_pool.readAllOneTime()                    #TODO  проверить как работает если нет доступа к source
                                                                 #       или заполнять Null чтобы первый раз сработало по изменению
             for node in (channel for channel in self.channel_base.channels if isinstance(channel,channels.Node)):
@@ -101,12 +114,12 @@ class MainLoop():
                 querry=self.db_quie.get_nowait()
                 logger.info(f'db_quie:{querry}')
                 match querry:
-                    case {'type':Consts.INSERT, 'sql':sql_txt,'params':sql_params}:
+                    case {'type':DbNames.INSERT, 'sql':sql_txt,'params':sql_params}:
                         logger.info (f'write to bd here:{sql_txt=}, {sql_params=} ')
                         # self.db_interface.execSQL(req.get('questType'),req.get('sql'),req.get('params'))
-                    case {'type':Consts.DBC, 'querry_func':querry_func,'params':querry_params}:
+                    case {'type':DbNames.DBC, 'querry_func':querry_func,'params':querry_params}:
                         logger.info(f'write to bd here:{querry_func}, {querry_params=} ')
-                        self.db_interface.exec_querry(querry_func, querry_params)
+                        self.db_interface.exec_querry_func(querry_func, querry_params)
                     case _: raise ValueError(f'invalid db_quie type:{querry}')
             await asyncio.sleep(defaults.DB_PERIOD)
 

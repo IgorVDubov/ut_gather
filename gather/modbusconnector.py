@@ -1,11 +1,11 @@
 import asyncio
 from abc import ABC, abstractmethod
-from pymodbus.client.tcp import AsyncModbusTcpClient as ModbusClient
+from pymodbus.client.tcp import AsyncModbusTcpClient 
 
 from bpacker import unpackCDABToFloat, unpackABCDToFloat
 
 from . import myexceptions
-from .consts import AI,DI,LIST
+from .consts import ValTypes 
 from .logger import logger
 
 class AsyncBaseModbusClient(ABC):
@@ -15,21 +15,19 @@ class AsyncBaseModbusClient(ABC):
 
     def start():...
     @property
-    def connected(self):...
+    def connected(self)->bool:...
     async def readInputRegisters_F4(address:int, regCount:int, unit:int):...
     async def readHoldingRegisters_F3(address:int, regCount:int, unit:int):...
     async def readDiscreteInputs_F2(address:int, regCount:int, unit:int):...
     async def writeCoil_F5(address:int, value:bool, unit:int):...
     async def writeWord_F6(address:int, value:int, unit:int):...
 
-
-
 class AsyncModbusClient(AsyncBaseModbusClient):
     def __init__(self,ip,port,loop=None):
         self.ip=ip
         self.port=port
         self.loop=loop
-        self.connection = ModbusClient(self.ip, self.port)
+        self.connection = AsyncModbusTcpClient(self.ip, self.port)
     
 
     async def start(self):
@@ -159,8 +157,8 @@ async def run():
     begin=time()
     r=100
     с=AsyncModbusClient('192.168.1.200',503)
-    client1= AsyncModbusConnection(с,0x0,1,2,AI,function=3)
-    client3= AsyncModbusConnection(с,0x0,2,1,DI,function=3)
+    client1= AsyncModbusConnection(с,0x0,1,2,ValTypes.AI,function=3)
+    client3= AsyncModbusConnection(с,0x0,2,1,ValTypes.DI,function=3)
     print (client1)
     await client1.start()
     print (client1.connected)

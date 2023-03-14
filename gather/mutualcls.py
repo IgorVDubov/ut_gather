@@ -14,7 +14,7 @@ class WSClient():
         self.client=ws_client
         self.subscriptions=[]
     
-    def write_message(self,data):
+    def write_message(self, data:Any)-> None:
         self.client.write_message(data)
 
 @dataclass

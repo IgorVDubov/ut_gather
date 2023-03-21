@@ -17,13 +17,13 @@ class DeviceProtocol(Singleton):
     MODBUS='ModBus'
 
 class DbNames(Singleton):
-    DBC='db_connector'
-    MYSQL='MySql'
-    SQLIGHT3='Sqlight3'
-    SELECT='select'
-    INSERT='insert'
-    UPDATE='update'
-    DELETE='delete'
+    DBC:str='db_connector'
+    MYSQL:str='MySql'
+    SQLIGHT3:str='Sqlight3'
+    SELECT:str='select'
+    INSERT:str='insert'
+    UPDATE:str='update'
+    DELETE:str='delete'
 
 
 

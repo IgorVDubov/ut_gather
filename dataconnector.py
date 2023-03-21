@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import config
-from gather.consts import  Consts # TODO move Consts.DATE_FORMAT_DB from Consts
+from gather.consts import  Formats # TODO move Consts.DATE_FORMAT_DB from Consts
 
 import dbqueries as dbc
 import settings
@@ -55,7 +55,7 @@ def set_operator_login(macine_id, operator_id):
     пишем логин оператора на macine_id
     '''
     print (f'operator {get_machine_operators(1).get(operator_id, None)} logit to {macine_id}')
-    project_globals.operators_db.append({'operator_id':operator_id ,'machine_id':macine_id , 'login':datetime.now().strftime(Consts.DATE_FORMAT_DB), 'logout':None})
+    project_globals.operators_db.append({'operator_id':operator_id ,'machine_id':macine_id , 'login':datetime.now().strftime(Formats.DATE_FORMAT_DB), 'logout':None})
 
 def set_operator_logout(macine_id,operator_id):
     '''

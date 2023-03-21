@@ -1,11 +1,12 @@
 from abc import abstractmethod
-from typing import Any, List, Type
+from typing import Any, List, Type, NewType
 import schedule
 
-from .. import consts 
+from ..consts  import ValTypes
 from .vars import Vars
 from .. import myexceptions
 
+Channel_attr = str
 
 def auto_str(cls):
     def __str__(self):
@@ -15,8 +16,6 @@ def auto_str(cls):
         )
     cls.__str__ = __str__
     return cls
-
-
 
 def get_deep_attr_value(obj:Type, attr:str):
     '''
@@ -236,9 +235,9 @@ class Node(Channel):
     def __call__(self):
         if self.source:
             if self.source.result:
-                if self.source.format==consts.DI:
+                if self.source.format==ValTypes.DI:
                     self.result_in=[self.source.result[i] for i in self.sourceIndexList]
-                elif self.source.format==consts.AI:
+                elif self.source.format==ValTypes.AI:
                     self.result_in=self.source.result[0]                                 # только 1-й элемент....  уточнить!!!!!!!!!!!!!!!!!!!!!!
             else:
                 print(f'No result in channel {self.id} source {self.source}')

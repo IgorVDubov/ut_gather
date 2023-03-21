@@ -1,20 +1,17 @@
 '''
 Connection and SQL script funcs to MySql DB
 '''
-import struct
 
-from numpy import iterable
-from dbinterface import DBInterface
 from typing import Callable, Sequence
-
 import mysql.connector
 from mysql.connector import CMySQLConnection, MySQLConnection
 from loguru import logger
 
+from .absconnection import DBConnectorInterface
 from ... import myexceptions
 
 
-class MySQLConnector(DBInterface):
+class MySQLConnector(DBConnectorInterface):
     '''
     connection to MySQL base on 
     https://dev.mysql.com/doc/connector-python/en/
@@ -38,7 +35,7 @@ class MySQLConnector(DBInterface):
             raise myexceptions.DBException (f'DB not connected with params: {self.params}')
     
     @staticmethod
-    def connection(func: Callable)->Callable:
+    def connector(func: Callable)->Callable:
         def makeConn(self,*args, **kwargs):
             ctx=None
             try:
@@ -53,27 +50,46 @@ class MySQLConnector(DBInterface):
                     ctx.close()
         return makeConn
 
-    @connection
-    def exec_querry_func(self,connection:MySQLConnection, func:Callable, params:dict={}):
-        return func(connection, params)
+    # @connector
+    # def exec_querry_func(self,connection:MySQLConnection, func:Callable, params:dict={}):
+    #     return func(connection, params)
     
-    @connection
-    def exec_fetch_sql_querry(self, connection:MySQLConnection, sql:str, params:dict={}):
+    @connector
+    def fetch_sql_querry(self, connection:MySQLConnection, sql:str, params:dict={}):
+        '''
+        get sql query with fetch result 
+         - select
+        '''
         cur = connection.cursor()
         cur.execute(sql,params)
         result = cur.fetchall()
         cur.close()
         return result 
     
-    @connection
-    def exec_commit_sql_querry(self, connection:MySQLConnection, sql:str, values:dict={}):
+    @connector
+    def commit_sql_querry(self, connection:MySQLConnection, sql:str, values:tuple={}):
+        '''
+        put sql query with fetch result 
+         - insert, update, delete 
+        '''
         cur = connection.cursor()
         cur.execute(sql,values)
         connection.commit()
         cur.close()
+    
+    @connector
+    def commit_many_sql_querry(self, connection:MySQLConnection, sql:str, values:list[tuple]=[]):
+        '''
+        put many sql query with fetch result and executemany method
+         - insert, update, delete 
+        '''
+        cur = connection.cursor()
+        cur.executemany(sql,values)
+        connection.commit()
+        cur.close()
 
 
-    @connection
+    @connector
     def insertManyToTable(self, connection:MySQLConnection, table:str, values_list:list[tuple]):    #TODO liast of tuples + executemany для нескольких записей
         '''
         insert querry of values list. 

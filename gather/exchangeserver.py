@@ -5,13 +5,18 @@
 '''
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from typing import Any, Dict
 
 from .channels import channelbase 
+from .channels import channels
+
+
 from .modbus_server import MBServer
 
 
 class ExchangeServer(ABC):
-    
+    server:Any
+    exchange_bindings:Any
     @abstractmethod
     def start():...
     @abstractmethod
@@ -56,7 +61,7 @@ class ModbusExchangeServer(ExchangeServer):
     def _mbGetIdValue(self,channel_attr):
         return self.server.getValue(channel_attr)
 
-def MBServerAdrMapInit(channelBase:channelbase.ChannelsBase,addrMaping:list)->tuple():
+def MBServerAdrMapInit(channelBase:channelbase.ChannelsBase,addrMaping:list)->Dict[channels.Channel_attr,Any]:
     '''
     привязка атрибутов каналов из addrMaping к атрибутам каналов из channelBase
     return

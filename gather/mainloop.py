@@ -2,14 +2,15 @@ import asyncio
 import json
 from datetime import datetime
 from time import time
-from typing import List, Optional
+from typing import Any, List, Optional
 
 
 from . import defaults
 from .channels import channels
 from .channels.channelbase import ChannelsBase
 from .consts import DbNames
-from .db_interface import DBInterface
+# from .interfaces.db import dbinterface
+from  gather.interfaces.db.dbinterface import DBCommandProcessor
 from .exchangeserver import ExchangeServer
 from .logger import logger
 from .mutualcls import SubscriptChannelArg
@@ -23,17 +24,19 @@ class MainLoop():
     channel_base:ChannelsBase
     exchange_server:ExchangeServer|None
     HTTP_server:CURR_HTTP_SERVER_TYPE|None
-    db_interface:DBInterface|None
+    # db_interface:dbinterface.DBInterface|None
+    db_processor:DBCommandProcessor|None
     db_quie:asyncio.Queue
-    subsriptions
-    ws_clients
+    subsriptions:Any
+    ws_clients:Any
     
     def __init__(self,  loop:asyncio.AbstractEventLoop, 
                         source_pool:SourcePool|None, 
                         channel_base:ChannelsBase,
                         exchange_server:ExchangeServer|None=None, 
                         HTTP_server:CURR_HTTP_SERVER_TYPE|None=None,
-                        db_interface:(DBInterface|None)=None):
+                        # db_interface:(dbinterface.DBInterface|None)=None):
+                        db_processor:DBCommandProcessor|None=None):
         '''
         source_pool: source pool
         channeBlase: channe Blase
@@ -70,7 +73,8 @@ class MainLoop():
             self.subsriptions=[]
             self.ws_clients=[]
         self.db_quie = channel_base.db_quie
-        self.db_interface=db_interface
+        # self.db_interface=db_interface
+        self.db_processor=db_processor
         self.set_tasks()
             
     
@@ -105,22 +109,26 @@ class MainLoop():
 
     def set_tasks(self):
             self.loop.create_task(self.calc_channel_base_loop(), name='reader')
-            if self.db_interface:
+            # if self.db_interface:
+            if self.db_processor:
                 self.loop.create_task(self.db_requester_loop(), name='db_requester_loop')
     
     async def db_requester_loop(self):
         while True:
             while not self.db_quie.empty():
-                querry=self.db_quie.get_nowait()
-                logger.info(f'db_quie:{querry}')
-                match querry:
-                    case {'type':DbNames.INSERT, 'sql':sql_txt,'params':sql_params}:
-                        logger.info (f'write to bd here:{sql_txt=}, {sql_params=} ')
-                        # self.db_interface.execSQL(req.get('questType'),req.get('sql'),req.get('params'))
-                    case {'type':DbNames.DBC, 'querry_func':querry_func,'params':querry_params}:
-                        logger.info(f'write to bd here:{querry_func}, {querry_params=} ')
-                        self.db_interface.exec_querry_func(querry_func, querry_params)
-                    case _: raise ValueError(f'invalid db_quie type:{querry}')
+                # querry=self.db_quie.get_nowait()
+                querry_command=self.db_quie.get_nowait()
+                logger.info(f'db_quie:{querry_command}')
+                # getattr(self.db_interface, querry['func'].__name__)(querry['sql'], querry['params'])
+                self.db_processor.call(querry_command)
+                # match querry:
+                #     case {'type':DbNames.INSERT, 'sql':sql_txt,'params':sql_params}:
+                #         logger.info (f'write to bd here:{sql_txt=}, {sql_params=} ')
+                #         # self.db_interface.execSQL(req.get('questType'),req.get('sql'),req.get('params'))
+                #     case {'type':DbNames.DBC, 'querry_func':querry_func,'params':querry_params}:
+                #         logger.info(f'write to bd here:{querry_func}, {querry_params=} ')
+                #         self.db_interface.exec_querry_func(querry_func, querry_params)
+                #     case _: raise ValueError(f'invalid db_quie type:{querry}')
             await asyncio.sleep(defaults.DB_PERIOD)
 
     async def calc_channel_base_loop(self): 

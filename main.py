@@ -21,7 +21,11 @@ except ModuleNotFoundError:
     project_init=None
 
 from gather.channels.channelbase import channel_base_init
-from gather.db_interface import DBInterface
+
+# from gather.interfaces.db import dbconnector
+from gather.interfaces.db.dbconnector import create_db_connector
+from  gather.interfaces.db.dbinterface import DBCommandProcessor
+
 from gather.exchangeserver import MBServerAdrMapInit, ModbusExchangeServer
 from gather.mainloop import MainLoop
 from gather.mutualcls import (ChannelSubscriptionsList, DataContainer, EList,
@@ -61,7 +65,10 @@ def init():
                                         subscrptions,
                                         ws_clients)
                             )
-    db_interface=DBInterface(config.DB_TYPE, config.DB_PARAMS)
+    # db_interface=DBInterface(config.DB_TYPE, config.DB_PARAMS)
+    # db_interface=dbconnector.create_db_connection(config.DB_TYPE, config.DB_PARAMS)
+    db_processor=DBCommandProcessor(create_db_connector(config.DB_TYPE, config.DB_PARAMS))
+    
     print ('Sources')
     print (source_pool)
     print ('Channels:')
@@ -77,7 +84,7 @@ def init():
                         channel_base, 
                         modbus_exchange_server, 
                         http_server, 
-                        db_interface)
+                        db_processor)
     logger.info ('init done')
     return main_loop
 print('',)

@@ -1,6 +1,6 @@
 import handlers
 from handlers import lib
-from gather.consts import AI, DI, INT, FLOAT,LIST
+from gather.consts import ValTypes 
 
 
 '''
@@ -18,8 +18,8 @@ period->float: период опроса в сек
 handler->callable: функция предобработки данных из channel_handlers 
 ''' 
 module_list=[ 
-            {'id':'cocos_di','type':'ModbusTcp','ip':'127.0.0.1','port':'511','unit':0x1, 'address':0, 'regCount':8, 'function':2, 'format':DI, 'period':1},
-            {'id':'cocos_ai','type':'ModbusTcp','ip':'127.0.0.1','port':'511','unit':0x1, 'address':0, 'regCount':1, 'function':4, 'format':DI, 'period':1},
+            {'id':'cocos_di','type':'ModbusTcp','ip':'127.0.0.1','port':'511','unit':0x1, 'address':0, 'regCount':8, 'function':2, 'format':ValTypes.DI, 'period':1},
+            {'id':'cocos_ai','type':'ModbusTcp','ip':'127.0.0.1','port':'511','unit':0x1, 'address':0, 'regCount':1, 'function':4, 'format':ValTypes.DI, 'period':1},
             ]    
   
 
@@ -162,9 +162,9 @@ mb_server_addr_map=[
         # 'di':[{'id':4001, 'attr':'result', 'addr':0, 'len':16}
         #     ],
         'hr':[
-            {'channel':'2020.args.status', 'addr':0, 'type':INT},
-            {'channel':'2021.args.counter', 'addr':1, 'type':FLOAT},
-            {'channel':'2021.result', 'addr':3, 'type':FLOAT},
+            {'channel':'2020.args.status', 'addr':0, 'type':ValTypes.INT},
+            {'channel':'2021.args.counter', 'addr':1, 'type':ValTypes.FLOAT},
+            {'channel':'2021.result', 'addr':3, 'type':ValTypes.FLOAT},
         ]
         }
     }]

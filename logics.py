@@ -8,7 +8,6 @@ from gather.channels.channelbase import ChannelsBase
 import config
 from gather.channels.channels import Channel
 import colors
-from gather.consts import Consts
 
 import settings
 import dbqueries as db_queries
@@ -76,7 +75,8 @@ def jsdb_put_state(state_rec):
 def db_put_state(db_quie, state_rec):
     print (f'db_put_state {state_rec}')
     if state_rec.get('length')>0:
-        db_quie.put({'type':Consts.DBC, 'querry_func':db_queries.insert_state, 'params':state_rec})
+        db_queries.insert_state(db_quie,state_rec)
+        # db_quie.put({'type':Consts.DBC, 'querry_func':db_queries.insert_state, 'params':state_rec})
 
 def db_get_all_states(id):
     # return [rec for rec in project_globals.states_db if (rec and rec.get('id')==id)]
@@ -238,6 +238,7 @@ def current_idle_store(machine_id, prj_id, db_quie):
 
         print(f'{colors.CYELLOWBG}db_quie:{store_dict} {colors.CEND}')
         jsdb_put_idle(store_dict) #локально для демо!!! убрать
-        db_quie.put({'type':Consts.DBC, 'querry_func':db_queries.insert_idle, 'params':store_dict})
+        db_queries.insert_idle(db_quie, store_dict)
+        # db_quie.put({'type':Consts.DBC, 'querry_func':db_queries.insert_idle, 'params':store_dict})
         ... # store to DB here
 

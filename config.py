@@ -1,6 +1,6 @@
 import os.path
 
-from gather.consts import Consts
+from gather import consts 
 
 DEMO_DB=True
 
@@ -30,7 +30,7 @@ MBServerParams_E={'host':'127.0.0.1','port':5022}
 параметры эмулятора Модбас сервера 
 host:str, port:itn  An optional (interface, port) to bind to.
 '''
-DB_TYPE=Consts.MYSQL        #тип используемой СУБД (доступные в dbclassfactory)
+DB_TYPE=consts.DbNames.MYSQL        #тип используемой СУБД (доступные в dbclassfactory)
 MySQLServerParams={
     'host': '127.0.0.1',
     'database': 'utrack_db',

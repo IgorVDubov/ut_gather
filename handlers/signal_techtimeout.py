@@ -1,6 +1,6 @@
 from datetime import datetime
 
-import logics
+import dbqueries
 
 def signal_techtimeout(vars):
     '''
@@ -39,7 +39,7 @@ def signal_techtimeout(vars):
     #           Запись счетчика
     if vars.write_counter:
         vars.write_counter=False
-        logics.db_put_state(vars.db_quie,
+        dbqueries.db_put_state(vars.db_quie,
                                 {   'id':vars.channel_id, 
                                     'project_id':vars.project_id, 
                                     'time':time_now,
@@ -182,12 +182,19 @@ def signal_techtimeout(vars):
         db_write_flag=False
         vars.write_init=False                    #сбрасываем флаг инициализации записи если был 1
         if vars.saved_length>10 or vars.saved_length<90000 : 
-            logics.db_put_state(vars.db_quie,
-                                {   'id':vars.channel_id, 
+            dbqueries.insert_state(vars.db_quie,
+                                 {  'id':vars.channel_id, 
                                     'project_id':vars.project_id, 
                                     'time':vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
                                     'status':vars.saved_status,
                                     'length':int(round(vars.saved_length))
                                     })
+            # dbqueries.db_put_state(vars.db_quie,
+            #                     {   'id':vars.channel_id, 
+            #                         'project_id':vars.project_id, 
+            #                         'time':vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
+            #                         'status':vars.saved_status,
+            #                         'length':int(round(vars.saved_length))
+            #                         })
             print(f'Put ti dbquire id={vars.channel_id}, time={vars.saved_time.strftime("%Y:%m:%d %H:%M:%S")}, status={vars.saved_status}, length={int(vars.saved_length)}')
             

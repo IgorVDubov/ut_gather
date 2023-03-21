@@ -28,7 +28,11 @@ import bpacker
 
 from .channels.channelbase import ChannelsBase
 from .myexceptions import ConfigException, ModbusExchangeServerException
-from .consts import FLOAT, INT, LIST, BYTE
+from .consts import ValTypes
+FLOAT=ValTypes.FLOAT
+INT=ValTypes.INT
+LIST=ValTypes.LIST
+BYTE=ValTypes.BYTE
 
 #from pymodbus.transaction import ModbusRtuFramer, ModbusBinaryFramer
 # --------------------------------------------------------------------------- #

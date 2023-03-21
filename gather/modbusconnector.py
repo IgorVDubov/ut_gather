@@ -65,11 +65,11 @@ class AsyncModbusConnection(AsyncModbusClient):
         self.address=address
         self.regCount=count
         self.unit=unit
-        if format==AI:
+        if format==ValTypes.AI:
             self.format=self.AI
-        elif format==DI:
+        elif format==ValTypes.DI:
             self.format=self.DI
-        elif format==LIST:
+        elif format==ValTypes.LIST:
             self.format=self.LIST
         self.client=client
         self.function=function

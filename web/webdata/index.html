@@ -440,9 +440,9 @@
 
     var currentState=Object()
       currentState.state=initState.state;
-      currentState.stateTime = (initState.begin_time!='None')?initState.begin_time:undefined;
-      currentState.cause = (initState.cause_id!='None')?initState.cause_id:undefined;
-      currentState.causeTime = (initState.cause_time!='None')?initState.cause_time:undefined;
+      currentState.stateTime = (initState.begin_time!=null)?initState.begin_time:undefined;
+      currentState.cause = (initState.cause_id!=null)?initState.cause_id:undefined;
+      currentState.causeTime = (initState.cause_time!=null)?initState.cause_time:undefined;
       currentState.pred
     var progressBar
 
@@ -830,7 +830,7 @@
     
     currentState = new Proxy(currentState, {
       set(target, property, value){
-        if (value=='None'){
+        if (value==null){
           value==undefined;
         } 
         target[property]=value;

@@ -1,3 +1,6 @@
+import collections
+
+
 def bits_to_word(vars):
     '''
     bits to 2 byte 
@@ -10,7 +13,6 @@ def bits_to_word(vars):
         result+=bit*2**i
     vars.result=result
 
-import collections
 def middle(vars):
     '''
     бегущее среднее из MAX_VALUES значений

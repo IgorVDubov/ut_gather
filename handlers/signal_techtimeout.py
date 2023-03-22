@@ -36,10 +36,13 @@ def signal_techtimeout(vars):
     time_now=datetime.now()
     db_write_flag=False
     dost_change_flag = False
+    NA_status = False
+    result_in_error=False
+    
     #           Запись счетчика
     if vars.write_counter:
         vars.write_counter=False
-        dbqueries.db_put_state(vars.db_quie,
+        dbqueries.insert_state(vars.db_quie,
                                 {   'id':vars.channel_id, 
                                     'project_id':vars.project_id, 
                                     'time':time_now,
@@ -50,32 +53,37 @@ def signal_techtimeout(vars):
         vars.counter_reset=True #сбрасываем счетчик в контроллере
         return
     
-    #           если нет источника
-    if vars.result_in==None:       #########!!!!!!!!!!!!
-        vars.result_in=0
+    #           если нет источника или входящий результат пустой массив
+    if (vars.result_in is None) or len(vars.result_in)==0:       
+        result_in_error=True
+        
     #          вычисление достоверности ждем таймаут, потом выставляется NA_status
-    if vars.dost==False:
+    if vars.dost==False or result_in_error:
         vars.not_dost_counter+=1
     else:
         vars.not_dost_counter=0
         NA_status=False
-    if vars.not_dost_counter>vars.dost_timeout:
+    if vars.not_dost_counter > vars.dost_timeout:
         NA_status=True
         vars.d_length=vars.dost_Timeout+1
     if vars.NA_status_before!=NA_status :
         dost_change_flag = True
+        vars.NA_status_before = NA_status   #запоминаем NA_status 
     else:
        dost_change_flag = False
 
     #           определяем текущий статус
-    vars.NA_status_before = NA_status   #запоминаем NA_status 
-    # result_bits=[1 if b=='1' else 0 for b in reversed(bin(vars.result_in)[2:].zfill(2))]
-    if len(vars.result_in):
-        signal1=vars.result_in[0]     # TODO вынести наверх тк привязка к конкретным позициям в массиве результата
-        signal2=vars.result_in[1]            
+    if not result_in_error:         
+        signal1=vars.result_in[0]                               # type: ignore   первый бит                  
+        signal2=vars.result_in[1]                               # type: ignore   второй бит    
     else:
-        signal1=0
-        signal2=0
+        if not NA_status:                           # если ждем NA_status берем сигналы из предыдущих
+            signal1=1 if vars.status!=0 else 0        
+            signal2=1 if vars.status==3 else 0
+        else:
+            signal1=0        
+            signal2=0
+        
     OFF_status = not signal1
     WORK_status = signal2
     status = (not NA_status) * ( OFF_status + (not OFF_status)*(2+WORK_status) )
@@ -84,8 +92,11 @@ def signal_techtimeout(vars):
     #         первоначальная инициализация
     if vars.init:
         vars.init=False
+        if result_in_error and not NA_status:    
+            vars.saved_status = 0
+        else:
+            vars.saved_status = status
         vars.currentStateTime=time_now
-        vars.saved_status = status
         vars.saved_time = time_now
         vars.saved_length=0
         vars.buffer_status = status
@@ -94,9 +105,6 @@ def signal_techtimeout(vars):
         vars.double_write=False
         vars.was_write_init=False
         vars.status_bit1, vars.status_bit2 = (1 if b=='1' else 0 for b in reversed(bin(status)[2:].zfill(2)))
-        # NA_status=False
-        # vars.lengthDB=0
-        # vars.timeDB=time_now
 
     if status != vars.buffer_status or vars.write_init or dost_change_flag:  #если меняется интервал или принудительная инициализации записи
         print(f'{vars.channel_id}:{status=}')
@@ -108,7 +116,7 @@ def signal_techtimeout(vars):
             vars.write_init	=False
             vars.was_write_init=True					        
             if vars.buffered:
-                double_write=True															
+                vars.double_write=True															
                 vars.buffered=False
                 db_write_flag=True
             else:
@@ -116,7 +124,7 @@ def signal_techtimeout(vars):
                 vars.saved_time=vars.buffer_time
                 vars.saved_length=(time_now-vars.buffer_time).total_seconds()
                 db_write_flag=True
-                double_write=False
+                vars.double_write=False
                 vars.buffer_status=status
                 vars.buffer_time=time_now
         else:   # Если смена статуса
@@ -189,12 +197,5 @@ def signal_techtimeout(vars):
                                     'status':vars.saved_status,
                                     'length':int(round(vars.saved_length))
                                     })
-            # dbqueries.db_put_state(vars.db_quie,
-            #                     {   'id':vars.channel_id, 
-            #                         'project_id':vars.project_id, 
-            #                         'time':vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
-            #                         'status':vars.saved_status,
-            #                         'length':int(round(vars.saved_length))
-            #                         })
-            print(f'Put ti dbquire id={vars.channel_id}, time={vars.saved_time.strftime("%Y:%m:%d %H:%M:%S")}, status={vars.saved_status}, length={int(vars.saved_length)}')
+            # print(f'Put to dbquire id={vars.channel_id}, time={vars.saved_time.strftime("%Y:%m:%d %H:%M:%S")}, status={vars.saved_status}, length={int(vars.saved_length)}')
             

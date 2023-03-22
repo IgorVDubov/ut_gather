@@ -1,18 +1,31 @@
-import importlib
 import json
-# import pickle
-from dataclasses import dataclass, asdict
-from datetime import datetime
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta
+from typing import TypedDict
 
-from gather.channels.channelbase import ChannelsBase
-import config
-from gather.channels.channels import Channel
 import colors
 
-import settings
+import config
+import dataconnector as dc
 import dbqueries as db_queries
 import projectglobals as project_globals
-import dataconnector as dc
+import settings
+from gather.channels.channelbase import ChannelsBase
+from gather.channels.channels import Channel
+from gather.gtyping import DBQuie
+
+
+@dataclass
+class Idle():
+    state:int                         # текущее состояние
+    tech_idle:int                     # техпростой, сек
+    begin_time:datetime  | None               # начало текущего состояния
+    operator:int | None               # оператор id
+    cause:int | None                  # id причина простоя
+    cause_time:datetime | None        # начало действия причины (может быть не равно begin_time если сменв причины без смены состояния)
+    cause_set_time:datetime | None    # время установки причины
+    length:int | None                 # длительность нахождения в текущей причине простоя
+
 
 def convert_none_2_str(func):
     '''
@@ -35,9 +48,16 @@ def convert_none_2_str(func):
     return wrapper
 
 def get_server_time():
+    '''
+    returns server time for put to clients
+    '''
     return datetime.now().strftime(settings.TIME_FORMAT)
 
 def load_machines_idle():
+    '''
+    loads idle from buffer file 
+    '''
+    #TODO временное решение или вынести в БД или вынести файл в настройки
     with open('idles.txt', 'r') as file:
         if saved:=file.read():
             if data:=json.loads(saved):
@@ -53,6 +73,10 @@ def load_machines_idle():
                 project_globals.machines_idle.update(rec)
 
 def save_machines_idle():
+    '''
+    saves idle from buffer file 
+    '''
+    #TODO временное решение или вынести в БД или вынести файл в настройки
     with open('idles.txt', 'w') as file:
         for machine_id, idle in project_globals.machines_idle.items():
             if idle:
@@ -67,22 +91,21 @@ def save_machines_idle():
                             'length':idle.length})
                 file.write(json.dumps(data))
 
-def jsdb_put_state(state_rec):
-    if state_rec.get('length')>0:
+def jsdb_put_state(state_rec:dict):
+    if state_rec.get('length') and state_rec['length']>0:
         project_globals.states_db.append(state_rec)
         project_globals.states_buffer.append(state_rec)
 
-def db_put_state(db_quie, state_rec):
+def db_put_state(db_quie: DBQuie, state_rec:dict):
     print (f'db_put_state {state_rec}')
-    if state_rec.get('length')>0:
+    if state_rec.get('length') and state_rec['length']>0:
         db_queries.insert_state(db_quie,state_rec)
         # db_quie.put({'type':Consts.DBC, 'querry_func':db_queries.insert_state, 'params':state_rec})
 
-def db_get_all_states(id):
-    # return [rec for rec in project_globals.states_db if (rec and rec.get('id')==id)]
+def db_get_all_states(id:int):
     return [rec for rec in project_globals.states_db ]
 
-def jsdb_put_idle(rec):
+def jsdb_put_idle(rec: dict):
 
     print (f'jsdb_put_idle {rec}')
     project_globals.idles_db.append(rec)
@@ -93,12 +116,12 @@ def jsdb_put_idle(rec):
     project_globals.idles_buffer.append(rec)
     ...
 
-def db_get_all_idles(id):
+def db_get_all_idles(id: int):
     # return [rec for rec in project_globals.idles_db if (rec and rec.get('id')==id)]
     return [rec for rec in project_globals.idles_db ]
 
 
-def addCause(new_cause):        #добавляем новую причину в список возможных
+def addCause(new_cause: str):        #добавляем новую причину в список возможных
     settings.IDLE_CAUSES.update({max(settings.IDLE_CAUSES.keys())+1:new_cause})
 
 def check_allowed_machine(machine_id:int, remote_ip:list[str])-> bool:
@@ -116,10 +139,10 @@ def check_allowed_machine(machine_id:int, remote_ip:list[str])-> bool:
     else:
         raise ValueError(f'machine {machine_id} not allowed for client from ip {remote_ip}')
 
-def get_machine_operators(machine_id):
+def get_machine_operators(machine_id: int):
     return dc.get_machine_operators(machine_id)
 
-def get_operator_data(operator_id):
+def get_operator_data(operator_id: int):
     return dc.get_operator_data(operator_id)
 
 def get_machine_from_user(user:str)->int:
@@ -128,23 +151,39 @@ def get_machine_from_user(user:str)->int:
     # except ValueError:
     #     raise ValueError
 
-def get_causeid_arg(machine_ch:Channel)->int:                                                   #TODO убрать
+def get_causeid_arg(machine_ch:Channel)->str:                                #TODO убрать
+    '''
+    значение causeid_arg обработчика канала machine_ch для передаси в web клиента для подписки
+    '''
     return str(machine_ch.get_arg(settings.IDLE_HANDLERID_ARG)) + '.' + settings.CAUSEID_ARG
 
-def get_machine_causes(id:int)->dict[int:str]:               # TODO refact with DB
-    return settings.IDLE_CAUSES  #пока так, отделяем зарезервированные причины (id < 0 ) от доступных
-
-def get_causes()->dict[int:str]:               # TODO refact with DB
+def get_machine_causes(id:int)->dict[int,str]:               # TODO refact with DB
+    '''
+    causes of current machine id
+    '''
     return settings.IDLE_CAUSES  
 
-@convert_none_2_str
-def get_channel_arg(channel_base:ChannelsBase, machine_id:int, arg:str):
+def get_causes()->dict[int,str]:               # TODO refact with DB
+    '''
+    return all avaluable causes 
+    '''
+    return settings.IDLE_CAUSES  
+
+# @convert_none_2_str
+def get_channel_arg(channel_base:ChannelsBase, machine_id:int, arg:str)->int|str|None:
     result= channel_base.get(machine_id).get_arg(arg)
     return result
 
-
-@convert_none_2_str
-def get_current_state(channel_base, machine_id:int)->dict['machine':id, 'state':int, 'begin_time':str, 'couse_id':int]:
+class CurrentStateProtocol(TypedDict):
+    machine:int
+    state:int|None
+    begin_time:str|None #formatted to YYYY-MM-DDTHH:mm:ss
+    cause_id:int|None
+    cause_time:str|None #formatted to YYYY-MM-DDTHH:mm:ss
+    cause_set_time:str|None #formatted to YYYY-MM-DDTHH:mm:ss
+    
+# @convert_none_2_str
+def get_current_state(channel_base: ChannelsBase, machine_id:int)->CurrentStateProtocol:
     channel=channel_base.get(machine_id)
     if idle:=project_globals.machines_idle.get(machine_id):
         saved_state=idle.state
@@ -167,66 +206,70 @@ def get_current_state(channel_base, machine_id:int)->dict['machine':id, 'state':
         cause_time=saved_current_cause_time
         cause_set_time=saved_current_cause_set_time
     else:
-        begin_time=channel.get_arg(settings.STATE_TIME_ARG).strftime(settings.TIME_FORMAT)
-        cause_id=str(None)
-        cause_time=str(None)
-        cause_set_time=str(None)
+        begin_time=channel.get_arg(settings.STATE_TIME_ARG)
+        if begin_time is not None:
+            begin_time=begin_time.strftime(settings.TIME_FORMAT)
+        cause_id=None
+        cause_time=None
+        cause_set_time=None
+    result: CurrentStateProtocol= {'machine':machine_id, 'state':state, 'begin_time':begin_time, 
+                                   'cause_id':cause_id, 'cause_time':cause_time, 'cause_set_time':cause_set_time}
+    return result
 
-    return {'machine':machine_id, 'state':state, 'begin_time':begin_time, 'cause_id':cause_id, 'cause_time':cause_time, 'cause_set_time':cause_set_time}
 
 
-@dataclass
-class Idle():
-    state:int                         # текущее состояние
-    tech_idle:int                     # техпростой, сек
-    begin_time:datetime               # начало текущего состояния
-    operator:int                      # оператор id
-    cause:int                         # id причина простоя
-    cause_time:datetime               # начало действия причины (может быть не равно begin_time если сменв причины без смены состояния)
-    cause_set_time:datetime           # время установки причины
-    length:int                        # длительность нахождения в текущей причине простоя
-
-def current_idle_get(machine_id):
+def current_idle_get(machine_id: int):
     return project_globals.machines_idle.get(machine_id)
 
-def current_idle_set(machine_id, state, tech_idle_length, operator=None, cause=None, cause_time=None, cause_set_time=None):
+def current_idle_set(machine_id: int, 
+                    state: int, 
+                    tech_idle_length: int, 
+                    operator: int|None=None, 
+                    cause: int|None=None, 
+                    cause_time: datetime|None=None, 
+                    cause_set_time:datetime|None=None):
     print(f'set idle to {machine_id} with state {state}')
     begin_time=datetime.now() 
-    project_globals.machines_idle.update({machine_id:Idle(state, tech_idle_length, begin_time, operator, cause, cause_time, cause_set_time, None)})
+    project_globals.machines_idle.update({machine_id:Idle(state, 
+                                                          tech_idle_length, begin_time, 
+                                                          operator, 
+                                                          cause, cause_time, 
+                                                          cause_set_time, 
+                                                          None)})
     save_machines_idle()
 
-def current_idle_add_cause(machine_id, operator_id, cause_id, cause_set_time, prj_id, db_quie):
+def current_idle_add_cause(machine_id:int, operator_id:int, cause_id: int, cause_set_time: datetime, prj_id: int, db_quie: DBQuie):
     
     if current_idle:=project_globals.machines_idle.get(machine_id):
-        project_globals.machines_idle.get(machine_id).operator=operator_id
+        project_globals.machines_idle[machine_id].operator=operator_id
         if current_idle.cause is not None: 
             print(f'change cause idle to {machine_id} from {current_idle.cause} to {cause_id}')
             if current_idle.cause!=0:   #если причина была сброшена через causeid=0 время причины оставляем от момента сброса
                 current_idle_store(machine_id, prj_id, db_quie)
-                project_globals.machines_idle.get(machine_id).cause_time = datetime.now() 
+                project_globals.machines_idle[machine_id].cause_time = datetime.now() 
             elif current_idle.cause==settings.TECH_IDLE_ID:
                 current_idle_store(machine_id, prj_id, db_quie)
                 if (datetime.now()-current_idle.cause_time).seconds > current_idle.tech_idle:
-                    project_globals.machines_idle.get(machine_id).cause_time = current_idle.cause_time + datetime.timedelta(0,current_idle.tech_idle)
+                    project_globals.machines_idle[machine_id].cause_time = current_idle.cause_time + timedelta(0,current_idle.tech_idle)
         else:
-            project_globals.machines_idle.get(machine_id).cause_time=current_idle.begin_time
+            project_globals.machines_idle[machine_id].cause_time=current_idle.begin_time
 
         print(f'add cause idle to {machine_id} cause:{cause_id}')
-        project_globals.machines_idle.get(machine_id).cause=cause_id
-        project_globals.machines_idle.get(machine_id).cause_set_time=cause_set_time
+        project_globals.machines_idle[machine_id].cause=cause_id
+        project_globals.machines_idle[machine_id].cause_set_time=cause_set_time
         save_machines_idle()
     else:
         print(project_globals.machines_idle)
         raise KeyError(f'no machine {machine_id} in project_globals.machines_idle')
 
-def current_idle_reset(machine_id):
+def current_idle_reset(machine_id: int):
     print(f'reset idle {machine_id} ')
     project_globals.machines_idle.update({machine_id:None})
     save_machines_idle()
 
-def current_idle_store(machine_id, prj_id, db_quie):
+def current_idle_store(machine_id: int, prj_id: int, db_quie: DBQuie):
     if  idle:=project_globals.machines_idle.get(machine_id):
-        project_globals.machines_idle.get(machine_id).length=int(round((datetime.now()-idle.cause_time).total_seconds()))
+        project_globals.machines_idle[machine_id].length=int(round((datetime.now()-idle.cause_time).total_seconds()))
         print(f'{colors.CGREENBG}Store machime {machine_id} Idle to DB: {settings.STATES[idle.state]}, cause: {settings.IDLE_CAUSES.get(idle.cause,0)}, length {idle.length} {colors.CEND}')
         print(idle)
         store_dict={'id':machine_id}
@@ -234,8 +277,8 @@ def current_idle_store(machine_id, prj_id, db_quie):
         store_dict.update(asdict(idle))
         for key,val in store_dict.items():
             if isinstance(store_dict[key],datetime):
-                store_dict.update({key:val.strftime('%Y-%m-%d %H:%M:%S')})
-
+                store_dict.update({key:val.strftime('%Y-%m-%d %H:%M:%S')})  # type: ignore
+                
         print(f'{colors.CYELLOWBG}db_quie:{store_dict} {colors.CEND}')
         jsdb_put_idle(store_dict) #локально для демо!!! убрать
         db_queries.insert_idle(db_quie, store_dict)

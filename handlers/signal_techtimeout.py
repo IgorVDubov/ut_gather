@@ -104,12 +104,12 @@ def signal_techtimeout(vars):
         vars.buffered=False
         vars.double_write=False
         vars.was_write_init=False
-        vars.status_bit1, vars.status_bit2 = (1 if b=='1' else 0 for b in reversed(bin(status)[2:].zfill(2)))
+        vars.status_ch_b1, vars.status_ch_b2 = tuple(1 if b=='1' else 0 for b in reversed(bin(status)[2:].zfill(2)))
 
     if status != vars.buffer_status or vars.write_init or dost_change_flag:  #если меняется интервал или принудительная инициализации записи
-        print(f'{vars.channel_id}:{status=}')
     	#выставляем биты состояния статуса для доступа по модбас для внешних клиентов (совместимость с UTrack SCADA)
-        vars.status_bit1, vars.status_bit2 = (1 if b=='1' else 0 for b in reversed(bin(status)[2:].zfill(2)))
+        vars.status_ch_b1, vars.status_ch_b2 = tuple(1 if b=='1' else 0 for b in reversed(bin(status)[2:].zfill(2)))
+        print(f'{vars.channel_id}:{status=}, {vars.status_ch_b1=}, {vars.status_ch_b2=}')
 
         if vars.write_init or NA_status or vars.double_write:	
             #если сюда попали тк форсированная запись или статус NA

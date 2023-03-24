@@ -3,6 +3,7 @@ from datetime import datetime
 import logics
 import settings
 
+
 def idle(vars):
     '''
         idle serving programm (обработка простоев)
@@ -26,7 +27,7 @@ def idle(vars):
     
     if vars.restore_idle_flag:      # записываем текущий простой и начинаем новый с текущего времени (например в конце смены)
         vars.restore_idle_flag=False
-        logics.current_idle_store(vars.machine_id)
+        logics.current_idle_store(vars.machine_id, vars.project_id, vars.db_quie)
         logics.current_idle_add_cause(vars.machine_id, vars.operator_id, idle.cause_id, datetime.now(), vars.project_id, vars.db_quie)
     
     if vars.reset_idle_flag:        # принудительный сброс текущего простоя без записи

@@ -21,17 +21,15 @@ except ModuleNotFoundError:
     project_init=None
 
 from gather.channels.channelbase import channel_base_init
-
+from gather.exchangeserver import MBServerAdrMapInit, ModbusExchangeServer
 # from gather.interfaces.db import dbconnector
 from gather.interfaces.db.dbconnector import create_db_connector
-from  gather.interfaces.db.dbinterface import DBCommandProcessor
-
-from gather.exchangeserver import MBServerAdrMapInit, ModbusExchangeServer
+from gather.interfaces.db.dbinterface import DBCommandProcessor
 from gather.mainloop import MainLoop
 from gather.mutualcls import (ChannelSubscriptionsList, DataContainer, EList,
                               SubscriptChannelArg)
 from gather.sourcepool import SourcePool
-from gather.webserver.webconnector import setHTTPServer, CURR_HTTP_SERVER_TYPE
+from gather.webserver.webconnector import CURR_HTTP_SERVER_TYPE, setHTTPServer
 
 
 def init():

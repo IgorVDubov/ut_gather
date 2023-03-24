@@ -2,6 +2,14 @@ from pymodbus.interfaces import Singleton
 
 class Formats(Singleton):
     DATE_FORMAT_DB='%Y-%d-%m %H:%M:%S'
+    AB=1
+    BA=2
+    ABCD=3
+    CDAB=4
+    BADC=5
+    DCBA=6    
+
+    
 
 class ValTypes(Singleton):
     AI=0

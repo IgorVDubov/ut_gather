@@ -124,7 +124,7 @@ def db_get_all_idles(id: int):
 def addCause(new_cause: str):        #добавляем новую причину в список возможных
     settings.IDLE_CAUSES.update({max(settings.IDLE_CAUSES.keys())+1:new_cause})
 
-def check_allowed_machine(machine_id:int, remote_ip:list[str])-> bool:
+def check_allowed_machine(machine_id:int, remote_ip:str)-> bool:
     '''
      проверяет доступность канала станка для подключения клиента с указанного в разрешенных ip
      если список ip  пустой - разрешаются все

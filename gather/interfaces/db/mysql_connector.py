@@ -25,7 +25,8 @@ class MySQLConnector(DBConnectorInterface):
         '''
         self.params=dbParams
         
-    def connect(self)->(CMySQLConnection | MySQLConnection | None ):
+    def connect(self)->(MySQLConnection | None ):
+    # def connect(self)->(CMySQLConnection | MySQLConnection | None ):
         try:
             cnx = mysql.connector.connect(**self.params)
             if cnx.is_connected():

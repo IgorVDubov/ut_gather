@@ -152,7 +152,7 @@ class AsyncModbusConnection():
             if self.bytes_order == Formats.BA:
                 result = [bpacker.convert_int_AB2BA(result_list[0])]
             else:
-                result: list[int] = result_list[0]
+                result: list[int] = result_list
         elif self.format in (ValTypes.FLOAT, ValTypes.FLOAT):
             if self.bytes_order is None:
                 self.bytes_order = DEFAULT_4_BYTES_ORDER

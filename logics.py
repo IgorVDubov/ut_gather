@@ -3,7 +3,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from typing import TypedDict
 
-import colors
+from gather.mylib import colors
 
 import config
 import dataconnector as dc

@@ -24,7 +24,7 @@ from pymodbus.register_write_message import (
     WriteSingleRegisterRequest,
     WriteSingleRegisterResponse,
 )
-import bpacker
+from .mylib import bpacker
 
 from .channels.channelbase import ChannelsBase
 from .myexceptions import ConfigException, ModbusExchangeServerException

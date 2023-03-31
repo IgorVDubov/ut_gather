@@ -3,7 +3,7 @@
 import asyncio
 import sys
 
-import logger as loggerLib
+from gather.mylib import logger as loggerLib
 from loguru import logger
 
 if sys.platform == 'win32':                 # Если запускаем из под win   

@@ -1,7 +1,7 @@
 from time import time
 import asyncio
 
-from loguru import logger
+from ..mylib import logger
 
 from . import channels
 

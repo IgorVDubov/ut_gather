@@ -12,7 +12,8 @@ from .consts import DbNames
 # from .interfaces.db import dbinterface
 from  gather.interfaces.db.dbinterface import DBCommandProcessor
 from .exchangeserver import ExchangeServer
-from .logger import logger
+from .mylib  import logger
+
 from .mutualcls import SubscriptChannelArg
 from .sourcepool import SourcePool
 from .webserver.webconnector import CURR_HTTP_SERVER_TYPE

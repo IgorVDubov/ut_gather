@@ -4,7 +4,7 @@ from time import time
 
 from .consts import SourceTypes
 from . import modbusconnector
-from .logger import logger
+from .mylib import logger
 from . import myexceptions
 
 class BaseSource(ABC):

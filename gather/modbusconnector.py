@@ -3,12 +3,12 @@ from abc import ABC, abstractmethod
 from pymodbus.client.tcp import AsyncModbusTcpClient, ModbusClientProtocol 
 from typing import Callable
 
-import bpacker 
+from .mylib import bpacker 
 
 from . import myexceptions
 from .consts import ValTypes, Formats, ModbusFuncs
 from .defaults import  FLOAT_ACCURACY, DEFAULT_4_BYTES_ORDER, DEFAULT_2_BYTES_ORDER
-from .logger import logger
+from .mylib import logger
 
 class AsyncBaseModbusClient(ABC):
     ip: str = None

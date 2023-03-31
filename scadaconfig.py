@@ -32,8 +32,8 @@ module_list = [
                  'period': 1},
                 {'id': 'cocos_ai',
                  'type': SourceTypes.MODBUS_TCP, 'ip': '127.0.0.1', 'port': '511',
-                 'unit': 0x1, 'address': 0, 'count': 2,
-                 'function':  ModbusFuncs.READ_IR, 'format': ValTypes.FLOAT, 'order': Formats.CDAB,
+                 'unit': 0x1, 'address': 0, 'count': 1,
+                 'function':  ModbusFuncs.READ_IR, 'format': ValTypes.INT16, 'order': Formats.AB,
                  'period': 1},
                 ]    
   

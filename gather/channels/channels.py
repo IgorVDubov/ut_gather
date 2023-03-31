@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import Callable
 from typing import Any, List, Type, NewType
 import schedule
 
@@ -93,15 +94,14 @@ def parse_attr_params(attrParam):
     elif not(attrParam) or isinstance(attrParam, (int, float, bool, type(None))):   #аттрибут - число или None
         return None, attrParam
 
-class Channel(object):
-    channelType='channel'
-    id=None
-    result=None
-    dost=None
-    error=None
-    handler:callable=None
-    args:Vars=None
-    type=None
+class Channel:
+    channelType = 'channel'
+    id = None
+    result = None
+    dost = True
+    error = None
+    handler: callable = None
+    args: Vars = None
 
     def __init__(self, id, args:Vars=None) -> None:
         self.id=id
@@ -163,7 +163,7 @@ class Channel(object):
                     'id':self.id,
                     'args':self.args.toDict()}
         else:
-            return { 'type':self.type, 'id':self.id}
+            return {'id':self.id}
 
 class DBQuie(Channel):
     def __init__(self, id, dbQuie, args: Vars = None) -> None:
@@ -195,18 +195,27 @@ class DBConnector(Channel):
     def execute(self):
         self.handler(self.args)
 
+
 class Node(Channel):
-    channelType='node'
-    def __init__(self,id:int,moduleId:str, type:str, sourceIndexList:List, handler:callable=None, args:Vars=None) -> None:
-        self.id=id
-        self.sourceId=moduleId
-        self.type=type
-        self.sourceIndexList=sourceIndexList
-        self.source=None
-        self.result_in=None
-        self.result=None # данные после обработки handler
-        self.handler=handler
-        self.args=args
+    channelType ='node'
+    id: int
+    moduleId: str
+    sourceIndexList: list
+    handler: Callable | None
+    args: Vars | None
+    
+    def __init__(self, id: int, moduleId: str,
+                 sourceIndexList: list,
+                 handler: Callable | None = None,
+                 args: Vars | None = None) -> None:
+        self.id = id
+        self.sourceId = moduleId
+        self.sourceIndexList = sourceIndexList
+        self.source = None
+        self.result_in = None
+        self.result = None      # данные после обработки handler
+        self.handler = handler
+        self.args = args
 
     def __str__(self):
         return f"Node: id:{self.id}, source:{self.source.id if self.source  else None}, source Id:{id(self.source)}, handler:{self.handler}, {self.result=},"  + (f'\n  args:\n{self.args}' if self.args else '')
@@ -216,7 +225,6 @@ class Node(Channel):
                 'channelType':self.channelType,
                 'id':self.id,
                 'sourceId':self.sourceId,
-                'type':self.type,
                 'sourceIndexList':self.sourceIndexList,
                 'source':self.source,
                 'result_in':self.result_in,
@@ -228,30 +236,42 @@ class Node(Channel):
         return result
     
     def toDict(self):
-        return {    'channelType':self.channelType,
-                    'id':self.id,
-                    'result':self.result}
+        return {    'channelType': self.channelType,
+                    'id': self.id,
+                    'result': self.result}
 
     def __call__(self):
         if self.source:
             if self.source.result:
-                if self.source.format==ValTypes.DI:
-                    self.result_in=[self.source.result[i] for i in self.sourceIndexList]
-                elif self.source.format==ValTypes.AI:
-                    self.result_in=self.source.result[0]                                 # только 1-й элемент....  уточнить!!!!!!!!!!!!!!!!!!!!!!
+                self.dost = True
+                if self.source.format == ValTypes.BIT:  # !!!!!   dвынести преобразования в source или mobdus reader
+                    self.result_in = bool(self.source.result[0])
+                elif self.source.format == ValTypes.DI:
+                    if self.sourceIndexList is not None or len(self.sourceIndexList) > 0:
+                        self.result_in = [self.source.result[i] for i in self.sourceIndexList]
+                    else:
+                        self.result_in = self.source.result
+                elif self.source.format == ValTypes.LIST:
+                    self.result_in = self.source.result
+                elif self.source.format in (ValTypes.FLOAT, ValTypes.INT16, ValTypes.INT32):
+                    self.result_in = self.source.result[0]         
+                else:
+                    self.result_in = self.source.result
             else:
+                self.dost = False
                 print(f'No result in channel {self.id} source {self.source}')
+        else:
+            print(f'No source {self.source} reading channel {self.id} ')
+            self.dost = False
             # print(f'result in channel {self.id} = {self.source.result}')
         if self.handler:
-            self.handler(self.args)    
+            self.handler(self.args)
         else:
-            self.result=self.result_in
-        # else:
-            # print (f'no source init for node id:{self.id}')
-            # return
+            self.result = self.result_in
+    
     
 class Programm(Channel):
-    channelType='programm'
+    channelType = 'programm'
     def __init__(self,id:int,handler:callable, args:Vars=None) -> None:
         self.id=id
         self.args=args

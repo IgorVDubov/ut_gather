@@ -65,7 +65,7 @@ def signal_techtimeout(vars):
         NA_status=False
     if vars.not_dost_counter > vars.dost_timeout:
         NA_status=True
-        vars.d_length=vars.dost_Timeout+1
+        vars.d_length=vars.dost_timeout+1
     if vars.NA_status_before!=NA_status :
         dost_change_flag = True
         vars.NA_status_before = NA_status   #запоминаем NA_status 
@@ -78,8 +78,8 @@ def signal_techtimeout(vars):
         signal2=vars.result_in[1]                               # type: ignore   второй бит    
     else:
         if not NA_status:                           # если ждем NA_status берем сигналы из предыдущих
-            signal1=1 if vars.status!=0 else 0        
-            signal2=1 if vars.status==3 else 0
+            signal1 = 1 if vars.status != 0 else 0   
+            signal2 = 1 if vars.status == 3 else 0
         else:
             signal1=0        
             signal2=0

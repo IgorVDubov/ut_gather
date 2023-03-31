@@ -27,6 +27,8 @@ HTTP API
 MB Server
     - addr map hr/ir/di сейчас толлько по типу а не по положению в map HR:{...},IR:{...}
 
+convert_int_AB2BA реализовать
+
 
 + разделить globals - переместить параметры каналов в scadaparams.py
 

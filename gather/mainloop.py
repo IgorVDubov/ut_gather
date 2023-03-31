@@ -19,24 +19,24 @@ from .webserver.webconnector import CURR_HTTP_SERVER_TYPE
 
 
 class MainLoop():
-    loop:asyncio.AbstractEventLoop
-    source_pool:SourcePool|None
-    channel_base:ChannelsBase
-    exchange_server:ExchangeServer|None
-    HTTP_server:CURR_HTTP_SERVER_TYPE|None
+    loop: asyncio.AbstractEventLoop
+    source_pool: SourcePool | None
+    channel_base: ChannelsBase
+    exchange_server: ExchangeServer | None
+    HTTP_server: CURR_HTTP_SERVER_TYPE | None
     # db_interface:dbinterface.DBInterface|None
-    db_processor:DBCommandProcessor|None
-    db_quie:asyncio.Queue
-    subsriptions:Any
-    ws_clients:Any
+    db_processor: DBCommandProcessor | None
+    db_quie: asyncio.Queue
+    subsriptions: Any
+    ws_clients: Any
     
-    def __init__(self,  loop:asyncio.AbstractEventLoop, 
-                        source_pool:SourcePool|None, 
-                        channel_base:ChannelsBase,
-                        exchange_server:ExchangeServer|None=None, 
-                        HTTP_server:CURR_HTTP_SERVER_TYPE|None=None,
-                        # db_interface:(dbinterface.DBInterface|None)=None):
-                        db_processor:DBCommandProcessor|None=None):
+    def __init__(self,  loop: asyncio.AbstractEventLoop,
+                 source_pool: SourcePool | None,
+                 channel_base: ChannelsBase,
+                 exchange_server: ExchangeServer | None = None,
+                 HTTP_server: CURR_HTTP_SERVER_TYPE | None = None,
+                 # db_interface:(dbinterface.DBInterface|None)=None):
+                 db_processor: DBCommandProcessor | None = None):
         '''
         source_pool: source pool
         channeBlase: channe Blase
@@ -45,16 +45,17 @@ class MainLoop():
         db_interface: database interface
         '''
         self.loop = loop
-        self.cancelEvent=asyncio.Event()
-        self.source_pool=source_pool
-        self.channel_base=channel_base
-        if self.source_pool:       
-            self.source_pool.readAllOneTime()                    #TODO  проверить как работает если нет доступа к source
-                                                                #       или заполнять Null чтобы первый раз сработало по изменению
-            for node in (channel for channel in self.channel_base.channels if isinstance(channel,channels.Node)):
+        self.cancelEvent = asyncio.Event()
+        self.source_pool = source_pool
+        self.channel_base = channel_base
+        if self.source_pool:
+            self.source_pool.readAllOneTime()                    # TODO проверить как работает если нет доступа к source
+                                                                 #      или заполнять Null чтобы первый раз сработало по изменению
+            for node in (channel for channel in self.channel_base.channels
+                         if isinstance(channel, channels.Node)):
                 for source in self.source_pool.sources:
-                    if source.id==node.sourceId:
-                        node.source=source
+                    if source.id == node.sourceId:
+                        node.source = source
                         break
         # for node in (channel for channel in self.channel_base.channels if isinstance(channel,classes.Node)):
         #     if node.source==None and node.sourceId!=None :          # если указан sourceId, но не привязан source выключаем из базы каналов
@@ -62,25 +63,25 @@ class MainLoop():
         #         self.channel_base.channels.pop(self.channel_base.channels.index(node))
 
         #self.cancelEvent=asyncio.Event()
-        self.exchange_server=exchange_server
+        self.exchange_server = exchange_server
         if exchange_server is not None:
             self.exchange_bindings = exchange_server.exchange_bindings if exchange_server.exchange_bindings is not None else {}
-        self.HTTP_server= HTTP_server
+        self.HTTP_server = HTTP_server
         if HTTP_server is not None:
-            self.subsriptions=HTTP_server.request_callback.data.subsriptions #TODO для tornado проверить или переместить для других
-            self.ws_clients=HTTP_server.request_callback.data.ws_clients  #TODO для tornado проверить или переместить для других
+            self.subsriptions = HTTP_server.request_callback.data.subsriptions  # TODO для tornado проверить или переместить для других
+            self.ws_clients = HTTP_server.request_callback.data.ws_clients      # TODO для tornado проверить или переместить для других
         else:
-            self.subsriptions=[]
-            self.ws_clients=[]
+            self.subsriptions = []
+            self.ws_clients = []
         self.db_quie = channel_base.db_quie
         # self.db_interface=db_interface
-        self.db_processor=db_processor
+        self.db_processor = db_processor
         self.set_tasks()
             
     
     def start(self):   
         if self.exchange_server:
-            self.exchange_server.start() 
+            self.exchange_server.start()
         self.start_loop()
 
     def start_loop(self):
@@ -131,17 +132,17 @@ class MainLoop():
                 #     case _: raise ValueError(f'invalid db_quie type:{querry}')
             await asyncio.sleep(defaults.DB_PERIOD)
 
-    async def calc_channel_base_loop(self): 
+    async def calc_channel_base_loop(self):
         # print ('start results Reader')
         # try:
             while True:
-                change_subscriptions=[]
-                before=time()
+                change_subscriptions = []
+                before = time()
                 for channel in self.channel_base.channels:                          #calc Channels
                     channel()
-                    if subscr_channel:=next((s_channel for s_channel in self.subsriptions if s_channel.channel == channel), None):
-                        arg_value=subscr_channel.channel.get_arg(subscr_channel.argument)
-                        if arg_value!=subscr_channel.prev_value:
+                    if subscr_channel := next((s_channel for s_channel in self.subsriptions if s_channel.channel == channel), None):
+                        arg_value = subscr_channel.channel.get_arg(subscr_channel.argument)
+                        if arg_value != subscr_channel.prev_value:
                             change_subscriptions.append(subscr_channel)
                             subscr_channel.prev_value = arg_value
 

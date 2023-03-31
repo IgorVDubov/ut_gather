@@ -17,15 +17,15 @@ users=[
     ]
 
 
-DB_PERIOD=3    #период опроса очереди сообщений для БД DBQuie
-CHANNELBASE_CALC_PERIOD=1 #период пересчета каналов в секундах (float) 
+DB_PERIOD = 3                       # период опроса очереди сообщений для БД DBQuie
+CHANNELBASE_CALC_PERIOD = 1         # период пересчета каналов в секундах (float) 
 
-modbus_server_params={'host':'127.0.0.1','port':5021}
+modbus_server_params = {'host': '127.0.0.1', 'port': 5021}
 '''
 параметры Модбас сервера для внешнего доступа
 host, port->str: An optional (interface, port) to bind to.
 '''
-MBServerParams_E={'host':'127.0.0.1','port':5022}
+MBServerParams_E={'host': '127.0.0.1', 'port': 5022}
 '''
 параметры эмулятора Модбас сервера 
 host:str, port:itn  An optional (interface, port) to bind to.

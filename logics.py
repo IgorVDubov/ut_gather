@@ -207,7 +207,7 @@ def get_current_state(channel_base: ChannelsBase, machine_id:int)->CurrentStateP
         cause_set_time=saved_current_cause_set_time
     else:
         begin_time=channel.get_arg(settings.STATE_TIME_ARG)
-        if begin_time is not None:
+        if begin_time is not None and begin_time != 0:
             begin_time=begin_time.strftime(settings.TIME_FORMAT)
         cause_id=None
         cause_time=None

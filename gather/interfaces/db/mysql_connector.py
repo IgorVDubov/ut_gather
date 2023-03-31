@@ -4,7 +4,8 @@ Connection and SQL script funcs to MySql DB
 
 from typing import Callable, Sequence
 import mysql.connector
-from mysql.connector import CMySQLConnection, MySQLConnection
+# from mysql.connector import CMySQLConnection, MySQLConnection
+from mysql.connector import MySQLConnection
 from loguru import logger
 
 from .absconnection import DBConnectorInterface

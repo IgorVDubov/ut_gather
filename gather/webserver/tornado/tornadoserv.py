@@ -4,7 +4,7 @@ import tornado.ioloop
 import tornado.options
 import tornado.web
 import os.path  
-from logger import logger
+from loguru import logger
 import json
 from typing import *
 

@@ -27,5 +27,5 @@ def day_scheduler(vars):
         print('!!!!!!!!!!!!******************!!!!!!!!!!!!!!!!!!')
         subprocess.run("./cmd/echo.cmd", shell=True)
         # vars.write_init_5001=True
-        vars.write_init_2020=True
-        vars.write_counter_2020=True
+        vars.write_init_2120=True
+        vars.write_counter_2120=True

@@ -75,7 +75,7 @@ channels_config={
          'args':{
                 'result': 'self.result',
                 'result_in': 'self.result_in',
-                # 'in_dost':'2021.dost',
+                # 'in_dost':'2121.dost',
                 'in_dost': True,
                 'counter': 0,
                 'reset_counter': False,
@@ -89,12 +89,12 @@ channels_config={
          'handler':handlers.signal_techtimeout,
          'args':{
                 'channel_id': 2120,
-                'result_in': '2020.result_in',
-                'dost': '2020.dost',
-                'counter': '2021.args.counter',
-                'counter_reset': '2021.args.reset_counter',
-                'write_init': '13002.args.write_init_2020',
-                'write_counter': '13002.args.write_counter_2020',
+                'result_in': '2120.result_in',
+                'dost': '2120.dost',
+                'counter': '2121.args.counter',
+                'counter_reset': '2121.args.reset_counter',
+                'write_init': '13002.args.write_init_2120',
+                'write_counter': '13002.args.write_counter_2120',
                 'status_ch_b1': '11001.args.b7',
                 'status_ch_b2': '11001.args.b8',
                 'dost_timeout': '1001.args.dostTimeout',
@@ -140,10 +140,10 @@ channels_config={
         
         {'id': 17002, 'handler': handlers.idle,
                 'args': {
-                    'state': '2020.args.status',
-                    'machine_id': 2020,
-                    'operator_id': '2020.args.operator_id',
-                    'techidle_lenhth': '2020.args.tech_timeout',
+                    'state': '2120.args.status',
+                    'machine_id': 2120,
+                    'operator_id': '2120.args.operator_id',
+                    'techidle_lenhth': '2120.args.tech_timeout',
                     'cause_id': None,
                     'current_cause': None,
                     'current_cause_time': None,
@@ -162,8 +162,8 @@ channels_config={
         {'id': 13002, 'time_list': ['07:00', '15:30', '23:30', '19:00'],
             'handler':handlers.scheduler.write_init,
             'args': {
-                'write_init_2020': False,
-                'write_counter_2020': False,
+                'write_init_2120': False,
+                'write_counter_2120': False,
             }},
     ],
 }
@@ -191,8 +191,8 @@ mb_server_addr_map = [
         #     ],
         'hr': [
             {'channel': '2120.args.status', 'addr': 0, 'type': ValTypes.INT, 'order': Formats.AB},
-            {'channel': '2121.args.counter', 'addr': 328, 'type': ValTypes.FLOAT, 'order': Formats.ABCD},   # 2021 Counter
-            {'channel': '2121.result', 'addr': 330, 'type': ValTypes.FLOAT, 'order': Formats.ABCD},         # 2021 Result скорость выхода
+            {'channel': '2121.args.counter', 'addr': 328, 'type': ValTypes.FLOAT, 'order': Formats.ABCD},   # 2121 Counter
+            {'channel': '2121.result', 'addr': 330, 'type': ValTypes.FLOAT, 'order': Formats.ABCD},         # 2121 Result скорость выхода
             {'channel': '11001.result', 'addr': 292, 'type': ValTypes.INT32, 'order': Formats.CDAB},            # LR StatusByte
         ]
         }

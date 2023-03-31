@@ -7,8 +7,8 @@ from .mylib import bpacker
 
 from . import myexceptions
 from .consts import ValTypes, Formats, ModbusFuncs
-from .defaults import  FLOAT_ACCURACY, DEFAULT_4_BYTES_ORDER, DEFAULT_2_BYTES_ORDER
-from .mylib import logger
+from .defaults import FLOAT_ACCURACY, DEFAULT_4_BYTES_ORDER, DEFAULT_2_BYTES_ORDER
+from loguru import logger
 
 class AsyncBaseModbusClient(ABC):
     ip: str = None

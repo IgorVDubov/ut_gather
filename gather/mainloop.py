@@ -12,7 +12,7 @@ from .consts import DbNames
 # from .interfaces.db import dbinterface
 from  gather.interfaces.db.dbinterface import DBCommandProcessor
 from .exchangeserver import ExchangeServer
-from .mylib  import logger
+from loguru import logger
 
 from .mutualcls import SubscriptChannelArg
 from .sourcepool import SourcePool

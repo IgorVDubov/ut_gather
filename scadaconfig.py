@@ -68,8 +68,8 @@ channels_config={
             }
         },
     ],
-    'nodes':[  
-        {'id': 2021,        # AI
+    'nodes': [  
+        {'id': 2121,        # AI
          'moduleId': 'cocos_ai', 'sourceIndexList': [0],
          'handler':handlers.ai2021,
          'args':{
@@ -84,11 +84,11 @@ channels_config={
                 'min_ai': 10,
                 }
         },
-        {'id': 2020,
+        {'id': 2120,
          'moduleId': 'cocos_di', 'sourceIndexList': [0, 1],
          'handler':handlers.signal_techtimeout,
          'args':{
-                'channel_id': 2020,
+                'channel_id': 2120,
                 'result_in': '2020.result_in',
                 'dost': '2020.dost',
                 'counter': '2021.args.counter',
@@ -116,7 +116,7 @@ channels_config={
                 'cause': '17002.args.current_cause',
                 'cause_time': '17002.args.current_cause_time',
                 'idle_handler_id': 17002,
-                'project_id': 7,
+                'project_id': 3,
                 'operator_id': None,
                 }},
     ],
@@ -190,9 +190,9 @@ mb_server_addr_map = [
         # 'di':[{'id':4001, 'attr':'result', 'addr':0, 'len':16}
         #     ],
         'hr': [
-            {'channel': '2020.args.status', 'addr': 0, 'type': ValTypes.INT, 'order': Formats.AB},
-            {'channel': '2021.args.counter', 'addr': 328, 'type': ValTypes.FLOAT, 'order': Formats.ABCD},   # 2021 Counter
-            {'channel': '2021.result', 'addr': 330, 'type': ValTypes.FLOAT, 'order': Formats.ABCD},         # 2021 Result скорость выхода
+            {'channel': '2120.args.status', 'addr': 0, 'type': ValTypes.INT, 'order': Formats.AB},
+            {'channel': '2121.args.counter', 'addr': 328, 'type': ValTypes.FLOAT, 'order': Formats.ABCD},   # 2021 Counter
+            {'channel': '2121.result', 'addr': 330, 'type': ValTypes.FLOAT, 'order': Formats.ABCD},         # 2021 Result скорость выхода
             {'channel': '11001.result', 'addr': 292, 'type': ValTypes.INT32, 'order': Formats.CDAB},            # LR StatusByte
         ]
         }

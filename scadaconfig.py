@@ -155,8 +155,8 @@ channels_config={
                 }},
         
     ],
-    'dbquie':[
-        {'id':12001},
+    'dbquie': [
+        {'id': 12001},
     ],
     'scheduler': [
         {'id': 13002, 'time_list': ['07:00', '15:30', '23:30', '19:00'],

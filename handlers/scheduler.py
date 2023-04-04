@@ -6,8 +6,8 @@ TASK1_TIME='22:30'
 
 def write_init(vars):
     print ('!!!!!!!!!!in sheduller Task1!!!!!!')
-    vars.write_init_2020=True
-    vars.write_counter_2020=True
+    vars.write_init_2120=True
+    vars.write_counter_2120=True
 
 
 

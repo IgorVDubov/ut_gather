@@ -9,7 +9,7 @@ import tornado.web
 import tornado.websocket
 from loguru import logger
 
-import config
+from models import User
 from config import CHECK_AUTORIZATION
 from gather.mutualcls import WSClient, SubscriptChannelArg
 from gather.channels.channels import parse_attr_params
@@ -27,12 +27,12 @@ WebSocketHandler = tornado.websocket.WebSocketHandler
 
 
 class BaseHandler(RequestHandlerClass):
-    user = None
+    user: User
 
     def get_current_user(self):
         return self.get_secure_cookie("user")
 
-    def getUser(self):
+    def getUser(self)->User | None:
         '''
         return dict with user data if user belongs to project with projectId or None
         '''
@@ -287,6 +287,13 @@ class MEmulRequestHtmlHandler(BaseHandler):
             self.application.data.channelBase.get(request.get('id')).set_arg(
                 request.get('arg'), request.get('value'))
             self.write(json.dumps(200, default=str))
+        elif request.get('type') == 'set_ch_arg':
+            logger.log(
+                'MESSAGE', f'client {self.user.get("login")} do set_ch_arg from ip:{self.request.remote_ip}.')
+            id, arg = parse_attr_params(request.get('arg'))
+            
+            self.application.data.channelBase.get(id).set_arg(arg, [request.get('value')])
+            self.write(json.dumps(200, default=str))
 
     def get(self):
         self.set_header("Content-Type", "application/x-www-form-urlencoded")
@@ -378,7 +385,8 @@ class ReportsHtmlHandler(BaseHandler):
     @BaseHandler.check_user(CHECK_AUTORIZATION)
     def get(self):
         try:
-            machine_id = logics.get_machine_from_user(self.user.get('login'))
+            machine_id_list = logics.get_machine_from_user(self.user.get('id'))
+            machine_id = machine_id_list[0]                                                           #!!!!!!!!  dev
         except ValueError:
             logger.log(
                 'ERROR', f'wrong machine id in clients prequest args: {self.request.arguments}  from ip:{self.request.remote_ip}.')
@@ -390,6 +398,7 @@ class ReportsHtmlHandler(BaseHandler):
                     idle_couses=json.dumps(
                         logics.get_machine_causes(machine_id), default=str),
                     state_channel=str(machine_id)+'.'+settings.STATE_ARG,
+                    state_input=str(machine_id)+'.result_in',
                     causeid_arg=str(machine_id)+'.'+settings.CAUSEID_ARG,
                     project=3,
                     version=0.1,

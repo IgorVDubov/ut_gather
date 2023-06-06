@@ -88,7 +88,7 @@ channels_config={
                         'NA_status_before':False,
                         'was_write_init':False,
                         'dbQuie':'12001',
-                        'сause':'17002.args.cause_id',
+                        'cause':'17002.args.cause_id',
                         'idle_handler_id':17002,
                         'project_id':7,
                         }},

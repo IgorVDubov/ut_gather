@@ -2,149 +2,155 @@ from datetime import datetime
 
 import logics
 
+
 def r_level_timeout(vars):
     '''
     result_in level with timeout
     VARS:
         'channel':'4209',
-        'dbChannel':None,
-        'writeInit':'10001.args.writeInit',
+        'write_init':'10001.args.write_init',
         'statusCh':'100.result_in',
-        'grStand':1,
-        'grWork':8,
-        'dostTimeout':5,
-        'minLength':20,
+        'gr_stand':1,
+        'gr_work':8,
+        'dost_timeout':5,
+        'tech_timeout':20,
     ******************************************************        
     channel - привязка к каналу
     VAR_INPUT value_in :  IN вход канала
-                * vars.statusDB : USINT END_VAR # статус отрезка для записи БД
-                * vars.lengthDB : UDINT END_VAR # длительность отрезка для записи БД
-                * vars.timeDB : DATE_AND_TIME END_VAR # начало отрезка для записи БД
+                * vars.status_db : USINT END_VAR # статус отрезка для записи БД
+                * vars.length_db : UDINT END_VAR # длительность отрезка для записи БД
+                * vars.time_db : DATE_AND_TIME END_VAR # начало отрезка для записи БД
                 * db_write : BOOL END_VAR # флаг записи в БД -> DB_in
-	VAR_OUTPUT status : текущее состояние (для отображения)
-	VAR_INPUT dost :  достоверность аргумент от канала к источнику
-	VAR_INOUT write_init : BOOL := 1 END_VAR # принудительная инициализация записи
-	VAR_OUTPUT status_bit1 : BOOL END_VAR # бит1 статуса для HEX канала состояния
-	VAR_OUTPUT status_bit2 : BOOL END_VAR # бит2 статуса для HEX состояния
+        VAR_OUTPUT status : текущее состояние (для отображения)
+        VAR_INPUT dost :  достоверность аргумент от канала к источнику
+        VAR_INOUT write_init : BOOL := 1 END_VAR # принудительная инициализация записи
+        VAR_OUTPUT status_bit1 : BOOL END_VAR # бит1 статуса для HEX канала состояния
+        VAR_OUTPUT status_bit2 : BOOL END_VAR # бит2 статуса для HEX состояния
     gr_stand  граница простоя
     gr_work : REAL END_VAR # граница рботы
-	dost_Timeout : USINT := 5 END_VAR # таймаут НЕдостоверности канала
-	min_length : USINT := 20 END_VAR # минимальный отрезок времени сменеы статуса (если меньше, статус не меняется)
-	VAR timeNow : DATE_AND_TIME END_VAR
+        dost_Timeout : USINT := 5 END_VAR # таймаут НЕдостоверности канала
+        min_length : USINT := 20 END_VAR # минимальный отрезок времени сменеы статуса (если меньше, статус не меняется)
+        VAR timeNow : DATE_AND_TIME END_VAR
     '''
-    timeNow=datetime.now()
+    timeNow = datetime.now()
     dostChangeFlag = False
     dbWriteFlag = False
+    result_in_error = False
     if vars.init:
-        vars.init=False
-        vars.currentStateTime=timeNow
-        vars.NAStatus=False
-        vars.lengthDB=0
-        vars.timeDB=timeNow
-
-    if vars.channel.result_in==None:       #########!!!!!!!!!!!!
-        vars.channel.result_in=0
-    # print (vars.channel.result_in)
-    if vars.channel.dost==False:
-        vars.notDost+=1
+        vars.init = False
+        vars.current_state_time = timeNow
+        vars.na_status = False
+        vars.length_db = 0
+        vars.time_db = timeNow
+        #           если нет источника или входящий результат пустой массив
+    if (vars.result_in is None) or len(vars.result_in) == 0:
+        result_in_error = True
+        
+    na_status = False
+    
+    if vars.dost == False or result_in_error:
+        vars.not_dost_counter += 1
     else:
-        vars.notDost=0
-        NA_status=False
-    if vars.notDost>vars.dostTimeout:
-        NA_status=True
-        vars.d_length=vars.dost_Timeout+1
-    if vars.NAStatusBefore!=vars.NAStatus :
+        vars.not_dost_counter = 0
+        
+    if vars.not_dost_counter > vars.dost_timeout:
+        na_status = True
+        vars.d_length = vars.dost_timeout + 1
+    if vars.na_status_before != na_status:
         dostChangeFlag = True
+        vars.na_status_before = na_status
     else:
-       dostChangeFlag = False
+        dostChangeFlag = False
 
-    vars.NAStatusBefore = vars.NAStatus
     # определяем текущий статус
-    if vars.channel.result_in < vars.grStand:  #откл
-        status=1
-        interval=1
-    elif vars.channel.result_in > vars.grStand and vars.channel.result_in<vars.grWork:    #простой
-        status=2
-        interval=2
-    elif vars.channel.result_in > vars.grWork: #работа
-        status=3
-        interval=3
+    interval = vars.current_interval
+    if not result_in_error:
+        result_in = vars.result_in[0]
+        if result_in < vars.gr_stand:  # откл
+            status = 1
+            interval = 1
+        elif result_in > vars.gr_stand and result_in < vars.gr_work:  # простой
+            status = 2
+            interval = 2
+        else:                   # работа
+            status = 3
+            interval = 3
+    else:
+        status = 0
+            
+    # если меняется интервал или принудительная инициализации записи
+    if interval != vars.current_interval or vars.write_init or dostChangeFlag:
 
+        if na_status:
+            status = 0  # NA
+        # print(f'{vars.channel_id}:{status=}')
+        # выставляем биты состояния статуса для доступа по модбас для внешних клиентов
+        # vars.statusCh=status
+        if status == 0:
+            vars.status_ch_b1 = 0
+            vars.status_ch_b2 = 0
+        elif status == 1:
+            vars.status_ch_b1 = 1
+            vars.status_ch_b2 = 0
+        elif status == 2:
+            vars.status_ch_b1 = 0
+            vars.status_ch_b2 = 1
+        elif status == 3:
+            vars.status_ch_b1 = 1
+            vars.status_ch_b2 = 1
 
-    if interval != vars.currentInterval or vars.writeInit or dostChangeFlag:  #если меняется интервал или принудительная инициализации записи
-	
-        if vars.NAStatus:
-            status = 0 #NA
-        # print(f'{vars.channel.id}:{status=}')
-    	#выставляем биты состояния статуса для доступа по модбас для внешних клиентов
-        #vars.statusCh=status
-        if status==0: 
-            vars.statusCh_b1=0 
-            vars.statusCh_b2=0
-        elif status==1: 
-            vars.statusCh_b1=1 
-            vars.statusCh_b2=0
-        elif status==2: 
-            vars.statusCh_b1=0 
-            vars.statusCh_b2=1
-        elif status==3: 
-            vars.statusCh_b1=1 
-            vars.statusCh_b2=1
-
-        if vars.writeInit or NA_status :							        #если форсированная запись или статус NA
-            vars.statusDB=vars.currentState								    #задаем отрезок для записи: текущий статус до смены
-            vars.timeDB=vars.currentStateTime							    #аналогично время
-            vars.lengthDB=(timeNow - vars.currentStateTime).total_seconds()	#и длительность
-            vars.currentState= status						        		#задаес текущий отрезок: статус
-            vars.currentStateTime = timeNow                                  #время
-            dbWriteFlag=True							
-            vars.buffered=False									    		# если отрезок был подвешен - сбрасываем флаг
+        if vars.write_init or na_status:  # если форсированная запись или статус NA
+            # задаем отрезок для записи: текущий статус до смены
+            vars.status_db = vars.current_state
+            vars.time_db = vars.current_state_time  # аналогично время
+            # и длительность
+            vars.length_db = (timeNow - vars.current_state_time).total_seconds()
+            vars.current_state = status  # задаес текущий отрезок: статус
+            vars.current_state_time = timeNow  # время
+            dbWriteFlag = True
+            vars.buffered = False									    		# если отрезок был подвешен - сбрасываем флаг
         else:
-            vars.buffered=True	#подвешиваем запись и ждем не изменится ли статус в течении таймаута (min_length): ожидание записи 
-            if (timeNow - vars.currentStateTime).total_seconds() <= vars.minLength : 		# если статус меняется до таймаута
-                #state_value не меняется
-                #state_time не меняется
-                vars.lengthDB=vars.lengthDB+(timeNow - vars.currentStateTime).total_seconds()           #увеличиваем длину подвешенного отрезка на длину текущего
-                if status==vars.statusDB :							                    #если  текущий статус стал такой же как у подвешеного отрезка		
-                    vars.currentState=vars.statusDB						                #подвешенный отрезок 
-                    vars.currentStateTime=vars.timeDB						            #становится текущим
-                    vars.buffered=False									                #снимаем отрезок с ожидания записи
-                else:												                    #если статус меняется			
-                    vars.currentState = status							                #обновляем статус и
-                    vars.currentStateTime = timeNow 					                #время текущего отрезка
-                    vars.buffered=True									                #и подвешиваем- ожидание записи
+            # подвешиваем запись и ждем не изменится ли статус в течении таймаута (min_length): ожидание записи
+            vars.buffered = True
+            # если статус меняется до таймаута
+            if (timeNow - vars.current_state_time).total_seconds() <= vars.tech_timeout:
+                # state_value не меняется
+                # state_time не меняется
+                # увеличиваем длину подвешенного отрезка на длину текущего
+                vars.length_db = vars.length_db + \
+                    (timeNow - vars.current_state_time).total_seconds()
+                if status == vars.status_db:  # если  текущий статус стал такой же как у подвешеного отрезка
+                    vars.current_state = vars.status_db  # подвешенный отрезок
+                    vars.current_state_time = vars.time_db  # становится текущим
+                    vars.buffered = False  # снимаем отрезок с ожидания записи
+                else:  # если статус меняется
+                    vars.current_state = status  # обновляем статус и
+                    vars.current_state_time = timeNow  # время текущего отрезка
+                    vars.buffered = True  # и подвешиваем- ожидание записи
             else:													                    # если статус меняется после таймаута
-                vars.statusDB=vars.currentState				        	                #задаем отрезок для записи (подвешенный): статус
-                vars.timeDB=vars.currentStateTime						                #время
-                vars.lengthDB=(timeNow - vars.currentStateTime).total_seconds()			#длительность
-                vars.currentState = status								                #задаем новй текущий отрезок: статус
-                vars.currentStateTime = timeNow 						                #начала отрезка
-            vars.currentInterval = interval							                    #в любом случае текущий интервал = интервал канала
-    if vars.buffered : 
-        if (timeNow-vars.currentStateTime).total_seconds()>=vars.minLength :            #если есть отрезок ожидающий записи - пишем его по прошествии min_length
-            dbWriteFlag=True
-            vars.buffered=False
-
-    if dbWriteFlag  :
-        dbWriteFlag=False
-        vars.writeInit=False                    #сбрасываем флаг инициализации записи если был 1
-        if vars.lengthDB>10 or vars.lengthDB<90000 : 
-            #vars.lengthDB=1                    #отмечаем первый отрезок формируемый при старте МРВ тк нет текущей даты
-            # vars.dbQuie.put({'type':Consts.INSERT,
-            # 'sql':'INSERT INTO track_2 VALUES (%s, %s, %s, %s)'
-            # ,'params': (vars.channel.id, vars.timeDB.strftime("%Y:%m:%d %H:%M:%S"), vars.statusDB, int(round(vars.lengthDB)))
-            # })
+                # задаем отрезок для записи (подвешенный): статус
+                vars.status_db = vars.current_state
+                vars.time_db = vars.current_state_time  # время
+                # длительность
+                vars.length_db = (
+                    timeNow - vars.current_state_time).total_seconds()
+                vars.current_state = status  # задаем новй текущий отрезок: статус
+                vars.current_state_time = timeNow  # начала отрезка
+            vars.current_interval = interval  # в любом случае текущий интервал = интервал канала
+    if vars.buffered:
+        # если есть отрезок ожидающий записи - пишем его по прошествии min_length
+        if (timeNow-vars.current_state_time).total_seconds() >= vars.tech_timeout:
+            dbWriteFlag = True
+            vars.buffered = False
+    vars.status = vars.current_state
+    if dbWriteFlag:
+        dbWriteFlag = False
+        vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
+        if vars.length_db > 10 or vars.length_db < 90000:
             logics.db_put_state(vars.db_quie,
-                                {   'id':vars.channel.id, 
-                                    'project_id':vars.project_id, 
-                                    'time':vars.timeDB.strftime("%Y-%m-%d %H:%M:%S"),
-                                    'status':vars.statusDB,
-                                    'length':int(round(vars.lengthDB))
-                                    })
-            
-            logics.jsdb_put_state({   'id':vars.channel.id, 
-                                    'time':vars.timeDB.strftime("%Y-%m-%dT%H:%M:%S"),
-                                    'status':vars.statusDB,
-                                    'length':int(round(vars.lengthDB))
-                                    })
-            
+                                {'id': vars.channel_id,
+                                    'project_id': vars.project_id,
+                                    'time': vars.time_db.strftime("%Y-%m-%d %H:%M:%S"),
+                                    'status': vars.status_db,
+                                    'length': int(round(vars.length_db))
+                                 })

@@ -108,8 +108,10 @@ def jsdb_put_state(state_rec: dict):
 def db_put_state(db_quie: DBQuie, state_rec: dict):
     print(f'db_put_state {state_rec}')
     if state_rec.get('length') and state_rec['length'] > 0:
-        db_queries.insert_state(db_quie, state_rec)
-        # db_quie.put({'type':Consts.DBC, 'querry_func':db_queries.insert_state, 'params':state_rec})
+        if state_rec.get('project_id') == 0:
+            jsdb_put_state(state_rec)
+        else:
+            db_queries.insert_state(db_quie, state_rec)
 
 
 def db_get_all_states(id: int):
@@ -164,9 +166,9 @@ def get_operator_data(operator_id: int):
     return dc.get_operator_data(operator_id)
 
 
-def get_machine_from_user(user: str) -> int:
+def get_machine_from_user(user_id: int) -> list[int]:
     # try:
-    return int(user[2:])
+    return config.user_machines[user_id]
     # except ValueError:
     #     raise ValueError
 
@@ -270,7 +272,13 @@ def current_idle_set(machine_id: int,
     save_machines_idle()
 
 
-def current_idle_add_cause(machine_id: int, operator_id: int, cause_id: int, cause_set_time: datetime, prj_id: int, db_quie: DBQuie):
+def current_idle_add_cause(machine_id: int,
+                           operator_id: int,
+                           cause_id: int,
+                           cause_set_time: datetime,
+                           prj_id: int,
+                           db_quie: DBQuie
+                           ):
 
     if current_idle := project_globals.machines_idle.get(machine_id):
         project_globals.machines_idle[machine_id].operator = operator_id
@@ -321,7 +329,7 @@ def current_idle_store(machine_id: int, prj_id: int, db_quie: DBQuie):
                     {key: val.strftime('%Y-%m-%d %H:%M:%S')})  # type: ignore
 
         print(f'{colors.CYELLOWBG}db_quie:{store_dict} {colors.CEND}')
-        jsdb_put_idle(store_dict)  # локально для демо!!! убрать
-        db_queries.insert_idle(db_quie, store_dict)
-        # db_quie.put({'type':Consts.DBC, 'querry_func':db_queries.insert_idle, 'params':store_dict})
-        ...  # store to DB here
+        if prj_id == 0:
+            jsdb_put_idle(store_dict)  # локально для демо!!!
+        else:
+            db_queries.insert_idle(db_quie, store_dict)

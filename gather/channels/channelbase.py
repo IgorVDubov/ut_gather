@@ -52,7 +52,7 @@ class ChannelsBase():
         '''
         ch_id, attr= channels.parse_attr_params(ch_arg_name)
         return self.get(ch_id)
-
+    
     def execute(self, id:int):
         channel=self.get(id)
         try:

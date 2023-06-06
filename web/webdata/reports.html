@@ -204,6 +204,41 @@
             border-radius: 3px;
           }
     </style>
+    <style> /* status change element*/
+        .status_div{
+            position: absolute;
+            left: 700px;
+            top: 40px;
+            width: 160px;
+            height: 40px;
+            background-color: rgb(141, 192, 111);
+            border-radius: 25px;
+            border: 2px solid black;
+            box-shadow: 3px 3px 2px 1px rgba(0, 0, 0, 0.2);
+        }
+        .butt_container{
+            display: flex;
+            align-items: center;
+            flex-direction: row;
+            justify-content: space-evenly;
+            flex-wrap: nowrap;
+        }
+        .round_button{
+            width: 43px;
+            height: 26px;
+            border-radius: 25px;
+            border: 2px solid black;
+        }
+        .color_grey{
+            background-color: grey;
+        }
+        .color_yellow{
+            background-color: rgba(255, 255, 0, 0.87);
+        }
+        .color_green{
+            background-color: rgb(4, 185, 4);
+        }
+    </style>
 </head>
 <body>
     <script src="/js/moment-with-locales.min.js" ></script> 
@@ -245,6 +280,11 @@
                 <canvas id="chartCanvasElem2" class="ChartCanvas" ></canvas>
             </div>
         </div>
+        <div class='status_div butt_container' id="statusSwitcer"> 
+            <div class='round_button color_grey' id="offBtn"></div>
+            <div class='round_button color_yellow' id="standBtn"></div>
+            <div class='round_button color_green' id="workBtn"></div>
+        </div>
     </main>
     <footer class='footer'>
         <span class ="pl1"> Статус: </span> </span>
@@ -257,15 +297,16 @@
     <div id="loader"></div>
 </body>
 <script>
+
     moment.locale('ru');
     {% autoescape None %}
     const MACHINE_ID={{ machine }}
     const WS_SERVER = '{{ wsserv }}';
     const IDLE_COUSES={{  idle_couses  }}
+
     const STATE_CHANNEL='{{state_channel}}'
     const CAUSEID_ARG='{{ causeid_arg }}'
-    // const CAUSEID_ARG='17001.args.current_cause'
-    // const CAUSE_TIME_ARG='17001.args.current_cause'
+    const STATE_INPUT_ARG='{{ state_input }}'
     const SUBSCRIBE_CHANNELS=[STATE_CHANNEL, CAUSEID_ARG]
     const STATUS_LIGHT_COLORS=['#e6e6e6','#b4b4b4','#fff134','#03e003']
      //{-1:'Технологический простой', 0:'Не подтверждена',,1:"Авария", 2:"Нет сырья", 3:"Нет задания", 4:"Плановый простой", 5:'Перерыв'}
@@ -307,6 +348,69 @@
 
     const wsStatus=document.getElementById("wsStatus")
     const wsIndicator=document.getElementById("wsLight")
+    const statusSwitcherElem=document.getElementById('statusSwitcer')
+    
+    var mousePosition;
+    var offset = [
+        statusSwitcherElem.offsetLeft,
+        statusSwitcherElem.offsetTop
+        ];
+    var isDown = false;
+    
+    async function channelSetArgRequest(chArg, argValue){
+        let response = await fetch('/merequest', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({type: 'set_ch_arg', arg: chArg, value: argValue})
+                            })
+        return await response.json()
+    }
+
+    document.getElementById('offBtn').addEventListener('click', function(e) {
+        channelSetArgRequest(STATE_INPUT_ARG, 0)}, true);
+    document.getElementById('standBtn').addEventListener('click', function(e) {
+        channelSetArgRequest(STATE_INPUT_ARG, 2)
+    }, true);
+    document.getElementById('workBtn').addEventListener('click', function(e) {
+        channelSetArgRequest(STATE_INPUT_ARG, 37)
+    }, true);
+
+    statusSwitcherElem.addEventListener('mousedown', function(e) {
+        isDown = true;
+        offset = [
+        statusSwitcherElem.offsetLeft - e.clientX,
+        statusSwitcherElem.offsetTop - e.clientY
+        ];
+    }, true);
+    
+    document.addEventListener("scroll", (event) => {
+        //if ((window.innerWidth < parseInt(statusSwitcherElem.style.left) + 40) || (window.innerHeight < parseInt(statusSwitcherElem.style.top) + 40)) 
+        {
+        statusSwitcherElem.style.top = (window.scrollY + offset[1]) + 'px';
+        statusSwitcherElem.style.left = (window.scrollX + offset[0]) + 'px';
+        }
+        console.log('on scroll',  window.scrollY, '  ->', statusSwitcherElem.style.top)
+    });
+
+    document.addEventListener('mouseup', function() {
+        isDown = false;
+        offset = [
+        statusSwitcherElem.offsetLeft,
+        statusSwitcherElem.offsetTop
+        ];
+    }, true);
+
+    document.addEventListener('mousemove', function(event) {
+        event.preventDefault();
+        if (isDown) {
+            mousePosition = {
+                x : event.clientX,
+                y : event.clientY
+            };
+            statusSwitcherElem.style.left = (mousePosition.x + offset[0]) + 'px';
+            statusSwitcherElem.style.top  = (mousePosition.y + offset[1]) + 'px';
+        }
+    }, true);
     
     function flashIndicator(indicator, flashColor,afterColor, pause){
       indicator.style.color=flashColor
@@ -319,6 +423,7 @@
       block.classList=classes;
       return block;
     }
+    
     class PerodicalCallback {
         constructor(callback, delay, start=true) {
           this.callback = callback;
@@ -346,6 +451,7 @@
         }
       }
     const UpdateDBTimer = new PerodicalCallback ("UpdateDBRequest()", 1000,false);
+    
     function wsConnect(WSServer){
       let ws=new WebSocket(WSServer);
       wsStatus.textContent='online'
@@ -375,6 +481,7 @@
           default:
             data=msg[0]
             if (data[STATE_CHANNEL]!=undefined){
+                updateSwitcherStatus(data[STATE_CHANNEL])
                 updateOnlineStatus(data[STATE_CHANNEL],data.time )
             }
             if (data[CAUSEID_ARG]!=undefined){
@@ -517,7 +624,10 @@
                 }
     });
     }
-
+    
+    function updateSwitcherStatus(statusId) {
+        statusSwitcherElem.style.backgroundColor=STATUS_LIGHT_COLORS[statusId]
+    }
     function updateOnlineStatus(id,time) {
         statusElem.innerText=STATES[id]
         statusElem.style.color=STATUS_LIGHT_COLORS[id]
@@ -561,6 +671,7 @@
         scrollToTableBottom(statesTableElem)
         scrollToTableBottom(idlesTableElem)
     }
+
     function updateIdles(data){
         console.log(data)
         idlesTableElem.append(makeIdleRow(data[0], IDLES_DB_HEADERS_WIDTH))
@@ -575,9 +686,11 @@
     function UpdateDBRequest() {
         wsSend(JSON.stringify({type:"update_data",id:MACHINE_ID}))
     }
+
     function scrollToTableBottom(table){
         table.scrollIntoView({block: "end", behavior: "smooth"})
     }
+
     function addRow(data, widthArr){
         let row= document.createElement('tr');
         row.classList.add('rows');
@@ -656,6 +769,7 @@
     function chartsUpdate(){
         let stateRec=new Object
         lastRec=statesDb[statesDb.length-1]
+
         if (lastRec==undefined) return
         stateRec.status=currentState
         bTime=moment(lastRec.time).add(lastRec['length'], 's')
@@ -670,6 +784,7 @@
         }
         let causeRec=new Object
         lastRec=causesDb[causesDb.length-1]
+        if (lastRec==undefined) return
         causeRec.cause=currentCause
         bTime=moment(lastRec.cause_time).add(lastRec['length'], 's')
         causeRec.cause_time=bTime.format('YYYY-MM-DDTHH:mm:ss')
@@ -679,11 +794,14 @@
         cArr.push(causeRec)
         updateLineChart(sArr, cArr)
     }
+    
     const cuaseTimer=new PerodicalCallback ("updateCauseTimer()", 1000,false);
+    
     function updateStatusTimer(){
         let d=moment.duration(moment().diff(moment(stateTime)),'ms')
         statusTimerElem.innerText=  d.days()*24 + d.hours() + ':' + d.minutes() + ':'+d.seconds()
     }
+    
     function updateCauseTimer(){
         let d=moment.duration(moment().diff(moment(causeTime)),'ms')
         if (currentState!=3){

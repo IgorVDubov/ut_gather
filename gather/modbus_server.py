@@ -102,7 +102,8 @@ class MBServer(ModbusTcpServer):
         # self.id_map:dict=self.addr_map_2_id_map(self._pop_addr(addr_map))
         super().__init__(self.context, address=(self.serverParams['host'],
                          self.serverParams['port']),
-                         handler=ChannelsRequestHandler)
+                        handler=ChannelsRequestHandler
+                         )
 
     def get_channel_attr(self, func, addr, slave_unit):
         for unit_block in self.addr_map:

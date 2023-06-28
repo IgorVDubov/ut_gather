@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import config
-from gather.consts import Formats  # TODO move Consts.DATE_FORMAT_DB from Consts
+from gathercore.consts import Formats  # TODO move Consts.DATE_FORMAT_DB from Consts
 
 import dbqueries as dbc
 import settings

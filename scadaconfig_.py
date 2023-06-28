@@ -1,6 +1,6 @@
 import handlers
 from handlers import lib
-from gather.consts import AI, DI, INT, FLOAT,LIST
+from gathercore.consts import AI, DI, INT, FLOAT,LIST
 
 
 '''

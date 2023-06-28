@@ -3,16 +3,16 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from typing import TypedDict
 
-from gather.mylib import colors
+from gathercore.mylib import colors
 
 import config
 import dataconnector as dc
 import dbqueries as db_queries
 import projectglobals as project_globals
 import settings
-from gather.channels.channelbase import ChannelsBase
-from gather.channels.channels import Channel
-from gather.gtyping import DBQuie
+from gathercore.channels.channelbase import ChannelsBase
+from gathercore.channels.channels import Channel
+from gathercore.gtyping import DBQuie
 
 
 @dataclass

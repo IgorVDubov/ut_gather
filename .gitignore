@@ -4,10 +4,13 @@ __pycache__/*.pyc
 
 *.log
 *.vscode*
-
 .docignore
 .gitignore
+
+/gather-core/    #import as library
 idles.txt
 config.py
+scadaconfig.py
+
 
 

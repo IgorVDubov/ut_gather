@@ -1,5 +1,5 @@
 # from gather.interfaces.db.dbinterface import DBInterface
-from gather.interfaces.db.dbcommands import DBInsert
+from gathercore.interfaces.db.dbcommands import DBInsert
 
 MIN_STORED_IDLE_LENGTH=5
 MIN_STORED_STATE_LENGTH=5

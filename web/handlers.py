@@ -11,8 +11,8 @@ from loguru import logger
 
 from models import User
 from config import CHECK_AUTORIZATION
-from gather.mutualcls import WSClient, SubscriptChannelArg
-from gather.channels.channels import parse_attr_params
+from gathercore.mutualcls import WSClient, SubscriptChannelArg
+from gathercore.channels.channels import parse_attr_params
 from settings import web_server_path_params as path_params
 
 import logics

@@ -114,10 +114,6 @@ def db_put_state(db_quie: DBQuie, state_rec: dict):
             db_queries.insert_state(db_quie, state_rec)
 
 
-def db_get_all_states(id: int):
-    return [rec for rec in project_globals.states_db]
-
-
 def jsdb_put_idle(rec: dict):
 
     print(f'jsdb_put_idle {rec}')
@@ -130,14 +126,13 @@ def jsdb_put_idle(rec: dict):
     ...
 
 
-def db_get_all_idles(id: int):
-    # return [rec for rec in project_globals.idles_db if (rec and rec.get('id')==id)]
-    return [rec for rec in project_globals.idles_db]
-
-
 def addCause(new_cause: str):  # добавляем новую причину в список возможных
     settings.IDLE_CAUSES.update(
         {max(settings.IDLE_CAUSES.keys())+1: new_cause})
+
+
+def reset_causes():  # добавляем новую причину в список возможных
+    settings.IDLE_CAUSES= settings.DEFAILT_IDLE_CAUSES
 
 
 def check_allowed_machine(machine_id: int, remote_ip: str) -> bool:

@@ -253,6 +253,10 @@
         </span>
      </header>
     <main class="main">
+        <h3> БД состояний оборудования</h3>
+        <div class="flexContainerCenterAl h_v20" id="dbStatesTable"> </div>
+        <h3> БД причин простоев оборудования</h3>
+        <div class="flexContainerCenterAl h_v30" id="dbCausesTable"> </div>
         <div class="flexContainerCenterAl h_v20 " id="OnlineElem">
             <div class="databox h100 cWhite gridSatateBlock">
                 <div class="gridAllRow fnt_1_25 bold" id="statusElem">Простой</div>
@@ -267,7 +271,6 @@
                     <canvas id="dayChartCanvasElem" class="dayChartCanvas" ></canvas>
                 </div>
             </div>
-            <div class="flexContainerCenterAl databox h100 cWhite fnt_r3" onclick="javascript:document.location.href='http:{{host_port}}/adm'">&#9776;</div>
         </div>
         <div class="flexContainerCenterAl" >
             <div class="ChartCanvasContainer">
@@ -276,6 +279,11 @@
             <div class="ChartCanvasContainer">
                 <canvas id="chartCanvasElem2" class="ChartCanvas" ></canvas>
             </div>
+        </div>
+        <div class='status_div butt_container' id="statusSwitcer"> 
+            <div class='round_button color_grey' id="offBtn"></div>
+            <div class='round_button color_yellow' id="standBtn"></div>
+            <div class='round_button color_green' id="workBtn"></div>
         </div>
     </main>
     <footer class='footer'>
@@ -340,13 +348,13 @@
 
     const wsStatus=document.getElementById("wsStatus")
     const wsIndicator=document.getElementById("wsLight")
-    // const statusSwitcherElem=document.getElementById('statusSwitcer')
+    const statusSwitcherElem=document.getElementById('statusSwitcer')
     
     var mousePosition;
-    // var offset = [
-    //     statusSwitcherElem.offsetLeft,
-    //     statusSwitcherElem.offsetTop
-    //     ];
+    var offset = [
+        statusSwitcherElem.offsetLeft,
+        statusSwitcherElem.offsetTop
+        ];
     var isDown = false;
     
     async function channelSetArgRequest(chArg, argValue){
@@ -358,51 +366,51 @@
         return await response.json()
     }
 
-    // document.getElementById('offBtn').addEventListener('click', function(e) {
-    //     channelSetArgRequest(STATE_INPUT_ARG, 0)}, true);
-    // document.getElementById('standBtn').addEventListener('click', function(e) {
-    //     channelSetArgRequest(STATE_INPUT_ARG, 2)
-    // }, true);
-    // document.getElementById('workBtn').addEventListener('click', function(e) {
-    //     channelSetArgRequest(STATE_INPUT_ARG, 37)
-    // }, true);
+    document.getElementById('offBtn').addEventListener('click', function(e) {
+        channelSetArgRequest(STATE_INPUT_ARG, 0)}, true);
+    document.getElementById('standBtn').addEventListener('click', function(e) {
+        channelSetArgRequest(STATE_INPUT_ARG, 2)
+    }, true);
+    document.getElementById('workBtn').addEventListener('click', function(e) {
+        channelSetArgRequest(STATE_INPUT_ARG, 37)
+    }, true);
 
-    // statusSwitcherElem.addEventListener('mousedown', function(e) {
-    //     isDown = true;
-    //     offset = [
-    //     statusSwitcherElem.offsetLeft - e.clientX,
-    //     statusSwitcherElem.offsetTop - e.clientY
-    //     ];
-    // }, true);
+    statusSwitcherElem.addEventListener('mousedown', function(e) {
+        isDown = true;
+        offset = [
+        statusSwitcherElem.offsetLeft - e.clientX,
+        statusSwitcherElem.offsetTop - e.clientY
+        ];
+    }, true);
     
-    // document.addEventListener("scroll", (event) => {
-    //     //if ((window.innerWidth < parseInt(statusSwitcherElem.style.left) + 40) || (window.innerHeight < parseInt(statusSwitcherElem.style.top) + 40)) 
-    //     {
-    //     statusSwitcherElem.style.top = (window.scrollY + offset[1]) + 'px';
-    //     statusSwitcherElem.style.left = (window.scrollX + offset[0]) + 'px';
-    //     }
-    //     console.log('on scroll',  window.scrollY, '  ->', statusSwitcherElem.style.top)
-    // });
+    document.addEventListener("scroll", (event) => {
+        //if ((window.innerWidth < parseInt(statusSwitcherElem.style.left) + 40) || (window.innerHeight < parseInt(statusSwitcherElem.style.top) + 40)) 
+        {
+        statusSwitcherElem.style.top = (window.scrollY + offset[1]) + 'px';
+        statusSwitcherElem.style.left = (window.scrollX + offset[0]) + 'px';
+        }
+        console.log('on scroll',  window.scrollY, '  ->', statusSwitcherElem.style.top)
+    });
 
-    // document.addEventListener('mouseup', function() {
-    //     isDown = false;
-    //     offset = [
-    //     statusSwitcherElem.offsetLeft,
-    //     statusSwitcherElem.offsetTop
-    //     ];
-    // }, true);
+    document.addEventListener('mouseup', function() {
+        isDown = false;
+        offset = [
+        statusSwitcherElem.offsetLeft,
+        statusSwitcherElem.offsetTop
+        ];
+    }, true);
 
-    // document.addEventListener('mousemove', function(event) {
-    //     event.preventDefault();
-    //     if (isDown) {
-    //         mousePosition = {
-    //             x : event.clientX,
-    //             y : event.clientY
-    //         };
-    //         statusSwitcherElem.style.left = (mousePosition.x + offset[0]) + 'px';
-    //         statusSwitcherElem.style.top  = (mousePosition.y + offset[1]) + 'px';
-    //     }
-    // }, true);
+    document.addEventListener('mousemove', function(event) {
+        event.preventDefault();
+        if (isDown) {
+            mousePosition = {
+                x : event.clientX,
+                y : event.clientY
+            };
+            statusSwitcherElem.style.left = (mousePosition.x + offset[0]) + 'px';
+            statusSwitcherElem.style.top  = (mousePosition.y + offset[1]) + 'px';
+        }
+    }, true);
     
     function flashIndicator(indicator, flashColor,afterColor, pause){
       indicator.style.color=flashColor
@@ -444,7 +452,6 @@
       }
     const UpdateDBTimer = new PerodicalCallback ("UpdateDBRequest()", 1000,false);
     
-
     function wsConnect(WSServer){
       let ws=new WebSocket(WSServer);
       wsStatus.textContent='online'
@@ -458,22 +465,23 @@
         console.log('ws message:', msg)
         switch (msg.type) {
           case "first_read":
-            //initTables(msg.data.states, msg.data.idles)
-            statesDb.push(...msg.data.states)
-            causesDb.push(...msg.data.idles)
+              initTables(msg.data.states, msg.data.idles)
+              statesDb.push(...msg.data.states)
+              causesDb.push(...msg.data.idles)
               break;
               case "update_idles_db":
+                  updateIdles(msg.data)
                   causesDb.push(...msg.data)
           break;
           case "update_states_db":
-            //updateState(msg.data)
-            statesDb.push(...msg.data)
+              updateState(msg.data)
+              statesDb.push(...msg.data)
 
           break;
           default:
             data=msg[0]
             if (data[STATE_CHANNEL]!=undefined){
-                // updateSwitcherStatus(data[STATE_CHANNEL])
+                updateSwitcherStatus(data[STATE_CHANNEL])
                 updateOnlineStatus(data[STATE_CHANNEL],data.time )
             }
             if (data[CAUSEID_ARG]!=undefined){
@@ -617,9 +625,9 @@
     });
     }
     
-    // function updateSwitcherStatus(statusId) {
-    //     statusSwitcherElem.style.backgroundColor=STATUS_LIGHT_COLORS[statusId]
-    // }
+    function updateSwitcherStatus(statusId) {
+        statusSwitcherElem.style.backgroundColor=STATUS_LIGHT_COLORS[statusId]
+    }
     function updateOnlineStatus(id,time) {
         statusElem.innerText=STATES[id]
         statusElem.style.color=STATUS_LIGHT_COLORS[id]

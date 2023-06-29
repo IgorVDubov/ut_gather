@@ -6,6 +6,21 @@ from gathercore.consts import Formats  # TODO move Consts.DATE_FORMAT_DB from Co
 import dbqueries as dbc
 import settings
 import projectglobals as project_globals
+from models import Operator
+
+
+def db_get_all_states(id: int):
+    return [rec for rec in project_globals.states_db]
+
+
+def db_get_all_idles(id: int):
+    # return [rec for rec in project_globals.idles_db if (rec and rec.get('id')==id)]
+    return [rec for rec in project_globals.idles_db]
+
+def db_get_all_operators():
+    result= [rec for rec in project_globals.operators_db]
+    [rec.update({'operator': (settings.OPERATORS[rec['operator_id']]['name'])}) for rec in result]
+    return result
 
 
 def get_causes(id: int) -> dict[int:str]:
@@ -33,7 +48,7 @@ def get_operator_data(operator_id):
 
 
 # взять из бд операторов machine_id последнюю не закрытую сессию
-def get_current_operator(machine_id):
+def get_current_operator(machine_id: int):
     if operator := get_logged_operator(machine_id):
         try:
             return {'id': operator['operator_id'], 'name': get_machine_operators(machine_id)[operator['operator_id']]['name']}
@@ -54,8 +69,11 @@ def get_operator(machine_id, operator_id):
         return None
 
 
-def get_logged_operator(machine_id):
-    return next((oper for oper in project_globals.operators_db if oper['logout'] == None), None)
+def get_logged_operator(machine_id: int):
+    return next((oper for oper in project_globals.operators_db 
+                    if (oper['machine_id']==machine_id) 
+                        and (oper['logout'] is None)
+                ),None)
 
 
 def set_operator_login(macine_id, operator_id):
@@ -64,8 +82,15 @@ def set_operator_login(macine_id, operator_id):
     '''
     print(
         f'operator {get_machine_operators(1).get(operator_id, None)} logit to {macine_id}')
-    project_globals.operators_db.append({'operator_id': operator_id, 'machine_id': macine_id, 'login': datetime.now(
-    ).strftime(Formats.DATE_FORMAT_DB), 'logout': None})
+    rec={'operator_id': operator_id,
+        'machine_id': macine_id,
+        'login': datetime.now().strftime(Formats.DATE_FORMAT_DB),
+        'logout': None}
+    project_globals.operators_db.append(rec)
+    rec.update({'operator': settings.OPERATORS[operator_id]['name']})
+    project_globals.operators_buffer.append(rec)
+    
+    
 
 
 def set_operator_logout(macine_id, operator_id):
@@ -73,10 +98,13 @@ def set_operator_logout(macine_id, operator_id):
     ищем у macine_id незакрытую сессию и пишем туда время окончания
     '''
     try:
-        get_logged_operator(macine_id)['logout'] = datetime.now().strftime(
+        rec=get_logged_operator(macine_id)
+        rec['logout'] = datetime.now().strftime(
             Formats.DATE_FORMAT_DB)
     except (KeyError, TypeError):
         print(f'no logout operators at {macine_id}')
-
+    rec.update({'operator': settings.OPERATORS[operator_id]['name']})    
+    project_globals.operators_buffer.append(rec)
     print(
         f'operator {get_machine_operators(1).get(operator_id, None)} logout to {macine_id}')
+

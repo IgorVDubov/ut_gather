@@ -10,10 +10,11 @@ import tornado.websocket
 from loguru import logger
 
 from models import User
-from config import CHECK_AUTORIZATION
+from config import CHECK_AUTORIZATION, DEFAULT_USER
 from gathercore.mutualcls import WSClient, SubscriptChannelArg
 from gathercore.channels.channels import parse_attr_params
 from settings import web_server_path_params as path_params
+from config import http_server_params
 
 import logics
 import dataconnector as dc
@@ -53,7 +54,10 @@ class BaseHandler(RequestHandlerClass):
         def decorator(handler_func):
             def wrapper(self, *args, **kwargs):
                 user = {}
-                if not check_authorization or (user := self.getUser()):
+                if not check_authorization:
+                    self.user = DEFAULT_USER
+                    handler_func(self, *args, **kwargs)
+                elif user := self.getUser():
                     self.user = user
                     handler_func(self, *args, **kwargs)
                 else:
@@ -92,6 +96,7 @@ class MainHtmlHandler(BaseHandler):
                         self.application.data.channelBase.get(machine_id)),
                     idle_couses=json.dumps(logics.convert_none_2_str(
                         logics.get_machine_causes)(machine_id), default=str),
+                    default_causes=settings.DEFAULT_CAUSES,
                     current_state=logics.convert_none_2_str(logics.get_current_state)(
                         self.application.data.channelBase, machine_id),
                     wsserv=self.application.settings['wsParams'] + \
@@ -209,6 +214,7 @@ class AdminHtmlHandler(BaseHandler):
 
         self.render('idleadm.html',
                     user=self.user.get('login'),
+                    host_port=http_server_params['host'] + ':' + str(http_server_params['port']),
                     idle_couses=json.dumps(logics.get_causes(), default=str),
                     version=settings.CLIENT_VERSION,
                     )
@@ -239,6 +245,9 @@ class AdmRequestHtmlHandler(BaseHandler):
                 self.write(json.dumps(200, default=str))
             else:
                 self.write(json.dumps(400, default=str))
+        elif request.get('type') == 'resetCauses':
+            logics.reset_causes()
+            self.write(json.dumps(200, default=str))
         elif request.get('type') == 'cmd':
             cmd = request.get('cmd')
             if cmd and cmd != '' and cmd != 'underfined':
@@ -385,8 +394,8 @@ class ReportsHtmlHandler(BaseHandler):
     @BaseHandler.check_user(CHECK_AUTORIZATION)
     def get(self):
         try:
-            machine_id_list = logics.get_machine_from_user(self.user.get('id'))
-            machine_id = machine_id_list[0]                                                           #!!!!!!!!  dev
+            # machine_id_list = logics.get_machine_from_user(self.user.get('id'))
+            machine_id = 2000                                                          #!!!!!!!!  dev !!!!!!!!!!!!!!!!!!!!
         except ValueError:
             logger.log(
                 'ERROR', f'wrong machine id in clients prequest args: {self.request.arguments}  from ip:{self.request.remote_ip}.')
@@ -400,7 +409,29 @@ class ReportsHtmlHandler(BaseHandler):
                     state_channel=str(machine_id)+'.'+settings.STATE_ARG,
                     state_input=str(machine_id)+'.result_in',
                     causeid_arg=str(machine_id)+'.'+settings.CAUSEID_ARG,
-                    project=3,
+                    project=5,
+                    version=0.1,
+                    )
+class DBHtmlHandler(BaseHandler):
+    @BaseHandler.check_user(CHECK_AUTORIZATION)
+    def get(self):
+        try:
+            # machine_id_list = logics.get_machine_from_user(self.user.get('id'))
+            machine_id = 2000                                                           #!!!!!!!!  dev  !!!!!!!!!!!!!!!!!!!!!!!!
+        except ValueError:
+            logger.log(
+                'ERROR', f'wrong machine id in clients prequest args: {self.request.arguments}  from ip:{self.request.remote_ip}.')
+            return
+        self.render('dbdemo.html',
+                    user=self.user.get('login'),
+                    machine=machine_id,
+                    wsserv=(self.application.settings['wsParams']+'_reps'),
+                    idle_couses=json.dumps(
+                        logics.get_machine_causes(machine_id), default=str),
+                    state_channel=str(machine_id)+'.'+settings.STATE_ARG,
+                    state_input=str(machine_id)+'.result_in',
+                    causeid_arg=str(machine_id)+'.'+settings.CAUSEID_ARG,
+                    project=5,
                     version=0.1,
                     )
 
@@ -423,8 +454,10 @@ class ReportsWSHandler(tornado.websocket.WebSocketHandler):
             logger.error("json loads Error for message: {0}".format(message))
         else:
             if jsonData.get('type') == "first_read":
-                data = {'states': logics.db_get_all_states(jsonData.get('id')),
-                        'idles': logics.db_get_all_idles(jsonData.get('id'))}
+                data = {'states': dc.db_get_all_states(jsonData.get('id')),
+                        'idles': dc.db_get_all_idles(jsonData.get('id')),
+                        'operators': dc.db_get_all_operators()
+                        }
                 msg = {'type': 'first_read', 'data': data}
                 json_data = json.dumps(msg, default=str)
                 logger.debug(f"ws_message: first_read")
@@ -448,18 +481,25 @@ class ReportsWSHandler(tornado.websocket.WebSocketHandler):
                     self.write_message(json.dumps(for_send, default=str))
             elif jsonData.get('type') == "update_data":
                 if len(project_globals.states_buffer) > 0:
-                    logger.debug(
-                        f"update states{project_globals.states_buffer}")
+                    # logger.debug(
+                    #     f"update states{project_globals.states_buffer}")
                     data = project_globals.states_buffer
                     project_globals.states_buffer = []
                     msg = {'type': 'update_states_db', 'data': data}
                     json_data = json.dumps(msg, default=str)
                     self.write_message(json_data)
                 if len(project_globals.idles_buffer) > 0:
-                    logger.debug(f"update idles{project_globals.idles_buffer}")
+                    # logger.debug(f"update idles{project_globals.idles_buffer}")
                     data = project_globals.idles_buffer
                     project_globals.idles_buffer = []
                     msg = {'type': 'update_idles_db', 'data': data}
+                    json_data = json.dumps(msg, default=str)
+                    self.write_message(json_data)
+                if len(project_globals.operators_buffer) > 0:
+                    # logger.debug(f"update operators{project_globals.idles_buffer}")
+                    data = project_globals.operators_buffer
+                    project_globals.operators_buffer = []
+                    msg = {'type': 'update_operators_db', 'data': data}
                     json_data = json.dumps(msg, default=str)
                     self.write_message(json_data)
             elif jsonData.get('type') == 'get_ch_arg':
@@ -519,6 +559,7 @@ handlers = [
     # (r"/request",RequestHtmlHandler),
     (r"/adm", AdminHtmlHandler),
     (r"/reps", ReportsHtmlHandler),
+    (r"/db", DBHtmlHandler),
     (r"/arequest", AdmRequestHtmlHandler),
     (r'/ws', WSHandler),
     (r"/me", MEmulHtmlHandler),

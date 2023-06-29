@@ -46,7 +46,10 @@
      </header>
     <main class="main">
         <h2> Администрирование учета причин простоев оборудования</h2>
-        <h2> Причины простоя {{user}}<input type="button" class="menuButton" value="перезагрузка клиента" onclick="resetClient()"></h2>
+        <h2> Причины простоя {{user}}
+            <input type="button" class="menuButton" value="перезагрузка клиента" onclick="resetClient()">
+            <input type="button" class="menuButton" value="сброс причин" onclick="resetCausesClick()">
+        </h2>
         <div class="flexContainerCenterAl"> 
             <input type="button" class="menuButton" id= "cAddButton" value="Создать" onclick="causeAdd()">
             <input type="text" class="menuButton" id= "causeInput" value="" style="display:none" >
@@ -86,6 +89,19 @@
                         body: JSON.stringify({type: "cmd",cmd:command})
                         });
         return await response.json();
+    }
+    async function resetCauses(){
+        let response = await fetch('/arequest', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({type: "resetCauses"})
+                        });
+        return await response.json();
+        
+    }
+    function resetCausesClick(){
+        resetCauses()
+        location.reload()
     }
     function storeAndSetStyle(elem, param, value){
       elem.dataset['saved'+param]=window.getComputedStyle(elem)[param]

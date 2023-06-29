@@ -418,6 +418,7 @@
     const WS_SERVER = '{{ wsserv }}';
     {% autoescape None %}
     const IDLE_COUSES={{  idle_couses  }}
+    const DEFAULT_CAUSES={{default_causes}}
     const STATE_CHANNEL='{{state_channel}}'
     const CAUSEID_ARG='{{ causeid_arg }}'
     const TECH_IDLE_LENGTH={{ tech_idle }}
@@ -1074,7 +1075,7 @@
         const causeButtonsContainer = block('',['w_v80 gridCauseButtons'],'causeButtonsContainer');
         for (i=0; i<Object.keys(IDLE_COUSES).length;i++){
           let id=Object.keys(IDLE_COUSES)[i]
-          if (id<=0) continue;          //пока так, отделяем зарезервированные причины (id < 0 ) от доступных
+          if (id in DEFAULT_CAUSES) continue;          //фильтруем зарезервированные
           let cause=IDLE_COUSES[id]
           button=block(cause,['h100 w20rem flex_center databox dataLable fnt_2'],'buttonsContainer');
           button.dataset.id=id

@@ -40,11 +40,14 @@
             padding: 0.5em;
         }
         .tables{
-            border: 1px solid gray;
             border-collapse: collapse; 
             padding : 0; 
             border-spacing : 0px;
             
+        }
+        .hrow{
+            padding-left: 0.5em;
+            padding-right: 0.5em;
         }
         .rows{
             border: 1px solid gray;
@@ -54,7 +57,6 @@
         .headers{
             padding-left: inherit;
             padding-right: inherit;
-            border: 1px solid gray;
         }
         .cells{
             padding-left:inherit;
@@ -253,29 +255,16 @@
         </span>
      </header>
     <main class="main">
-        <div class="flexContainerCenterAl h_v20 " id="OnlineElem">
-            <div class="databox h100 cWhite gridSatateBlock">
-                <div class="gridAllRow fnt_1_25 bold" id="statusElem">Простой</div>
-                <div class= "fnt_1 pl0_5 bold" id="statusTimerElem">10:25 </div>
-                <div class= "fnt_1 pr0_5" id="statusTimeElem"> 2023-01-26 10:37:05</div>
-                <div class= "gridAllRow fnt_1_25 bold" id="causeElem"> Плановый простой</div>
-                <div class= "fnt_1 pl0_5 bold" id="causeTimerElem">37:05</div>
-                <div class= "fnt_1 pr0_5" id="causeTimeElem">2023-01-26 10:37:05</div>
-            </div>
-            <div class="databox h100 w_v70 m1em flex_center" id="dayChartElem">
-                <div class="dayChartCanvasContainer">
-                    <canvas id="dayChartCanvasElem" class="dayChartCanvas" ></canvas>
-                </div>
-            </div>
-            <div class="flexContainerCenterAl databox h100 cWhite fnt_r3" onclick="javascript:document.location.href='http:{{host_port}}/adm'">&#9776;</div>
-        </div>
-        <div class="flexContainerCenterAl" >
-            <div class="ChartCanvasContainer">
-                <canvas id="chartCanvasElem1" class="ChartCanvas" ></canvas>
-            </div>
-            <div class="ChartCanvasContainer">
-                <canvas id="chartCanvasElem2" class="ChartCanvas" ></canvas>
-            </div>
+        <h3> БД состояний оборудования</h3>
+        <div class="flexContainerCenterAl h_v25" id="dbStatesTable"> </div>
+        <h3> БД причин простоев оборудования</h3>
+        <div class="flexContainerCenterAl h_v25" id="dbCausesTable"> </div>
+        <h3> БД операторов</h3>
+        <div class="flexContainerCenterAl h_v25" id="dbOperatorTable"> </div>
+        <div class='status_div butt_container' id="statusSwitcer"> 
+            <div class='round_button color_grey' id="offBtn"></div>
+            <div class='round_button color_yellow' id="standBtn"></div>
+            <div class='round_button color_green' id="workBtn"></div>
         </div>
     </main>
     <footer class='footer'>
@@ -304,11 +293,14 @@
      //{-1:'Технологический простой', 0:'Не подтверждена',,1:"Авария", 2:"Нет сырья", 3:"Нет задания", 4:"Плановый простой", 5:'Перерыв'}
     const CAUSES_LIGHT_COLORS=['#b6e166', '#e6891f', '#ee4a0a', '#1f2ce6', '#c51ee6', '#1ee6c5', '#1ee661', '#7fe61e', '#e6a01e']
     const STATES =['N/A', 'Откл', 'Простой', 'Работа']
-    const STATES_DB_HEADERS=['ID станка', 'статус', 'начало', 'длительность']
+    const STATES_DB_HEADERS=['станок', 'статус', 'начало', 'длительность']
     const STATES_DB_HEADERS_WIDTH=[4, 8, 10, 8]
 
-    const IDLES_DB_HEADERS=['ID станка', "Оператор", 'Причина', 'Начало', 'Подтверждение', 'Длительность']
-    const IDLES_DB_HEADERS_WIDTH=[4, 7, 15, 10, 10, 8]
+    const IDLES_DB_HEADERS=['станок', "Оператор", 'Причина', 'Начало', 'Подтверждение', 'Длительность']
+    const IDLES_DB_HEADERS_WIDTH=[3, 8, 15, 10, 10, 7]
+    
+    const OPERATORS_DB_HEADERS=['станок', "Оператор", 'Приступил', 'Завершил']
+    const OPERATORS_DB_HEADERS_WIDTH=[4, 14, 10, 10]
 
     const dbStateTableElem=document.getElementById('dbStateTable')
     const dbCauseTableElem=document.getElementById('dbCauseTable')
@@ -316,6 +308,7 @@
     const chartsElem=document.getElementById('dayChart')
     const statesContainerElem=document.getElementById('dbStatesTable')
     const idlesContainerElem=document.getElementById('dbCausesTable')
+    const operatorsContainerElem=document.getElementById('dbOperatorTable')
     
     const statusElem=document.getElementById('statusElem')
     const statusTimerElem=document.getElementById('statusTimerElem')
@@ -329,9 +322,11 @@
 
     var statesDb=[]
     var causesDb=[]
+    var operatorsDb=[]
 
     var statesTableElem
     var idlesTableElem
+    var operatorsTableElem
 
     var stateTime
     var causeTime
@@ -340,13 +335,13 @@
 
     const wsStatus=document.getElementById("wsStatus")
     const wsIndicator=document.getElementById("wsLight")
-    // const statusSwitcherElem=document.getElementById('statusSwitcer')
+    const statusSwitcherElem=document.getElementById('statusSwitcer')
     
     var mousePosition;
-    // var offset = [
-    //     statusSwitcherElem.offsetLeft,
-    //     statusSwitcherElem.offsetTop
-    //     ];
+    var offset = [
+        statusSwitcherElem.offsetLeft,
+        statusSwitcherElem.offsetTop
+        ];
     var isDown = false;
     
     async function channelSetArgRequest(chArg, argValue){
@@ -358,51 +353,51 @@
         return await response.json()
     }
 
-    // document.getElementById('offBtn').addEventListener('click', function(e) {
-    //     channelSetArgRequest(STATE_INPUT_ARG, 0)}, true);
-    // document.getElementById('standBtn').addEventListener('click', function(e) {
-    //     channelSetArgRequest(STATE_INPUT_ARG, 2)
-    // }, true);
-    // document.getElementById('workBtn').addEventListener('click', function(e) {
-    //     channelSetArgRequest(STATE_INPUT_ARG, 37)
-    // }, true);
+    document.getElementById('offBtn').addEventListener('click', function(e) {
+        channelSetArgRequest(STATE_INPUT_ARG, 0)}, true);
+    document.getElementById('standBtn').addEventListener('click', function(e) {
+        channelSetArgRequest(STATE_INPUT_ARG, 2)
+    }, true);
+    document.getElementById('workBtn').addEventListener('click', function(e) {
+        channelSetArgRequest(STATE_INPUT_ARG, 37)
+    }, true);
 
-    // statusSwitcherElem.addEventListener('mousedown', function(e) {
-    //     isDown = true;
-    //     offset = [
-    //     statusSwitcherElem.offsetLeft - e.clientX,
-    //     statusSwitcherElem.offsetTop - e.clientY
-    //     ];
-    // }, true);
+    statusSwitcherElem.addEventListener('mousedown', function(e) {
+        isDown = true;
+        offset = [
+        statusSwitcherElem.offsetLeft - e.clientX,
+        statusSwitcherElem.offsetTop - e.clientY
+        ];
+    }, true);
     
-    // document.addEventListener("scroll", (event) => {
-    //     //if ((window.innerWidth < parseInt(statusSwitcherElem.style.left) + 40) || (window.innerHeight < parseInt(statusSwitcherElem.style.top) + 40)) 
-    //     {
-    //     statusSwitcherElem.style.top = (window.scrollY + offset[1]) + 'px';
-    //     statusSwitcherElem.style.left = (window.scrollX + offset[0]) + 'px';
-    //     }
-    //     console.log('on scroll',  window.scrollY, '  ->', statusSwitcherElem.style.top)
-    // });
+    document.addEventListener("scroll", (event) => {
+        //if ((window.innerWidth < parseInt(statusSwitcherElem.style.left) + 40) || (window.innerHeight < parseInt(statusSwitcherElem.style.top) + 40)) 
+        {
+        statusSwitcherElem.style.top = (window.scrollY + offset[1]) + 'px';
+        statusSwitcherElem.style.left = (window.scrollX + offset[0]) + 'px';
+        }
+        console.log('on scroll',  window.scrollY, '  ->', statusSwitcherElem.style.top)
+    });
 
-    // document.addEventListener('mouseup', function() {
-    //     isDown = false;
-    //     offset = [
-    //     statusSwitcherElem.offsetLeft,
-    //     statusSwitcherElem.offsetTop
-    //     ];
-    // }, true);
+    document.addEventListener('mouseup', function() {
+        isDown = false;
+        offset = [
+        statusSwitcherElem.offsetLeft,
+        statusSwitcherElem.offsetTop
+        ];
+    }, true);
 
-    // document.addEventListener('mousemove', function(event) {
-    //     event.preventDefault();
-    //     if (isDown) {
-    //         mousePosition = {
-    //             x : event.clientX,
-    //             y : event.clientY
-    //         };
-    //         statusSwitcherElem.style.left = (mousePosition.x + offset[0]) + 'px';
-    //         statusSwitcherElem.style.top  = (mousePosition.y + offset[1]) + 'px';
-    //     }
-    // }, true);
+    document.addEventListener('mousemove', function(event) {
+        event.preventDefault();
+        if (isDown) {
+            mousePosition = {
+                x : event.clientX,
+                y : event.clientY
+            };
+            statusSwitcherElem.style.left = (mousePosition.x + offset[0]) + 'px';
+            statusSwitcherElem.style.top  = (mousePosition.y + offset[1]) + 'px';
+        }
+    }, true);
     
     function flashIndicator(indicator, flashColor,afterColor, pause){
       indicator.style.color=flashColor
@@ -444,7 +439,6 @@
       }
     const UpdateDBTimer = new PerodicalCallback ("UpdateDBRequest()", 1000,false);
     
-
     function wsConnect(WSServer){
       let ws=new WebSocket(WSServer);
       wsStatus.textContent='online'
@@ -458,31 +452,38 @@
         console.log('ws message:', msg)
         switch (msg.type) {
           case "first_read":
-            //initTables(msg.data.states, msg.data.idles)
-            statesDb.push(...msg.data.states)
-            causesDb.push(...msg.data.idles)
+              initTables(msg.data.states, msg.data.idles, msg.data.operators)
+              statesDb.push(...msg.data.states)
+              causesDb.push(...msg.data.idles)
+              operatorsDb.push(...msg.data.operators)
               break;
               case "update_idles_db":
+                  updateIdles(msg.data)
                   causesDb.push(...msg.data)
           break;
           case "update_states_db":
-            //updateState(msg.data)
-            statesDb.push(...msg.data)
+              updateState(msg.data)
+              statesDb.push(...msg.data)
+
+          break;
+          case "update_operators_db":
+              updateOperators(msg.data)
+              operatorsDb.push(...msg.data)
 
           break;
           default:
             data=msg[0]
             if (data[STATE_CHANNEL]!=undefined){
-                // updateSwitcherStatus(data[STATE_CHANNEL])
-                updateOnlineStatus(data[STATE_CHANNEL],data.time )
+                updateSwitcherStatus(data[STATE_CHANNEL])
+                // updateOnlineStatus(data[STATE_CHANNEL],data.time )
             }
             if (data[CAUSEID_ARG]!=undefined){
-                updateOnlineCause(data[CAUSEID_ARG],data.time )
+                // updateOnlineCause(data[CAUSEID_ARG],data.time )
 
             }
             
         };
-        updateCharts(statesDb, causesDb)
+        // updateCharts(statesDb, causesDb)
         flashIndicator(wsIndicator,'lightgreen','green',400);
         return true;
         }
@@ -617,9 +618,9 @@
     });
     }
     
-    // function updateSwitcherStatus(statusId) {
-    //     statusSwitcherElem.style.backgroundColor=STATUS_LIGHT_COLORS[statusId]
-    // }
+    function updateSwitcherStatus(statusId) {
+        statusSwitcherElem.style.backgroundColor=STATUS_LIGHT_COLORS[statusId]
+    }
     function updateOnlineStatus(id,time) {
         statusElem.innerText=STATES[id]
         statusElem.style.color=STATUS_LIGHT_COLORS[id]
@@ -653,13 +654,16 @@
 
 
 
-    function initTables(states, idles){
+    function initTables(states, idles, operators){
         let statesTable=makeTable(makeStateRow, STATES_DB_HEADERS, states)
         statesContainerElem.append(statesTable)
         let idlesTable=makeTable(makeIdleRow, IDLES_DB_HEADERS, idles)
         idlesContainerElem.append(idlesTable)
+        let operatorsTable=makeTable(makeOperatorRow, OPERATORS_DB_HEADERS, operators)
+        operatorsContainerElem.append(operatorsTable)
         statesTableElem=document.getElementById('statesTable')
         idlesTableElem=document.getElementById('idlesTable')
+        operatorsTableElem=document.getElementById('operatorsTable')
         scrollToTableBottom(statesTableElem)
         scrollToTableBottom(idlesTableElem)
     }
@@ -673,6 +677,14 @@
         console.log(data)
         statesTableElem.append(makeStateRow(data[0], STATES_DB_HEADERS_WIDTH))
         scrollToTableBottom(statesTableElem)
+    }
+    function updateOperators(data){
+        console.log(data)
+        if (data.logout==null){
+            operatorsTableElem.deleteRow(operatorsTableElem.rows.length-1)
+        }
+        operatorsTableElem.append(makeOperatorRow(data[0], OPERATORS_DB_HEADERS_WIDTH))
+        scrollToTableBottom(operatorsTableElem)
     }
 
     function UpdateDBRequest() {
@@ -709,6 +721,11 @@
         // stateTime=data.time
         return addRow(dataToTable, STATES_DB_HEADERS_WIDTH)
     }
+    function makeOperatorRow(data){
+        //let colorElem = ' <span class="box" style="background:'+STATUS_LIGHT_COLORS[data.status]+'"></span>'
+        let dataToTable=[data.machine_id, data.operator, data.login, data.logout]
+        return addRow(dataToTable, OPERATORS_DB_HEADERS_WIDTH)
+    }
 
     function makeTable(rowMaker, headers,data){
 
@@ -716,7 +733,7 @@
         let headerTable= document.createElement('table');
         headerTable.classList.add('tables');
         let headerRow= document.createElement('tr');
-        headerRow.classList.add('rows');
+        headerRow.classList.add('hrow');
         for (let i=0; i<headers.length; i++){
             let td= document.createElement('th');
             td.classList.add('headers')
@@ -724,6 +741,8 @@
                 case makeStateRow: td.style.width=parseInt(STATES_DB_HEADERS_WIDTH[i])+'em'
                 break
                 case makeIdleRow: td.style.width=parseInt(IDLES_DB_HEADERS_WIDTH[i])+'em'
+                break
+                case makeOperatorRow: td.style.width=parseInt(OPERATORS_DB_HEADERS_WIDTH[i])+'em'
             }
             td.innerText=headers[i]
             headerRow.append(td)
@@ -733,10 +752,14 @@
         let dataTable= document.createElement('table');
         switch (rowMaker) {
             case makeStateRow: dataTable.id='statesTable'
-                                hClass='h_v15'
+                                hClass='h_v20'
             break
             case makeIdleRow: dataTable.id='idlesTable'
                                 hClass='h_v20'
+                break;
+            case makeOperatorRow: dataTable.id='operatorsTable'
+                                hClass='h_v15'
+                break;
         }
         divDataScroll.classList.add('scrollContainer', hClass)
         dataTable.classList.add('tables');
@@ -749,9 +772,6 @@
         return table
     }
     
-    function makePage(){
-
-    }
     const secondsTimer=new PerodicalCallback ("updateTime()", 1000,false);
     function updateTime(){
         updateStatusTimer();
@@ -805,15 +825,11 @@
     }
 
     function init(){
-        // currentState=0
-        makePage()
         ws=wsConnect(WS_SERVER);
-        
-        // wsSend(JSON.stringify({type:"first_read", id:MACHINE_ID}))
         wsEvents();
         UpdateDBTimer.restart();
-        secondsTimer.restart();
-        chartsUpdateTimer.restart();
+        //secondsTimer.restart();
+        //chartsUpdateTimer.restart();
     }
     
     init()

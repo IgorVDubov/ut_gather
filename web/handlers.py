@@ -214,7 +214,6 @@ class AdminHtmlHandler(BaseHandler):
 
         self.render('idleadm.html',
                     user=self.user.get('login'),
-                    host_port=http_server_params['host'] + ':' + str(http_server_params['port']),
                     idle_couses=json.dumps(logics.get_causes(), default=str),
                     version=settings.CLIENT_VERSION,
                     )
@@ -404,6 +403,7 @@ class ReportsHtmlHandler(BaseHandler):
                     user=self.user.get('login'),
                     machine=machine_id,
                     wsserv=(self.application.settings['wsParams']+'_reps'),
+                    host_port=http_server_params['host'] + ':' + str(http_server_params['port']),
                     idle_couses=json.dumps(
                         logics.get_machine_causes(machine_id), default=str),
                     state_channel=str(machine_id)+'.'+settings.STATE_ARG,

@@ -4,6 +4,7 @@ from .signal_techtimeout import signal_techtimeout
 from .scheduler import day_scheduler
 from .idle import idle
 from .ai2021 import ai2021
+from .signal_tout_2_counters import signal_tout_2_counters
 from .test import test
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "day_scheduler", 
     "idle",
     'ai2021',
+    'signal_tout_2_counters',
     'test',
 ]

@@ -100,12 +100,14 @@ def save_machines_idle():
 
 
 def jsdb_put_state(state_rec: dict):
+    raise NotImplemented('move to dc')
     if state_rec.get('length') and state_rec['length'] > 0:
         project_globals.states_db.append(state_rec)
         project_globals.states_buffer.append(state_rec)
 
 
 def db_put_state(db_quie: DBQuie, state_rec: dict):
+    raise NotImplemented('move to dc')
     print(f'db_put_state {state_rec}')
     if state_rec.get('length') and state_rec['length'] > 0:
         if state_rec.get('project_id') == 0:

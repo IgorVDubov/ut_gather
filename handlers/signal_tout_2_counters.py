@@ -2,8 +2,7 @@ from datetime import datetime
 
 import dataconnector as dc
 
-
-def signal_techtimeout(vars):
+def signal_tout_2_counters(vars):
     '''
     signals values with timeout
     VARS:
@@ -40,26 +39,39 @@ def signal_techtimeout(vars):
     NA_status = False
     result_in_error = False
 
+    if vars.counter_1_reset is True:    # сброс сброса счетчика
+        vars.counter_1_reset = False
+    if vars.counter_2_reset is True:
+        vars.counter_2_reset = False
+        
     #           Запись счетчика
-    if vars.write_counter:
-        vars.write_counter = False
+    if vars.write_counters:
+        vars.write_counters = False
         dc.db_put_state(vars.db_quie,
-                               {'id': vars.channel_id,
+                               {'id': vars.counter_1_id,
                                 'project_id': vars.project_id,
                                 'time': time_now,
                                 'status': 7,
-                                'length': vars.counter
+                                'length': vars.counter_1
                                 })
         # TODO здесь пишем  со статусом 7, length - счетчик, time_now
-        vars.counter_reset = True  # сбрасываем счетчик в контроллере
+        vars.counter_1_reset = True  # сбрасываем счетчик в контроллере
+        dc.db_put_state(vars.db_quie,
+                               {'id': vars.counter_2_id,
+                                'project_id': vars.project_id,
+                                'time': time_now,
+                                'status': 7,
+                                'length': vars.counter_2
+                                })
+        # TODO здесь пишем  со статусом 7, length - счетчик, time_now
+        vars.counter_2_reset = True  # сбрасываем счетчик в контроллере
         return
-
     #           если нет источника или входящий результат пустой массив
     if (vars.result_in is None) or len(vars.result_in) == 0:
         result_in_error = True
 
     #          вычисление достоверности ждем таймаут, потом выставляется NA_status
-    if vars.dost == False or result_in_error:
+    if vars.dost is False or result_in_error:
         vars.not_dost_counter += 1
     else:
         vars.not_dost_counter = 0
@@ -75,21 +87,9 @@ def signal_techtimeout(vars):
 
     #           определяем текущий статус
     if not result_in_error:
-        # type: ignore   первый бит
-        signal1 = vars.result_in[0]
-        # type: ignore   второй бит
-        signal2 = vars.result_in[1]
+        status = (not NA_status) * vars.result_in
     else:
-        if not NA_status:                           # если ждем NA_status берем сигналы из предыдущих
-            signal1 = 1 if vars.status != 0 else 0
-            signal2 = 1 if vars.status == 3 else 0
-        else:
-            signal1 = 0
-            signal2 = 0
-
-    OFF_status = not signal1
-    WORK_status = signal2
-    status = (not NA_status) * (OFF_status + (not OFF_status)*(2+WORK_status))
+        status = 0
     vars.status = status
 
     #         первоначальная инициализация

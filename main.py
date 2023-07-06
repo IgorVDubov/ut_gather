@@ -21,7 +21,7 @@ except ModuleNotFoundError:
     project_init = None
 
 from gathercore.channels.channelbase import channel_base_init
-from gathercore.exchangeserver import MBServerAdrMapInit, ModbusExchangeServer
+from gathercore.interfaces.modbus_server.exchangeserver import MBServerAdrMapInit, ModbusExchangeServer
 # from gather.interfaces.db import dbconnector
 from gathercore.interfaces.db.dbconnector import create_db_connector
 from gathercore.interfaces.db.dbinterface import DBCommandProcessor

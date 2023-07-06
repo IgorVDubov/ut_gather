@@ -7,6 +7,8 @@ import dbqueries as dbc
 import settings
 import projectglobals as project_globals
 from models import Operator
+from gathercore.gtyping import DBQuie
+import dbqueries as db_queries
 
 
 def db_get_all_states(id: int):
@@ -107,4 +109,18 @@ def set_operator_logout(macine_id, operator_id):
     project_globals.operators_buffer.append(rec)
     print(
         f'operator {get_machine_operators(1).get(operator_id, None)} logout to {macine_id}')
+
+def jsdb_put_state(state_rec: dict):
+    if state_rec.get('length') and state_rec['length'] > 0:
+        project_globals.states_db.append(state_rec)
+        project_globals.states_buffer.append(state_rec)
+
+
+def db_put_state(db_quie: DBQuie, state_rec: dict):
+    print(f'db_put_state {state_rec}')
+    if state_rec.get('length') and state_rec['length'] > 0:
+        if state_rec.get('project_id') == 0:
+            jsdb_put_state(state_rec)
+        else:
+            db_queries.insert_state(db_quie, state_rec)
 

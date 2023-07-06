@@ -26,3 +26,15 @@ def middle(vars):
         
     vars.deque.append(vars.resultIn)
     vars.resultOut=sum(vars.deque)/vars.MAX_VALUES
+    
+def mult(vars):
+    '''
+    multiplicator
+    arg.output = arg.input * arg.k
+    '''
+    if vars.input is not None:
+        if isinstance(vars.input, list):
+            input=vars.input[0]
+        else:
+            input=vars.input
+        vars.output = input * vars.k

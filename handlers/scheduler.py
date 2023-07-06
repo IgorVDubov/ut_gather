@@ -29,3 +29,5 @@ def day_scheduler(vars):
         # vars.write_init_5001=True
         vars.write_init_2120=True
         vars.write_counter_2120=True
+        vars.write_init_2040=True
+        vars.write_counter_2040=True

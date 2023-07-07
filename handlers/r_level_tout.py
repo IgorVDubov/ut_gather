@@ -1,6 +1,6 @@
 from datetime import datetime
 
-import logics
+import dataconnector as dc
 
 
 def r_level_timeout(vars):
@@ -50,12 +50,14 @@ def r_level_timeout(vars):
     
     if vars.dost == False or result_in_error:
         vars.not_dost_counter += 1
+        if vars.not_dost_counter > vars.dost_timeout:
+            na_status = True
+            vars.not_dost_counter = vars.dost_timeout+1
+        else:
+            return
     else:
         vars.not_dost_counter = 0
         
-    if vars.not_dost_counter > vars.dost_timeout:
-        na_status = True
-        vars.d_length = vars.dost_timeout + 1
     if vars.na_status_before != na_status:
         dostChangeFlag = True
         vars.na_status_before = na_status
@@ -147,7 +149,7 @@ def r_level_timeout(vars):
         dbWriteFlag = False
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
         if vars.length_db > 10 or vars.length_db < 90000:
-            logics.db_put_state(vars.db_quie,
+            dc.db_put_state(vars.db_quie,
                                 {'id': vars.channel_id,
                                     'project_id': vars.project_id,
                                     'time': vars.time_db.strftime("%Y-%m-%d %H:%M:%S"),

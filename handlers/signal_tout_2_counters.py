@@ -67,18 +67,20 @@ def signal_tout_2_counters(vars):
         vars.counter_2_reset = True  # сбрасываем счетчик в контроллере
         return
     #           если нет источника или входящий результат пустой массив
-    if (vars.result_in is None) or len(vars.result_in) == 0:
+    if vars.result_in is None:
         result_in_error = True
 
     #          вычисление достоверности ждем таймаут, потом выставляется NA_status
     if vars.dost is False or result_in_error:
         vars.not_dost_counter += 1
+        if vars.not_dost_counter > vars.dost_timeout:
+            NA_status = True
+            vars.not_dost_counter = vars.dost_timeout+1
+        else:
+            return
     else:
         vars.not_dost_counter = 0
         NA_status = False
-    if vars.not_dost_counter > vars.dost_timeout:
-        NA_status = True
-        vars.d_length = vars.dost_timeout+1
     if vars.NA_status_before != NA_status:
         dost_change_flag = True
         vars.NA_status_before = NA_status  # запоминаем NA_status

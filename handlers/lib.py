@@ -13,6 +13,19 @@ def bits_to_word(vars):
         result+=bit*2**i
     vars.result=result
 
+def bits_to_list(vars):
+    '''
+    bits to 2 byte 
+    vars:
+        b1..b32:bool
+    '''
+    vars.result= [
+            vars.b1, vars.b2, vars.b3, vars.b4,
+            vars.b5, vars.b6, vars.b7, vars.b8,
+            vars.b9, vars.b10, vars.b11, vars.b12,
+            vars.b13, vars.b14, vars.b15, vars.b16
+            ]
+
 def middle(vars):
     '''
     бегущее среднее из MAX_VALUES значений

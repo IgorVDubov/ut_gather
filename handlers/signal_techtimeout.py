@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import dataconnector as dc
+import settings
 
 
 def signal_techtimeout(vars):
@@ -202,7 +203,7 @@ def signal_techtimeout(vars):
     if db_write_flag:
         db_write_flag = False
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
-        if vars.saved_length > 10 or vars.saved_length < 90000:
+        if vars.saved_length > settings.MIN_STORED_STATE_LENGTH:
             dc.db_put_state(vars.db_quie,
                                    {'id': vars.channel_id,
                                     'project_id': vars.project_id,

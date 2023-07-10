@@ -40,7 +40,7 @@ def init():
         source_pool = SourcePool(modules, loop)
     else:
         source_pool = None
-    channel_base = channel_base_init(scada_config.channels_config)
+    channel_base = channel_base_init(scada_config.channels_config, source_pool)
     if project_init:
         project_init.init(channel_base)
     exchange_bindings = MBServerAdrMapInit(channel_base,

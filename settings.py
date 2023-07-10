@@ -17,7 +17,8 @@ STATES = ['N/A', 'Откл', 'Простой', 'Работа']
 TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
 DEFAULT_CAUSES = [1, 2] # причины которые не отображаются в интерфейсе оператора 
-
+MIN_STORED_IDLE_LENGTH=5
+MIN_STORED_STATE_LENGTH=5
 # id каналов и разрешенные ip, к которым могут подключаться клиенты контроля простоя через запрос ?m=id
 ALLOWED_MACHINES = {2000: [], 2120: []}
 OPERATORS = {1111: {'name': 'Петров А.П.'},

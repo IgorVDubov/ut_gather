@@ -31,6 +31,7 @@ from gathercore.mutualcls import (ChannelSubscriptionsList,
                                   EList,)
 from gathercore.sourcepool import SourcePool
 from gathercore.webserver.webconnector import CURR_HTTP_SERVER_TYPE, setHTTPServer
+from gathercore.webserver.corewebadmin import  set_core_HTTP_server
 
 
 def init():
@@ -52,6 +53,15 @@ def init():
         config.modbus_server_params['host'],
         config.modbus_server_params['port'],
         loop=loop)
+    http_core_admin_params = config.http_core_admin_params
+    core_http_admin = set_core_HTTP_server(http_core_admin_params,
+                                           DataContainer(
+                                                        config.users,
+                                                        channel_base,
+                                                        ChannelSubscriptionsList(),
+                                                        EList())
+                                           )
+    
     http_params = config.http_server_params
     http_params.update(settings.web_server_path_params)
 
@@ -86,6 +96,7 @@ def init():
                          channel_base,
                          modbus_exchange_server,
                          http_server,
+                         core_http_admin,
                          db_processor)
     logger.info('init done')
     return main_loop

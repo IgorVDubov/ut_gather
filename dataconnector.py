@@ -124,3 +124,12 @@ def db_put_state(db_quie: DBQuie, state_rec: dict):
         else:
             db_queries.insert_state(db_quie, state_rec)
 
+def db_put_counter(db_quie: DBQuie, state_rec: dict):
+    print(f'db_put_state {state_rec}')
+    if state_rec.get('length') and state_rec['length'] >= 0:
+        state_rec.update({'length':0})
+    if state_rec.get('project_id') == 0:    # memory db for tests
+        jsdb_put_state(state_rec)
+    else:
+        db_queries.insert_state(db_quie, state_rec)
+

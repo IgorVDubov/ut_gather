@@ -34,6 +34,7 @@ def signal_tout_2_counters(vars):
         'dbQuie':'12001',                       связь с очередью записи в БД
         'idle_handler_id':17002,                канал обработчика простоев
     '''
+
     time_now = datetime.now()
     db_write_flag = False
     dost_change_flag = False
@@ -67,6 +68,10 @@ def signal_tout_2_counters(vars):
         # TODO здесь пишем  со статусом 7, length - счетчик, time_now
         vars.counter_2_reset = True  # сбрасываем счетчик в контроллере
         return
+    if  vars.counter_1_reset and vars.counter_1==0:
+        vars.counter_1_reset = False
+    if  vars.counter_2_reset and vars.counter_2==0:
+        vars.counter_2_reset = False
     #           если нет источника или входящий результат пустой массив
     if vars.result_in is None:
         result_in_error = True

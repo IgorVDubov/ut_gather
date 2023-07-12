@@ -3,6 +3,7 @@ from datetime import datetime
 import dataconnector as dc
 import settings
 
+
 def signal_tout_2_counters(vars):
     '''
     signals values with timeout
@@ -41,37 +42,32 @@ def signal_tout_2_counters(vars):
     NA_status = False
     result_in_error = False
 
-    if vars.counter_1_reset is True:    # сброс сброса счетчика
-        vars.counter_1_reset = False
-    if vars.counter_2_reset is True:
-        vars.counter_2_reset = False
-        
     #           Запись счетчика
     if vars.write_counters:
         vars.write_counters = False
         dc.db_put_state(vars.db_quie,
-                               {'id': vars.counter_1_id,
-                                'project_id': vars.project_id,
-                                'time': time_now,
-                                'status': 7,
-                                'length': vars.counter_1
-                                })
+                        {'id': vars.counter_1_id,
+                         'project_id': vars.project_id,
+                         'time': time_now,
+                         'status': 7,
+                         'length': vars.counter_1
+                         })
         # TODO здесь пишем  со статусом 7, length - счетчик, time_now
-        vars.counter_1_reset = True  # сбрасываем счетчик в контроллере
+        vars.counters_reset = True  # сбрасываем счетчик в контроллере
         dc.db_put_state(vars.db_quie,
-                               {'id': vars.counter_2_id,
-                                'project_id': vars.project_id,
-                                'time': time_now,
-                                'status': 7,
-                                'length': vars.counter_2
-                                })
+                        {'id': vars.counter_2_id,
+                         'project_id': vars.project_id,
+                         'time': time_now,
+                         'status': 7,
+                         'length': vars.counter_2
+                         })
         # TODO здесь пишем  со статусом 7, length - счетчик, time_now
         vars.counter_2_reset = True  # сбрасываем счетчик в контроллере
         return
-    if  vars.counter_1_reset and vars.counter_1==0:
-        vars.counter_1_reset = False
-    if  vars.counter_2_reset and vars.counter_2==0:
-        vars.counter_2_reset = False
+
+    if vars.counters_reset and vars.counter_1 == 0 and vars.counter_2 == 0:                      # сброс сброса счетчика
+        vars.counters_reset = False
+
     #           если нет источника или входящий результат пустой массив
     if vars.result_in is None:
         result_in_error = True
@@ -212,9 +208,9 @@ def signal_tout_2_counters(vars):
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
         if vars.saved_length > settings.MIN_STORED_STATE_LENGTH:
             dc.db_put_state(vars.db_quie,
-                                   {'id': vars.channel_id,
-                                    'project_id': vars.project_id,
-                                    'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
-                                    'status': vars.saved_status,
-                                    'length': int(round(vars.saved_length))
-                                    })
+                            {'id': vars.channel_id,
+                             'project_id': vars.project_id,
+                             'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
+                             'status': vars.saved_status,
+                             'length': int(round(vars.saved_length))
+                             })

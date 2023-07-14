@@ -41,9 +41,11 @@ def signal_tout_2_counters(vars):
     dost_change_flag = False
     NA_status = False
     result_in_error = False
-
-    #           Запись счетчика
-    if vars.write_counters:
+    
+    if vars.counters_reset:                     #           сброс сброса счетчика
+            vars.counters_reset = False
+    
+    if vars.write_counters:                     #           Запись счетчика
         vars.write_counters = False
         dc.db_put_state(vars.db_quie,
                         {'id': vars.counter_1_id,
@@ -65,8 +67,7 @@ def signal_tout_2_counters(vars):
         vars.counter_2_reset = True  # сбрасываем счетчик в контроллере
         return
 
-    if vars.counters_reset and vars.counter_1 == 0 and vars.counter_2 == 0:                      # сброс сброса счетчика
-        vars.counters_reset = False
+    
 
     #           если нет источника или входящий результат пустой массив
     if vars.result_in is None:
@@ -114,7 +115,7 @@ def signal_tout_2_counters(vars):
         vars.status_ch_b1, vars.status_ch_b2 = tuple(
             1 if b == '1' else 0 for b in reversed(bin(status)[2:].zfill(2)))
 
-    # если меняется интервал или принудительная инициализации записи
+    # если меняется интервал или принудительная инициализации записи или недостоверность источника
     if status != vars.buffer_status or vars.write_init or dost_change_flag:
         # выставляем биты состояния статуса для доступа по модбас для внешних клиентов (совместимость с UTrack SCADA)
         vars.status_ch_b1, vars.status_ch_b2 = tuple(
@@ -126,11 +127,11 @@ def signal_tout_2_counters(vars):
             # если сюда попали тк форсированная запись или статус NA
             vars.write_init = False
             vars.was_write_init = True
-            if vars.buffered:
+            if vars.buffered:               # если есть подвешенный отрезок
                 vars.double_write = True
                 vars.buffered = False
                 db_write_flag = True
-            else:
+            else:                            # если нет подвешенного отрезка
                 vars.saved_status = vars.buffer_status
                 vars.saved_time = vars.buffer_time
                 vars.saved_length = (time_now-vars.buffer_time).total_seconds()

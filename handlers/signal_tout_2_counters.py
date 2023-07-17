@@ -35,7 +35,6 @@ def signal_tout_2_counters(vars):
         'dbQuie':'12001',                       связь с очередью записи в БД
         'idle_handler_id':17002,                канал обработчика простоев
     '''
-
     time_now = datetime.now()
     db_write_flag = False
     dost_change_flag = False
@@ -80,10 +79,11 @@ def signal_tout_2_counters(vars):
             NA_status = True
             vars.not_dost_counter = vars.dost_timeout+1
         else:
-            return
+            return  # выходим если ждем таймаут
     else:
         vars.not_dost_counter = 0
         NA_status = False
+    
     if vars.NA_status_before != NA_status:
         dost_change_flag = True
         vars.NA_status_before = NA_status  # запоминаем NA_status

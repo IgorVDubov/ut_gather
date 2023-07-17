@@ -2,6 +2,7 @@ from .m_emulator import prog1
 from .r_level_tout import r_level_timeout
 from .signal_techtimeout import signal_techtimeout
 from .scheduler import write_init
+from .dbwriter import db_writer
 from .idle import idle
 from .ai2021 import ai2021
 from .signal_tout_2_counters import signal_tout_2_counters

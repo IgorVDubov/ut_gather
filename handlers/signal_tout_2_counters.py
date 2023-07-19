@@ -8,17 +8,22 @@ def signal_tout_2_counters(vars):
     '''
     signals values with timeout
     VARS:
-        'result_in':'5002.resultIn', -          вход от источника
-        'counter':'5003.result',             вход от источника счетчика
-        'counter_reset':'5004.result',          вход от источника сброс счетчика
-        'write_init':'13001.args.writeInit',    сигнал принудительной записи
-        'write_counter':'13001.args.write_counter' сигнал записи счетчика
+        'channel_id': ch_id
+        'result_in':'5002.resultIn', -              вход от источника
+        'dost': 'self.dost',                        достоверность
+        'counter_1':'_.result',                     вход от источника счетчика1
+        'counters_reset':'_.result_in',             вход от источника записи сигнала сброса счетчика
+        'counters_reset_in': '_.result',            вход от источника чтения сигнала сброса счетчика
+        'counter_2': _.result_in',                  вход от источника счетчика2
+        'counter_1_id': _                           id счетчика2 для записи в БД
+        'counter_2_id': _                           id счетчика2 для записи в БД
+        'write_init':'прогр_db_writer.args.writeInit',    сигнал принудительной записи
+        'write_counters':'прогр_db_writer.args.write_counter_idканала' сигнал записи счетчика
         'status_ch_b1':'11001.args.b1',         бит1 канала статуса
         'status_ch_b2':'11001.args.b2',         бит2 канала статуса
         'dost_timeout':'1001.args.dost_timeout', таймаут достоверности ,с
         'tech_timeout':'1001.args.minLength',   техпростой ,с
         'status':0,                             текущий статус
-        'cuase':'17002.args.cause_id',          текущая причина простоя
         'not_dost_counter':0,                   счетчик времени недостоверности
         'init':True,                            флаг инициализации
         'saved_status':0,                       сохраненный (подвешенный) отрезок статус
@@ -31,9 +36,12 @@ def signal_tout_2_counters(vars):
         'dost_length':0,                        буферезированный отрезок
         'NA_status_before':False,               сохраненный предыдущий статус NA
         'was_write_init':False,                 флаг произошедшей принудительной записи в БД
-        'db_write_flag':False,                  флаг принудительной записи в БД
         'dbQuie':'12001',                       связь с очередью записи в БД
+        'cuase':'17002.args.cause_id',          текущая причина простоя
+        'cause_time': '17003.args.current_cause_time', текущее время начала простоя
         'idle_handler_id':17002,                канал обработчика простоев
+        'project_id': 3,                        id проекта к которому относится канал
+        'operator_id': None,                    текущий оператор
     '''
     time_now = datetime.now()
     db_write_flag = False
@@ -41,7 +49,12 @@ def signal_tout_2_counters(vars):
     NA_status = False
     result_in_error = False
     
-    if vars.counters_reset:                     #           сброс сброса счетчика
+    if vars.counters_reset == False and vars.counters_reset_in == False:    # если был сигнал отмены сброс_счетчика 
+                                                                            # и он считан с источника, 
+                                                                            # выставляем его None чтобы не писался в регистр полстоянно
+            vars.counters_reset = None
+    
+    if vars.counters_reset == True and vars.counters_reset_in == True:   # если был сигнал сброс_счетчика и он считан с источника, сбрасываем его
             vars.counters_reset = False
     
     if vars.write_counters:                     #           Запись счетчика
@@ -120,8 +133,7 @@ def signal_tout_2_counters(vars):
         # выставляем биты состояния статуса для доступа по модбас для внешних клиентов (совместимость с UTrack SCADA)
         vars.status_ch_b1, vars.status_ch_b2 = tuple(
             1 if b == '1' else 0 for b in reversed(bin(status)[2:].zfill(2)))
-        print(
-            f'{vars.channel_id}:{status=}, {vars.status_ch_b1=}, {vars.status_ch_b2=}')
+        print(f'{vars.channel_id}:{status=}, {vars.status_ch_b1=}, {vars.status_ch_b2=}')
 
         if vars.write_init or NA_status or vars.double_write:
             # если сюда попали тк форсированная запись или статус NA

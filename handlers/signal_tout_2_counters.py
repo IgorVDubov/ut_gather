@@ -42,12 +42,45 @@ def signal_tout_2_counters(vars):
         'idle_handler_id':17002,                канал обработчика простоев
         'project_id': 3,                        id проекта к которому относится канал
         'operator_id': None,                    текущий оператор
+        'stop_signal': False,                   сигнал остановки системы
     '''
     time_now = datetime.now()
     db_write_flag = False
     dost_change_flag = False
     NA_status = False
     result_in_error = False
+    
+    if vars.stop_signal:
+        print('!!!!!!!!!!!!!!!!!    get stop signal       !!!!!!!!!!!!!!!!!!!!!!!!!')
+        dc.db_put_state(vars.db_quie,
+                        {'id': vars.counter_1_id,
+                         'project_id': vars.project_id,
+                         'time': time_now,
+                         'status': 7,
+                         'length': vars.counter_1
+                         })
+        dc.db_put_state(vars.db_quie,
+                        {'id': vars.counter_2_id,
+                         'project_id': vars.project_id,
+                         'time': time_now,
+                         'status': 7,
+                         'length': vars.counter_2
+                         })
+        dc.db_put_state(vars.db_quie,
+                        {'id': vars.channel_id,
+                            'project_id': vars.project_id,
+                            'time': vars.buffer_time.strftime("%Y-%m-%d %H:%M:%S"),
+                            'status': vars.buffer_status,
+                            'length': int(round((time_now-vars.buffer_time).total_seconds()))
+                            })
+        if vars.buffered and (vars.buffer_time - vars.saved_time).total_seconds() > 0 :
+            dc.db_put_state(vars.db_quie,
+                            {'id': vars.channel_id,
+                                'project_id': vars.project_id,
+                                'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
+                                'status': vars.saved_status,
+                                'length': int(round(vars.saved_length))
+                                })
     
     if vars.counters_reset == False and vars.counters_reset_in == False:    # если был сигнал отмены сброс_счетчика 
                                                                             # и он считан с источника, 
@@ -143,16 +176,15 @@ def signal_tout_2_counters(vars):
             # если сюда попали тк форсированная запись или статус NA
             vars.write_init = False
             vars.was_write_init = True
+            db_write_flag = True
             if vars.buffered:               # если есть подвешенный отрезок
                 vars.double_write = True
                 vars.buffered = False
-                db_write_flag = True
             else:                            # если нет подвешенного отрезка
+                vars.double_write = False
                 vars.saved_status = vars.buffer_status
                 vars.saved_time = vars.buffer_time
                 vars.saved_length = (time_now-vars.buffer_time).total_seconds()
-                db_write_flag = True
-                vars.double_write = False
                 vars.buffer_status = status
                 vars.buffer_time = time_now
         else:   # Если смена статуса
@@ -197,7 +229,7 @@ def signal_tout_2_counters(vars):
                     vars.saved_status = vars.buffer_status
                     vars.saved_length = vars.saved_length + \
                         (time_now-vars.buffer_time).total_seconds()
-                    if vars.was_write_init:  # если писали по сигналу write_init обновляем saved_time
+                    if vars.was_write_init:  # если предыдущий раз писали по сигналу write_init обновляем saved_time
                         vars.saved_time = vars.buffer_time
                     vars.buffered = True
                 else:

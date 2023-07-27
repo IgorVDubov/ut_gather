@@ -1,4 +1,5 @@
 import collections
+import datetime
 
 
 def bits_to_word(vars):
@@ -51,3 +52,9 @@ def mult(vars):
         else:
             input=vars.input
         vars.output = input * vars.k
+        
+def current_second(vars):
+    '''
+    return current second
+    '''
+    vars.result=datetime.datetime.now().second

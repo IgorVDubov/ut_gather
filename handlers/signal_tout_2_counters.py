@@ -30,7 +30,7 @@ def signal_tout_2_counters(vars):
         'saved_status':0,                       сохраненный (подвешенный) отрезок статус
         'saved_length':0,                       сохраненный (подвешенный) отрезок
         'saved_time':0,                         сохраненный (подвешенный) отрезок
-        'double_write':False,                   флаг для исключения повторной записи
+        'write_buffer':False,                   флаг для исключения повторной записи
         'buffered':False,                       флаг наличия буферезированный отрезок
         'buffer_time':0,                        буферезированный отрезок
         'buffer_status':0,                      буферезированный отрезок
@@ -166,37 +166,44 @@ def signal_tout_2_counters(vars):
         vars.buffer_status = status
         vars.buffer_time = time_now
         vars.buffered = False
-        vars.double_write = False
+        vars.write_buffer = False
         vars.was_write_init = False
         vars.status_ch_b1, vars.status_ch_b2 = tuple(
             1 if b == '1' else 0 for b in reversed(bin(status)[2:].zfill(2)))
 
-    # если меняется интервал или принудительная инициализации записи или недостоверность источника
     if status != vars.buffer_status or vars.write_init or dost_change_flag:
+        # если меняется интервал или принудительная инициализации записи или недостоверность источника
         logger.log('PROG',f'меняется интервал или принудительная инициализации записи или недостоверность источника')
-        logger.log('PROG',f'status != vars.buffer_status{status != vars.buffer_status} {vars.write_init=} {dost_change_flag}=')
+        logger.log('PROG',f'status != vars.buffer_status={status != vars.buffer_status}, {vars.write_init=}, {dost_change_flag=}')
         # выставляем биты состояния статуса для доступа по модбас для внешних клиентов (совместимость с UTrack SCADA)
         vars.status_ch_b1, vars.status_ch_b2 = tuple(
             1 if b == '1' else 0 for b in reversed(bin(status)[2:].zfill(2)))
         print(f'{vars.channel_id}:{status=}, {vars.status_ch_b1=}, {vars.status_ch_b2=}')
 
-        if vars.write_init or NA_status or vars.double_write:
-            # если сюда попали тк форсированная запись или статус NA
+        if vars.write_init or NA_status or vars.write_buffer:
+            # сюда попали тк форсированная запись или статус NA или доп запись буфера 
             logger.log('PROG','если сюда попали тк форсированная запись или статус NA')
-            logger.log('PROG',f'{vars.write_init=} {NA_status=} {vars.double_write=}')
+            logger.log('PROG',f'{vars.write_init=} {NA_status=} {vars.write_buffer=}')
             vars.write_init = False
             vars.was_write_init = True
             db_write_flag = True
             if vars.buffered:               # если есть подвешенный отрезок
-                vars.double_write = True
+                logger.log('PROG',f'есть подвешенный отрезок')
+                vars.write_buffer = True
                 vars.buffered = False
             else:                            # если нет подвешенного отрезка
-                vars.double_write = False
-                vars.saved_status = vars.buffer_status
-                vars.saved_time = vars.buffer_time
-                vars.saved_length = (time_now-vars.buffer_time).total_seconds()
+                if vars.write_buffer:                # если дополнительтно записываем буферный отрезок
+                    logger.log('PROG',f'пишем буфер')
+                    vars.write_buffer = False
+                    vars.saved_status = vars.buffer_status
+                    vars.saved_time = vars.buffer_time
+                    vars.saved_length = (time_now-vars.buffer_time).total_seconds()
+                else:                                   # если нет буф отрезка пишем начало сохраненного отрезка
+                    logger.log('PROG',f'нет подвешенного отрезка ')
+                    vars.saved_length = (time_now-vars.saved_time).total_seconds()
                 vars.buffer_status = status
                 vars.buffer_time = time_now
+                    
         else:   # Если смена статуса
             logger.log('PROG',f'смена статуса {status=} {vars.buffer_status=}')
             if (time_now - vars.buffer_time).total_seconds() <= vars.tech_timeout:
@@ -205,8 +212,7 @@ def signal_tout_2_counters(vars):
                 if status == 3:  # если Работа
                     if vars.saved_status == 3:
                         logger.log('PROG','status == 3 saved_status == 3')
-                        vars.saved_length = vars.saved_length + \
-                            (time_now-vars.buffer_time).total_seconds()
+                        vars.saved_length = vars.saved_length + (time_now-vars.buffer_time).total_seconds()
                         vars.buffered = False
                     else:
                         logger.log('PROG','status = 3 saved_status != 3')

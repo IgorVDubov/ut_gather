@@ -123,18 +123,21 @@ def signal_techtimeout(vars):
             # если сюда попали тк форсированная запись или статус NA
             vars.write_init = False
             vars.was_write_init = True
+            db_write_flag = True
             if vars.buffered:
                 vars.double_write = True
                 vars.buffered = False
-                db_write_flag = True
             else:
-                vars.saved_status = vars.buffer_status
-                vars.saved_time = vars.buffer_time
-                vars.saved_length = (time_now-vars.buffer_time).total_seconds()
-                db_write_flag = True
-                vars.double_write = False
+                if vars.write_buffer:                # если дополнительтно записываем буферный отрезок              27/07
+                    vars.double_write = False
+                    vars.saved_status = vars.buffer_status
+                    vars.saved_time = vars.buffer_time
+                    vars.saved_length = (time_now-vars.buffer_time).total_seconds()
+                else:                                   # если нет буф отрезка пишем начало сохраненного отрезка    27/07
+                    vars.saved_length = (time_now-vars.saved_time).total_seconds()
                 vars.buffer_status = status
                 vars.buffer_time = time_now
+                
         else:   # Если смена статуса
             # Если техпростой еще не закончился но сменился статус
             if (time_now - vars.buffer_time).total_seconds() <= vars.tech_timeout:
@@ -211,3 +214,4 @@ def signal_techtimeout(vars):
                                     'status': vars.saved_status,
                                     'length': int(round(vars.saved_length))
                                     })
+        vars.saved_length = 0                                                   # 02/08

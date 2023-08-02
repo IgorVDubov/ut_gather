@@ -27,13 +27,13 @@ def signal_tout_2_counters(vars):
         'status':0,                             текущий статус
         'not_dost_counter':0,                   счетчик времени недостоверности
         'init':True,                            флаг инициализации
-        'saved_status':0,                       сохраненный (подвешенный) отрезок статус
-        'saved_length':0,                       сохраненный (подвешенный) отрезок
-        'saved_time':0,                         сохраненный (подвешенный) отрезок
-        'write_buffer':False,                   флаг для исключения повторной записи
-        'buffered':False,                       флаг наличия буферезированный отрезок
-        'buffer_time':0,                        буферезированный отрезок
-        'buffer_status':0,                      буферезированный отрезок
+        'saved_status':0,                       текущий сохраненный отрезок статус
+        'saved_length':0,                       текущий сохраненный отрезок длительтность
+        'saved_time':0,                         текущий сохраненный отрезок время начала отрезка
+        'buffered':False,                       флаг наличия подвешенного отрезок (техпростой или нет)
+        'buffer_time':0,                        буферезированный отрезок время начала
+        'buffer_status':0,                      буферезированный отрезок сосотяние
+        'write_buffer':False,                   флаг для записи подвешенного отрезка при принудительной записи
         'dost_length':0,                        буферезированный отрезок
         'NA_status_before':False,               сохраненный предыдущий статус NA
         'was_write_init':False,                 флаг произошедшей принудительной записи в БД
@@ -50,8 +50,7 @@ def signal_tout_2_counters(vars):
     dost_change_flag = False
     NA_status = False
     result_in_error = False
-    
-    
+        
     if vars.stop_signal:
         logger.log('PROG', '!!!!!!!!!!!!!!!!!    get stop signal       !!!!!!!!!!!!!!!!!!!!!!!!!')
         dc.db_put_state(vars.db_quie,
@@ -71,26 +70,25 @@ def signal_tout_2_counters(vars):
         dc.db_put_state(vars.db_quie,
                         {'id': vars.channel_id,
                             'project_id': vars.project_id,
-                            'time': vars.buffer_time.strftime("%Y-%m-%d %H:%M:%S"),
-                            'status': vars.buffer_status,
-                            'length': int(round((time_now-vars.buffer_time).total_seconds()))
+                            'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
+                            'status': vars.saved_status,
+                            'length': int(round((time_now-vars.saved_time).total_seconds()))                # 02/08 (was buffer_time)
                             })
-        if vars.buffered: 
-        # and vars.buffer_time > vars.saved_time:
-            dc.db_put_state(vars.db_quie,
-                            {'id': vars.channel_id,
-                                'project_id': vars.project_id,
-                                'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
-                                'status': vars.saved_status,
-                                'length': int(round(vars.saved_length))
-                                })
+        # if vars.buffered:                                                                                 # 02/08
+        #     dc.db_put_state(vars.db_quie,
+        #                     {'id': vars.channel_id,
+        #                         'project_id': vars.project_id,
+        #                         'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
+        #                         'status': vars.saved_status,
+        #                         'length': int(round(vars.saved_length))
+        #                         })
     
-    if vars.counters_reset == False and vars.counters_reset_in == False:    # если был сигнал отмены сброс_счетчика 
+    if vars.counters_reset is False and vars.counters_reset_in is False:    # если был сигнал отмены сброс_счетчика 
                                                                             # и он считан с источника, 
                                                                             # выставляем его None чтобы не писался в регистр полстоянно
             vars.counters_reset = None
     
-    if vars.counters_reset == True and vars.counter_2 == 0:                # если был сигнал отмены сброс_счетчика 
+    if vars.counters_reset is True and vars.counter_2 == 0:                # если был сигнал отмены сброс_счетчика 
                                                                             # и счетчик рулонов = 0, , сбрасываем его
             vars.counters_reset = False
     
@@ -139,7 +137,7 @@ def signal_tout_2_counters(vars):
         NA_status = False
     
     if vars.NA_status_before != NA_status:
-        logger.log('PROG',f'смена достоверности {NA_status=}')
+        logger.log('PROG', f'смена достоверности {NA_status=}')
         dost_change_flag = True
         vars.NA_status_before = NA_status  # запоминаем NA_status
     else:
@@ -154,7 +152,7 @@ def signal_tout_2_counters(vars):
 
     #         первоначальная инициализация
     if vars.init:
-        logger.log('PROG','vars init')
+        logger.log('PROG', 'vars init')
         vars.init = False
         if result_in_error and not NA_status:
             vars.saved_status = 0
@@ -173,8 +171,12 @@ def signal_tout_2_counters(vars):
 
     if status != vars.buffer_status or vars.write_init or dost_change_flag:
         # если меняется интервал или принудительная инициализации записи или недостоверность источника
-        logger.log('PROG',f'меняется интервал или принудительная инициализации записи или недостоверность источника')
-        logger.log('PROG',f'status != vars.buffer_status={status != vars.buffer_status}, {vars.write_init=}, {dost_change_flag=}')
+        logger.log('PROG', 'меняется интервал или принудительная инициализации записи или недостоверность источника')
+        logger.log('PROG', f'{status=}, {vars.buffer_status=}, {vars.write_init=}, {dost_change_flag=}')
+        logger.log('PROG', 'на входе в условие ')
+        logger.log('PROG', f'saved_status:{vars.saved_status} saved_time:{vars.saved_time.strftime("%Y-%m-%d %H:%M:%S")} saved_length:{vars.saved_length}')
+        logger.log('PROG', f'buffer_status:{vars.buffer_status} buffer_time:{vars.buffer_time.strftime("%Y-%m-%d %H:%M:%S")} ')
+        logger.log('PROG', f'{vars.buffered=} {db_write_flag=} {vars.was_write_init=}')
         # выставляем биты состояния статуса для доступа по модбас для внешних клиентов (совместимость с UTrack SCADA)
         vars.status_ch_b1, vars.status_ch_b2 = tuple(
             1 if b == '1' else 0 for b in reversed(bin(status)[2:].zfill(2)))
@@ -191,14 +193,14 @@ def signal_tout_2_counters(vars):
                 logger.log('PROG',f'есть подвешенный отрезок')
                 vars.write_buffer = True
                 vars.buffered = False
-            else:                            # если нет подвешенного отрезка
-                if vars.write_buffer:                # если дополнительтно записываем буферный отрезок
+            else:                            # если нет подвешенного отрезка / попадаем сюда если write_buffer  
+                if vars.write_buffer:                # если дополнительтно записываем буферный отрезок              27/07
                     logger.log('PROG',f'пишем буфер')
                     vars.write_buffer = False
                     vars.saved_status = vars.buffer_status
                     vars.saved_time = vars.buffer_time
                     vars.saved_length = (time_now-vars.buffer_time).total_seconds()
-                else:                                   # если нет буф отрезка пишем начало сохраненного отрезка
+                else:                                   # если нет буф отрезка пишем начало сохраненного отрезка    27/07
                     logger.log('PROG',f'нет подвешенного отрезка ')
                     vars.saved_length = (time_now-vars.saved_time).total_seconds()
                 vars.buffer_status = status
@@ -258,7 +260,7 @@ def signal_tout_2_counters(vars):
                         (time_now-vars.buffer_time).total_seconds()
                     if vars.was_write_init:  # если предыдущий раз писали по сигналу write_init обновляем saved_time
                         vars.saved_time = vars.buffer_time
-                        logger.log('PROG',f'предыдущий раз писали по сигналу write_init обновляем saved_time {vars.saved_time=}')
+                        logger.log('PROG', f'предыдущий раз писали по сигналу write_init обновляем saved_time {vars.saved_time=}')
                     vars.buffered = True
                 else:
                     logger.log('PROG','не перерыв в работе')
@@ -298,3 +300,5 @@ def signal_tout_2_counters(vars):
                              'status': vars.saved_status,
                              'length': int(round(vars.saved_length))
                              })
+        vars.saved_length = 0                                                       # 02/08
+        

@@ -215,3 +215,5 @@ def signal_techtimeout(vars):
                                     'length': int(round(vars.saved_length))
                                     })
         vars.saved_length = 0                                                   # 02/08
+        vars.saved_status = status                                                  # 03/08
+        vars.saved_time = time_now                                                  # 03/08

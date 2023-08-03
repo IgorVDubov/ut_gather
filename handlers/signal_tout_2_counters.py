@@ -284,7 +284,7 @@ def signal_tout_2_counters(vars):
     if vars.buffered:
         # если есть отрезок ожидающий записи - пишем его по прошествии tech_timeout
         if (time_now-vars.buffer_time).total_seconds() >= vars.tech_timeout:
-            logger.log('PROG',f'buffered + tech_timeout -> db_write_flag = True' )
+            logger.log('PROG', 'пишем buffered по прошествии tech_timeout')
             db_write_flag = True
             vars.buffered = False
 
@@ -301,4 +301,6 @@ def signal_tout_2_counters(vars):
                              'length': int(round(vars.saved_length))
                              })
         vars.saved_length = 0                                                       # 02/08
+        vars.saved_status = status                                                  # 03/08
+        vars.saved_time = time_now                                                  # 03/08
         

@@ -24,7 +24,7 @@ def signal_techtimeout(vars):
         'saved_status':0,                       сохраненный (подвешенный) отрезок статус
         'saved_length':0,                       сохраненный (подвешенный) отрезок
         'saved_time':0,                         сохраненный (подвешенный) отрезок
-        'double_write':False,                   флаг для исключения повторной записи
+        'write_buffer':False,                   флаг для исключения повторной записи
         'buffered':False,                       флаг наличия буферезированный отрезок
         'buffer_time':0,                        буферезированный отрезок
         'buffer_status':0,                      буферезированный отрезок
@@ -106,7 +106,7 @@ def signal_techtimeout(vars):
         vars.buffer_status = status
         vars.buffer_time = time_now
         vars.buffered = False
-        vars.double_write = False
+        vars.write_buffer = False
         vars.was_write_init = False
         vars.status_ch_b1, vars.status_ch_b2 = tuple(
             1 if b == '1' else 0 for b in reversed(bin(status)[2:].zfill(2)))
@@ -119,17 +119,17 @@ def signal_techtimeout(vars):
         print(
             f'{vars.channel_id}:{status=}, {vars.status_ch_b1=}, {vars.status_ch_b2=}')
 
-        if vars.write_init or NA_status or vars.double_write:
+        if vars.write_init or NA_status or vars.write_buffer:
             # если сюда попали тк форсированная запись или статус NA
             vars.write_init = False
             vars.was_write_init = True
             db_write_flag = True
             if vars.buffered:
-                vars.double_write = True
+                vars.write_buffer = True
                 vars.buffered = False
             else:
                 if vars.write_buffer:                # если дополнительтно записываем буферный отрезок              27/07
-                    vars.double_write = False
+                    vars.write_buffer = False
                     vars.saved_status = vars.buffer_status
                     vars.saved_time = vars.buffer_time
                     vars.saved_length = (time_now-vars.buffer_time).total_seconds()

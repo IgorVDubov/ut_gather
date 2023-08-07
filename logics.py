@@ -62,21 +62,24 @@ def load_machines_idle():
     '''
     # TODO временное решение или вынести в БД или вынести файл в настройки
     with open('idles.txt', 'r') as file:
-        if saved := file.read():
-            if data := json.loads(saved):
-                rec = {data.get('id'): Idle(data.get('state'),
-                                            data.get('tech_idle'),
-                                            datetime.strptime(data.get('begin_time'), settings.TIME_FORMAT) if data.get(
-                                                'begin_time') else None,
-                                            data.get('operator'),
-                                            data.get('cause'),
-                                            datetime.strptime(data.get('cause_time'), settings.TIME_FORMAT) if data.get(
-                    'cause_time') else None,
-                    datetime.strptime(data.get('cause_set_time'), settings.TIME_FORMAT) if data.get(
-                        'cause_set_time') else None,
-                    data.get('length')
-                )}
-                project_globals.machines_idle.update(rec)
+        line=' '
+        while line:
+            if line:= file.readline():
+                if data := json.loads(line):
+                    rec = {data.get('id'): Idle(data.get('state'),
+                                                data.get('tech_idle'),
+                                                datetime.strptime(data.get('begin_time'), 
+                                                settings.TIME_FORMAT) if data.get('begin_time') else None,
+                                                data.get('operator'),
+                                                data.get('cause'),
+                                                datetime.strptime(data.get('cause_time'),
+                                                settings.TIME_FORMAT) if data.get('cause_time') else None,
+                                                datetime.strptime(data.get('cause_set_time'),
+                                                settings.TIME_FORMAT) if data.get('cause_set_time') else None,
+                                                data.get('length')
+                                                )
+                           }
+                    project_globals.machines_idle.update(rec)
 
 
 def save_machines_idle():
@@ -96,7 +99,7 @@ def save_machines_idle():
                              'cause_time': idle.cause_time.strftime(settings.TIME_FORMAT) if idle.cause_time else None,
                              'cause_set_time': idle.cause_set_time.strftime(settings.TIME_FORMAT) if idle.cause_set_time else None,
                              'length': idle.length})
-                file.write(json.dumps(data))
+                file.write(json.dumps(data)+'\n')
 
 
 def jsdb_put_state(state_rec: dict):

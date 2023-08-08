@@ -11,7 +11,10 @@ from loguru import logger
 
 from models import User
 from config import CHECK_AUTORIZATION, DEFAULT_USER
-from gathercore.mutualcls import WSClient, SubscriptChannelArg
+from gathercore.classes import  SubscriptChannelArg
+from gathercore.webserver.classes import WSClient
+from gathercore.webserver.webconnector import BaseRequestHandler, BaseWSHandler
+
 from gathercore.channels.channels import parse_attr_params
 from settings import web_server_path_params as path_params
 from config import http_server_params
@@ -21,10 +24,9 @@ import dataconnector as dc
 import settings
 import projectglobals as project_globals
 
-RequestHandlerClass = tornado.web.RequestHandler
+RequestHandlerClass = BaseRequestHandler
 StaticFileHandler = tornado.web.StaticFileHandler
-RequestHandler = tornado.web.RequestHandler
-WebSocketHandler = tornado.websocket.WebSocketHandler
+WebSocketHandler = BaseWSHandler
 
 
 class BaseHandler(RequestHandlerClass):
@@ -108,7 +110,7 @@ class MainHtmlHandler(BaseHandler):
                     )
 
 
-class WSHandler(tornado.websocket.WebSocketHandler):
+class WSHandler(WebSocketHandler):
     def open(self):
         try:
             machine_id = int(tornado.escape.xhtml_escape(
@@ -169,10 +171,10 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                     channel_id, argument = parse_attr_params(arg)
                     channel = self.application.data.channelBase.get(channel_id)
                     new_subscription = SubscriptChannelArg(channel, argument)
-                    subscription = self.application.data.subsriptions.add_subscription(
+                    subscription = self.application.data.subscriptions.add_subscription(
                         new_subscription)
-                    self.application.data.ws_clients.get_by_attr(
-                        'client', self).subscriptions.append(subscription)
+                    stored_client = self.application.data.ws_clients.get_client(self)
+                    stored_client.subscriptions.append(subscription)
                     send_data = {arg: channel.get_arg(argument)}
                     send_data.update(
                         {'time': (datetime.now()).strftime('%Y-%m-%dT%H:%M:%S')})
@@ -196,9 +198,9 @@ class WSHandler(tornado.websocket.WebSocketHandler):
                 logger.debug('Unsupported ws message: '+message)
 
     def on_close(self):
-        if client := self.application.data.ws_clients.get_by_attr('client', self):
+        if client := self.application.data.ws_clients.get_client(self):
             for subscr in client.subscriptions:
-                self.application.data.subsriptions.del_subscription(subscr)
+                self.application.data.subscriptions.del_subscription(subscr)
             self.application.data.ws_clients.remove(client)
 
 
@@ -218,16 +220,6 @@ class AdminHtmlHandler(BaseHandler):
                     version=settings.CLIENT_VERSION,
                     )
 
-
-# class RequestHtmlHandler(BaseHandler):
-#     # @BaseHandler.check_user(CHECK_AUTORIZATION)
-#     def post(self):
-#         self.set_header("Content-Type", "application/json")
-#         request=json.loads(self.request.body)
-#         print (request)
-#         if request.get('type')=='get_ch':
-#             logger.log('MESSAGE',f'client {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
-#             self.write(json.dumps(self.application.data.channelBase.get(request.get('id')).toDict(), default=str))
 
 class AdmRequestHtmlHandler(BaseHandler):
     @BaseHandler.check_user(CHECK_AUTORIZATION)
@@ -312,7 +304,7 @@ class MEmulRequestHtmlHandler(BaseHandler):
         print(f'requestBody:{requestBody}')
 
 
-class MEWSHandler(tornado.websocket.WebSocketHandler):
+class MEWSHandler(WebSocketHandler):
     # def initialize(self, clbk):
     #     self.callback=clbk
     # def __init__(self, *args, **kwargs):
@@ -358,17 +350,17 @@ class MEWSHandler(tornado.websocket.WebSocketHandler):
                     channel_id, argument = parse_attr_params(arg)
                     channel = self.application.data.channelBase.get(channel_id)
                     new_subscription = SubscriptChannelArg(channel, argument)
-                    subscription = self.application.data.subsriptions.add_subscription(
+                    subscription = self.application.data.subscriptions.add_subscription(
                         new_subscription)
-                    self.application.data.ws_clients.get_by_attr(
-                        'client', self).subscriptions.append(subscription)
+                    self.application.data.ws_clients.get_client(
+                        self).subscriptions.append(subscription)
                     send_data = {arg: channel.get_arg(argument)}
                     send_data.update(
                         {'time': (datetime.now()).strftime('%Y-%m-%dT%H:%M:%S')})
                     for_send.append(send_data)
                     if len(for_send):
                         self.write_message(json.dumps(for_send, default=str))
-                # print (f'in ws:{self.application.data.subsriptions}')
+                # print (f'in ws:{self.application.data.subscriptions}')
             elif jsonData.get('type') == "msg":
                 logger.debug(f"ws_message: {jsonData.get('data')}")
             elif jsonData.get('cmd') == "ws_reload":
@@ -383,9 +375,9 @@ class MEWSHandler(tornado.websocket.WebSocketHandler):
         # if self.request.headers['User-Agent'] != 'UTHMBot':  #не логгируем запросы от бота
         #     user=[user for user in config.users if user['id']==int(tornado.escape.xhtml_escape(self.get_secure_cookie("user")))][0]
         #     logger.info(f' User {user.get("login")} close WebSocket. Online {len(self.application.wsC_cients)-1} clients')
-        if client := self.application.data.ws_clients.get_by_attr('client', self):
+        if client := self.application.data.ws_clients.get_client(self):
             for subscr in client.subscriptions:
-                self.application.data.subsriptions.del_subscription(subscr)
+                self.application.data.subscriptions.del_subscription(subscr)
             self.application.data.ws_clients.remove(client)
 
 
@@ -412,6 +404,8 @@ class ReportsHtmlHandler(BaseHandler):
                     project=5,
                     version=0.1,
                     )
+
+
 class DBHtmlHandler(BaseHandler):
     @BaseHandler.check_user(CHECK_AUTORIZATION)
     def get(self):
@@ -436,7 +430,7 @@ class DBHtmlHandler(BaseHandler):
                     )
 
 
-class ReportsWSHandler(tornado.websocket.WebSocketHandler):
+class ReportsWSHandler(WebSocketHandler):
 
     def open(self):
         logger.info(f'Web Socket open, IP:{self.request.remote_ip} ')
@@ -469,10 +463,10 @@ class ReportsWSHandler(tornado.websocket.WebSocketHandler):
                     channel_id, argument = parse_attr_params(arg)
                     channel = self.application.data.channelBase.get(channel_id)
                     new_subscription = SubscriptChannelArg(channel, argument)
-                    subscription = self.application.data.subsriptions.add_subscription(
+                    subscription = self.application.data.subscriptions.add_subscription(
                         new_subscription)
-                    self.application.data.ws_clients.get_by_attr(
-                        'client', self).subscriptions.append(subscription)
+                    self.application.data.ws_clients.get_client(
+                                    self).subscriptions.append(subscription)
                     send_data = {arg: channel.get_arg(argument)}
                     send_data.update(
                         {'time': (datetime.now()).strftime('%Y-%m-%dT%H:%M:%S')})
@@ -521,7 +515,7 @@ class ReportsWSHandler(tornado.websocket.WebSocketHandler):
                 logger.debug('Unsupported ws message: '+message)
 
     def on_close(self):
-        if client := self.application.data.ws_clients.get_by_attr('client', self):
+        if client := self.application.data.ws_clients.get_client(self):
             self.application.data.ws_clients.remove(client)
 
 

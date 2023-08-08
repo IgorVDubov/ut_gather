@@ -26,11 +26,12 @@ from gathercore.interfaces.modbus_server.exchangeserver import MBServerAdrMapIni
 from gathercore.interfaces.db.dbconnector import create_db_connector
 from gathercore.interfaces.db.dbinterface import DBCommandProcessor
 from gathercore.mainloop import MainLoop
-from gathercore.mutualcls import (ChannelSubscriptionsList,
-                                  DataContainer,
+from gathercore.classes import (ChannelSubscriptionsList,
                                   EList,)
+
 from gathercore.sourcepool import SourcePool
 from gathercore.webserver.webconnector import CURR_HTTP_SERVER_TYPE, setHTTPServer
+from gathercore.webserver.classes import DataContainer, CoreAdminDataContainer
 from gathercore.webserver.corewebadmin import  set_core_HTTP_server
 
 
@@ -55,25 +56,28 @@ def init():
         loop=loop)
     http_core_admin_params = config.http_core_admin_params
     core_http_admin = set_core_HTTP_server(http_core_admin_params,
-                                           DataContainer(
+                                           CoreAdminDataContainer(
                                                         config.users,
                                                         channel_base,
-                                                        ChannelSubscriptionsList(),
-                                                        EList())
+                                                        source_pool
+                                                        # ChannelSubscriptionsList(),
+                                                        # EList()
+                                                        )
                                            )
     
     http_params = config.http_server_params
     http_params.update(settings.web_server_path_params)
 
-    subscrptions: ChannelSubscriptionsList = ChannelSubscriptionsList()
-    ws_clients: EList = EList()
+    # subscrptions: ChannelSubscriptionsList = ChannelSubscriptionsList()
+    # ws_clients: EList = EList()
     http_server: CURR_HTTP_SERVER_TYPE = setHTTPServer(http_params,
                                         project_webserver_handlers.handlers,
                                         DataContainer(
                                             config.users,
                                             channel_base,
-                                            subscrptions,
-                                            ws_clients)
+                                            # subscrptions,
+                                            # ws_clients
+                                            )
                                         )
     # db_interface=DBInterface(config.DB_TYPE, config.DB_PARAMS)
     # db_interface=dbconnector.create_db_connection(config.DB_TYPE, config.DB_PARAMS)

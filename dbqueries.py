@@ -3,7 +3,7 @@ from gathercore.interfaces.db.dbcommands import DBInsert
 
 
 
-def insert_state(db_quie, state_rec:dict):
+def insert_state(db_quie, state_rec: dict):
     print(f'db_put_state {state_rec}')
     sql = f'insert into track_{state_rec.get("project_id","")} values  (%s,%s,%s,%s)'
     params = (state_rec.get('id'), 

@@ -575,14 +575,15 @@
          return false
       }
     }
+    
     function storeAndSetStyle(elem, param, value){
       elem.dataset['saved'+param]=window.getComputedStyle(elem)[param]
       elem.style[param]=value
       }
+    
     function restoreStyle(elem, param){
       elem.style[param]=elem.dataset['saved'+param]
       }
- 
 
     function block(innerHTML=undefined, classes=[], id=undefined, ){
       let block=document.createElement('div');
@@ -591,12 +592,14 @@
       block.classList=classes;
       return block;
     }
+    
     function labledDataBlock(label, blockClasses=[],labelClasses=[],dataClasses=[], blockID=undefined, labelID=undefined, dataID=undefined){
         let container=block('',blockClasses,blockID);
         container.append(block(label,labelClasses,labelID));
         container.append(block('',dataClasses,dataID));
         return container
     }
+    
     function labled2DataBlock(label, blockClasses=[],labelClasses=[],data1Classes=[], data2Classes=[], blockID=undefined, labelID=undefined, data1ID=undefined, data2ID=undefined, flexDirection='row'){
         let container=block('',blockClasses,blockID);
         container.append(block(label,labelClasses,labelID));
@@ -609,6 +612,7 @@
         container.append(dataContainer);
         return container
     }
+    
     function flashIndicator(indicator, flashColor,afterColor, pause){
       indicator.style.color=flashColor
       setTimeout(function(){indicator.style.color=afterColor},pause)
@@ -701,6 +705,7 @@
       updateStatusTimer();
       updateCauseTimer();
     }
+    
     function updateServerTime(){
       serverTime.add(1,'s');
       serverTimeElem.innerText=  serverTime.format('HH:mm:ss')
@@ -742,9 +747,11 @@
     function showKeyboard(){
       restoreStyle(keyboardElem, 'display')
     }
+    
     function hideKeyboard(){
       keyboardElem.style.display='None'
     }
+    
     function hideOperatorRequest(){
       operatorLoginContainerElem.style.display='None'
     }
@@ -753,6 +760,7 @@
       restoreStyle(operatorLogoutContainerElem, 'display')
 
     }
+    
     function hideOperatorLogout(){
       operatorLogoutContainerElem.style.display='None'
     }
@@ -764,6 +772,7 @@
       hideOperatorLogout()
 
     }
+    
     function cancelLogout(){
       hideOperatorLogout()
     }
@@ -793,13 +802,16 @@
       hideKeyboard()
       restoreStyle(operatorConfurmContainerElem, 'display')
     }
+    
     function hideConfirmOperatorContainer(){
       operatorConfurmContainerElem.style.display='None'
     }
+    
     function showNoOperatorAllert(){
       hideConfirmOperatorContainer()
       restoreStyle(noOperatorAllertElem, 'display')
     }
+    
     function hideNoOperatorAllert(){
       noOperatorAllertElem.style.display='None'
     }
@@ -820,13 +832,12 @@
 
       // hideOperatorRequest()
     }
+    
     function cancelLogin(){
       operatorIdElem.innerText=''
       hideConfirmOperatorContainer()
       showKeyboard()
     }
-
-    
     
     currentState = new Proxy(currentState, {
       set(target, property, value){
@@ -843,7 +854,6 @@
         return true
       }
       });
-    
 
     function changeState(){
       setStatus(currentState.state, moment(currentState.stateTime).format('DD.MM.YY HH:mm:ss'))
@@ -890,12 +900,14 @@
       stateValueElem.innerText=STATES[result];
       stateTimeElem.innerText=time;
     }
+    
     function setCause(){
       let causeTime = (currentState.causeTime==undefined) ?  serverTime : currentState.causeTime
       currentState.causeTime=moment(causeTime).format('YYYY-MM-DDTHH:mm:ss');
       displayCauseStatus();
       displayIdleMode();
     }
+    
     function displayCauseStatus(){
       if (currentState.cause!=undefined){
         causeStatusElem.innerText=IDLE_COUSES[currentState.cause]
@@ -930,6 +942,7 @@
     function showTechIdleProgress(){
       progressBar.show()
     }
+    
     function hideTechIdleProgress(){
         progressBar.hide()
     }
@@ -937,13 +950,16 @@
     function showCauseStatusContainer(){
       restoreStyle(causeStatusBlockElem, 'display')
     }
+    
     function hideCauseStatusContainer(){
       if (isVisible(causeStatusBlockElem)) {storeAndSetStyle(causeStatusBlockElem, 'display', 'none')}
     }
+    
     function updateStatusTimer(){
         let d=moment.duration(serverTime.diff(currentState.stateTime),'ms')
         stateTimerElem.innerText=  d.days()*24 + d.hours() + ':' + d.minutes() + ':'+d.seconds()
     }
+    
     function updateCauseTimer(){
         let d=moment.duration(serverTime.diff(moment(currentState.causeTime)),'ms')
         causeTimerElem.innerText=  d.days()*24 + d.hours() + ':' + d.minutes() + ':'+d.seconds()
@@ -952,12 +968,15 @@
     function showCauseButtons(){
       restoreStyle(causeButtonsContainerElem, 'display')
     }
+    
     function hideCauseButtons(){
       if (isVisible(causeButtonsContainerElem)) {storeAndSetStyle(causeButtonsContainerElem, 'display', 'none')}
     }
+    
     function showChangeCauseButton(){
       restoreStyle(changeCauseButtonElem, 'display')
     }
+    
     function hideChangeCauseButton(){
       if (isVisible(changeCauseButtonElem)) {storeAndSetStyle(changeCauseButtonElem, 'display', 'none')}
     }
@@ -965,6 +984,7 @@
     function showFlashWaitWarning(){
       restoreStyle(flashWaitWarning, 'display')
     }
+    
     function hideFlashWaitWarning(){
       if (isVisible(flashWaitWarning)) {storeAndSetStyle(flashWaitWarning, 'display', 'none')}
     }
@@ -972,15 +992,18 @@
     function setProgress(progress,value){
       progressElem.style.width=progress.toString()+'%'
     }
+    
     function resetTechIdle(){
       hideTechIdleProgress()
       techIdleTimer.pause();
     }
+    
     function setTechIdle(){
       idleTime=TECH_IDLE_LENGTH;
       showTechIdleProgress();
       techIdleTimer.restart();
     }
+    
     function updateTechIdle(){
       idleTime= idleTime - 0.25;
       if (idleTime<1){
@@ -992,8 +1015,6 @@
       } 
     }
 
-
-
     function displayWorkMode(){
       hideFlashWaitWarning();
       hideCauseButtons();
@@ -1001,6 +1022,7 @@
       hideChangeCauseButton();
       displayBigStaus();
     }
+    
     function displayIdleMode(){
       hideFlashWaitWarning();
       hideCauseButtons();
@@ -1023,17 +1045,18 @@
       stateBlockElem.classList.add('h_v80')
       stateBlockElem.classList.add('fnt_5')
     }
+    
     function displaySmallStaus(){
       stateBlockElem.classList.remove('h_v80')
       stateBlockElem.classList.remove('fnt_5')
       stateBlockElem.classList.add('h_v20')
       stateBlockElem.classList.add('fnt_3')
     }
-
     
     function clickHandler(event){
       setCauseID(parseInt(event.target.dataset.id));
     }
+    
     function changeCauseclickHandler(){
       resetCause();
     }
@@ -1139,6 +1162,7 @@
       key=makeKey(13, 'key', 'Ok')
         gridContainer.append(key)
     }
+    
     function pushButton(code){
 
       if (code>=0 && code< 10){

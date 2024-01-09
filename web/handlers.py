@@ -399,7 +399,7 @@ class ReportsHtmlHandler(BaseHandler):
                     idle_couses=json.dumps(
                         logics.get_machine_causes(machine_id), default=str),
                     state_channel=str(machine_id)+'.'+settings.STATE_ARG,
-                    state_input=str(machine_id)+'.result_in',
+                    state_input=str(machine_id)+'.result',
                     causeid_arg=str(machine_id)+'.'+settings.CAUSEID_ARG,
                     project=5,
                     version=0.1,
@@ -423,7 +423,8 @@ class DBHtmlHandler(BaseHandler):
                     idle_couses=json.dumps(
                         logics.get_machine_causes(machine_id), default=str),
                     state_channel=str(machine_id)+'.'+settings.STATE_ARG,
-                    state_input=str(machine_id)+'.result_in',
+                    # state_input=str(machine_id)+'.result_in',
+                    state_input=str(machine_id)+'.result',
                     causeid_arg=str(machine_id)+'.'+settings.CAUSEID_ARG,
                     project=5,
                     version=0.1,

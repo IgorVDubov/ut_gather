@@ -10,11 +10,19 @@ http_server_params = {'host': '192.168.1.200',
                       'wsserver': 'ws://192.168.1.200:8870/ws',
                       'debug': True,
                       }
-core_webadmin_params = {'host': '127.0.0.1',
-                      'port': 8899,
-                      'wsserver': 'ws://127.0.0.1:8899/ws',
-                      'debug': True,
-                      }
+core_webadmin_params = {
+                    'host': '127.0.0.1',
+                    'port': 8899,
+                    'wsserver': 'ws://127.0.0.1:8899/ws',
+                    'debug': True,
+                    'static_path': 'web/webdata',
+                    'template_path': 'web/webdata',
+                    'static': 'web/webdata',
+                    'js': 'web/webdata/js',
+                    'css': 'web/webdata/css',
+                    'images': 'web/webdata/images',
+}
+
 
 CHECK_AUTORIZATION = True
 
@@ -22,6 +30,7 @@ users: list[User] = [
     {'id': 1, 'name': 'Igor', 'm_name': '',
         's_name': 'Dubov', 'login': 'div', 'password': '123'},
 ]
+DEFAULT_USER=users[0]
 
 user_machines = {1: [2000]}
 

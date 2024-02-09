@@ -13,7 +13,9 @@ if sys.platform == 'win32':                 # Если запускаем из �
 sys.path.append("/gathercore")
 
 import config
+import settings
 import scadaconfig as scada_config
+from gathercore.interfaces.db import create_db_interface
 import web.handlers as project_webserver_handlers
 
 try:
@@ -24,19 +26,20 @@ except (ModuleNotFoundError | ImportError):
 def main():
     loggerLib.loggerInit('ERROR')
     logger.info('Starting........')
+    db_interface = create_db_interface('db_interface',
+                                       config.DB_TYPE,
+                                       config.DB_PARAMS
+                                       )
     app = app_builder(
-                module_list=scada_config.module_list,
+                source_list=scada_config.source_list,
                 channels_config=scada_config.channels_config,
                 mb_server_addr_map=scada_config.mb_server_addr_map,
-                modbus_server_host=config.modbus_server_params['host'],
-                modbus_server_port=config.modbus_server_params['port'],
+                modbus_server_params=config.modbus_server_params,
                 project_webserver_params=config.http_server_params,
                 project_webserver_handlers=project_webserver_handlers.handlers,
-                project_web_users=config.users,
+                project_web_users=settings.users,
                 project_init_func=project_init_func,
-                core_webadmin_params=config.core_webadmin_params,
-                db_type=config.DB_TYPE,
-                db_params=config.DB_PARAMS
+                databus_objects=[db_interface]
                 )
     app.start()
 

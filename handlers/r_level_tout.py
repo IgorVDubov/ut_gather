@@ -43,7 +43,7 @@ def r_level_timeout(vars):
         vars.length_db = 0
         vars.time_db = timeNow
         #           если нет источника или входящий результат пустой массив
-    if (vars.result_in is None) or len(vars.result_in) == 0:
+    if vars.result_in is None:
         result_in_error = True
         
     na_status = False
@@ -67,7 +67,7 @@ def r_level_timeout(vars):
     # определяем текущий статус
     interval = vars.current_interval
     if not result_in_error:
-        result_in = vars.result_in[0]
+        result_in = vars.result_in
         if result_in < vars.gr_stand:  # откл
             status = 1
             interval = 1
@@ -85,7 +85,6 @@ def r_level_timeout(vars):
 
         if na_status:
             status = 0  # NA
-        # print(f'{vars.channel_id}:{status=}')
         # выставляем биты состояния статуса для доступа по модбас для внешних клиентов
         # vars.statusCh=status
         if status == 0:
@@ -150,7 +149,7 @@ def r_level_timeout(vars):
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
         if vars.length_db > 10 or vars.length_db < 90000:
             dc.db_put_state(vars.db_quie,
-                                {'id': vars.channel_id,
+                                {'id': vars.machine_id,
                                     'project_id': vars.project_id,
                                     'time': vars.time_db.strftime("%Y-%m-%d %H:%M:%S"),
                                     'status': vars.status_db,

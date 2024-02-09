@@ -68,20 +68,12 @@ def signal_tout_2_counters(vars):
                          'length': vars.counter_2
                          })
         dc.db_put_state(vars.db_quie,
-                        {'id': vars.channel_id,
+                        {'id': vars.machine_id,
                             'project_id': vars.project_id,
                             'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
                             'status': vars.saved_status,
                             'length': int(round((time_now-vars.saved_time).total_seconds()))                # 02/08 (was buffer_time)
                             })
-        # if vars.buffered:                                                                                 # 02/08
-        #     dc.db_put_state(vars.db_quie,
-        #                     {'id': vars.channel_id,
-        #                         'project_id': vars.project_id,
-        #                         'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
-        #                         'status': vars.saved_status,
-        #                         'length': int(round(vars.saved_length))
-        #                         })
     
     if vars.counters_reset is False and vars.counters_reset_in is False:    # если был сигнал отмены сброс_счетчика 
                                                                             # и он считан с источника, 
@@ -180,7 +172,7 @@ def signal_tout_2_counters(vars):
         # выставляем биты состояния статуса для доступа по модбас для внешних клиентов (совместимость с UTrack SCADA)
         vars.status_ch_b1, vars.status_ch_b2 = tuple(
             1 if b == '1' else 0 for b in reversed(bin(status)[2:].zfill(2)))
-        print(f'{vars.channel_id}:{status=}, {vars.status_ch_b1=}, {vars.status_ch_b2=}')
+        print(f'{vars.channel_nane}:{status=}, {vars.status_ch_b1=}, {vars.status_ch_b2=}')
 
         if vars.write_init or NA_status or vars.write_buffer:
             # сюда попали тк форсированная запись или статус NA или доп запись буфера 
@@ -289,12 +281,12 @@ def signal_tout_2_counters(vars):
             vars.buffered = False
 
     if db_write_flag:
-        logger.log('PROG',f'db_write: ch:{vars.channel_id} t={vars.saved_time.strftime("%Y-%m-%d %H:%M:%S")} s:{vars.saved_status} l:{int(round(vars.saved_length))}' )
+        logger.log('PROG',f'db_write: ch:{vars.channel_nane} t={vars.saved_time.strftime("%Y-%m-%d %H:%M:%S")} s:{vars.saved_status} l:{int(round(vars.saved_length))}' )
         db_write_flag = False
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
         if vars.saved_length > settings.MIN_STORED_STATE_LENGTH:
             dc.db_put_state(vars.db_quie,
-                            {'id': vars.channel_id,
+                            {'id': vars.machine_id,
                              'project_id': vars.project_id,
                              'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
                              'status': vars.saved_status,

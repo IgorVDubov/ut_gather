@@ -9,7 +9,7 @@ import tornado.websocket
 from loguru import logger
 
 from models import User
-from config import CHECK_AUTORIZATION, DEFAULT_USER
+from settings import CHECK_AUTORIZATION, DEFAULT_USER
 from gathercore.classes import  SubscriptChannelArg
 from gathercore.webserver.classes import WSClient
 from gathercore.webserver.webconnector import BaseRequestHandler, BaseWSHandler
@@ -34,7 +34,7 @@ class BaseHandler(RequestHandlerClass):
     def get_current_user(self):
         return self.get_secure_cookie("user")
 
-    def getUser(self)->User | None:
+    def get_user(self)->User | None:
         '''
         return dict with user data if user belongs to project with projectId or None
         '''
@@ -58,7 +58,7 @@ class BaseHandler(RequestHandlerClass):
                 if not check_authorization:
                     self.user = DEFAULT_USER
                     handler_func(self, *args, **kwargs)
-                elif user := self.getUser():
+                elif user := self.get_user():
                     self.user = user
                     handler_func(self, *args, **kwargs)
                 else:
@@ -257,7 +257,7 @@ class MEmulHtmlHandler(BaseHandler):
         self.render('memul.html',
                     user=self.user.get('login'),
                     data=json.dumps(
-                        self.application.data.channelBase.toDict(), default=str),
+                        self.application.data.channelBase.to_dict(), default=str),
                     wsserv=(self.application.settings['wsParams'])+'_me')
 
 
@@ -271,7 +271,7 @@ class MEmulRequestHtmlHandler(BaseHandler):
             logger.log(
                 'MESSAGE', f'client {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
             self.write(json.dumps(self.application.data.channelBase.get(
-                request.get('id')).toDict(), default=str))
+                request.get('id')).to_dict(), default=str))
         elif request.get('type') == 'get_ch_arg':
             logger.log(
                 'MESSAGE', f'client {self.user.get("login")} do get_ch_arg from ip:{self.request.remote_ip}.')

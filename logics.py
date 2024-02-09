@@ -12,7 +12,7 @@ import projectglobals as project_globals
 import settings
 from gathercore.channels.channelbase import ChannelsBase
 from gathercore.channels.channels import Channel
-from gathercore.gtyping import DBQuie
+from gathercore.gtyping import DBInterface
 
 
 @dataclass
@@ -109,7 +109,7 @@ def jsdb_put_state(state_rec: dict):
         project_globals.states_buffer.append(state_rec)
 
 
-def db_put_state(db_quie: DBQuie, state_rec: dict):
+def db_put_state(db_quie: DBInterface, state_rec: dict):
     raise NotImplemented('move to dc')
     print(f'db_put_state {state_rec}')
     if state_rec.get('length') and state_rec['length'] > 0:
@@ -277,7 +277,7 @@ def current_idle_add_cause(machine_id: int,
                            cause_id: int,
                            cause_set_time: datetime,
                            prj_id: int,
-                           db_quie: DBQuie
+                           db_quie: DBInterface
                            ):
 
     if current_idle := project_globals.machines_idle.get(machine_id):
@@ -313,7 +313,7 @@ def current_idle_reset(machine_id: int):
     save_machines_idle()
 
 
-def current_idle_store(machine_id: int, prj_id: int, db_quie: DBQuie):
+def current_idle_store(machine_id: int, prj_id: int, db_quie: DBInterface):
     if idle := project_globals.machines_idle.get(machine_id):
         project_globals.machines_idle[machine_id].length = int(
             round((datetime.now()-idle.cause_time).total_seconds()))

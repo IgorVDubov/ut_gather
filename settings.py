@@ -1,3 +1,4 @@
+
 CLIENT_VERSION = 0.1
 STATE_ARG = 'args.status'
 STATE_TIME_ARG = 'args.saved_time'
@@ -32,3 +33,15 @@ web_server_path_params = {
     'css': 'web/webdata/css',
     'images': 'web/webdata/images',
 }
+
+CHECK_AUTORIZATION = False
+DEFAULT_USER = {'id': 0, 'name': '', 'm_name': '',
+                's_name': '', 'login': '', 'password': ''
+                }
+                
+users = [
+    {'id': 1, 'name': 'Igor', 'm_name': '',
+        's_name': 'Dubov', 'login': 'div', 'password': '123'},
+]
+
+user_machines = {1: [2000]}

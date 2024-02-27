@@ -197,8 +197,10 @@ def get_causes() -> dict[int, str]:               # TODO refact with DB
 # @convert_none_2_str
 
 
-def get_channel_arg(channel_base: ChannelsBase, machine_id: int, arg: str) -> int | str | None:
-    result = channel_base.get(machine_id).get_arg(arg)
+def get_channel_arg(channel_base: ChannelsBase,
+                    machine_id: int,
+                    arg: str) -> int | str | None:
+    result = channel_base.get_by_name(str(machine_id)).get_arg(arg)
     return result
 
 
@@ -214,7 +216,7 @@ class CurrentStateProtocol(TypedDict):
 
 
 def get_current_state(channel_base: ChannelsBase, machine_id: int) -> CurrentStateProtocol:
-    channel = channel_base.get(machine_id)
+    channel = channel_base.get_by_name(str(machine_id))
     if idle := project_globals.machines_idle.get(machine_id):
         saved_state = idle.state
         saved_state_time = idle.begin_time.strftime(

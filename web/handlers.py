@@ -10,7 +10,7 @@ from loguru import logger
 
 from models import User
 from settings import CHECK_AUTORIZATION, DEFAULT_USER
-from gathercore.classes import  SubscriptChannelArg
+from gathercore.classes import SubscriptChannelArg
 from gathercore.webserver.classes import WSClient
 from gathercore.webserver.webconnector import BaseRequestHandler, BaseWSHandler
 
@@ -34,7 +34,7 @@ class BaseHandler(RequestHandlerClass):
     def get_current_user(self):
         return self.get_secure_cookie("user")
 
-    def get_user(self)->User | None:
+    def get_user(self) -> User | None:
         '''
         return dict with user data if user belongs to project with projectId or None
         '''
@@ -94,7 +94,7 @@ class MainHtmlHandler(BaseHandler):
                     tech_idle=logics.get_channel_arg(
                         self.application.data.channelBase, machine_id, settings.TECH_IDLE_ARG),
                     causeid_arg=logics.get_causeid_arg(
-                        self.application.data.channelBase.get(machine_id)),
+                        self.application.data.channelBase.get_by_name(str(machine_id))),
                     idle_couses=json.dumps(logics.convert_none_2_str(
                         logics.get_machine_causes)(machine_id), default=str),
                     default_causes=settings.DEFAULT_CAUSES,
@@ -154,7 +154,11 @@ class WSHandler(WebSocketHandler):
                     'args.operator_id', jsonData.get('operator_id'))
             elif jsonData.get('type') == "logout_operator":
                 logger.info(
-                    f"ws_message: set_operator_logout for {jsonData.get('macine_id')}, operator {jsonData.get('operator_id')} from ip:{self.request.remote_ip}")
+                    f"ws_message: set_operator_logout \
+                        for {jsonData.get('macine_id')}, \
+                            operator {jsonData.get('operator_id')}\
+                                from ip:{self.request.remote_ip}"
+                            )
                 dc.set_operator_logout(jsonData.get(
                     'macine_id'), jsonData.get('operator_id'))
                 msg = {'type': 'curr_operator', 'data': dc.get_current_operator(
@@ -168,11 +172,13 @@ class WSHandler(WebSocketHandler):
                 for_send = []
                 for arg in jsonData.get('data'):
                     channel_id, argument = parse_attr_params(arg)
-                    channel = self.application.data.channelBase.get(channel_id)
+                    channel = self.application.data.channelBase.get_by_name(
+                                                            str(channel_id))
                     new_subscription = SubscriptChannelArg(channel, argument)
                     subscription = self.application.data.subscriptions.add_subscription(
                         new_subscription)
-                    stored_client = self.application.data.ws_clients.get_client(self)
+                    stored_client = self.application.data.ws_clients.get_client(
+                        self)
                     stored_client.subscriptions.append(subscription)
                     send_data = {arg: channel.get_arg(argument)}
                     send_data.update(
@@ -197,6 +203,7 @@ class WSHandler(WebSocketHandler):
                 logger.debug('Unsupported ws message: '+message)
 
     def on_close(self):
+        print('ws disconnecr')
         if client := self.application.data.ws_clients.get_client(self):
             for subscr in client.subscriptions:
                 self.application.data.subscriptions.del_subscription(subscr)
@@ -290,8 +297,9 @@ class MEmulRequestHtmlHandler(BaseHandler):
             logger.log(
                 'MESSAGE', f'client {self.user.get("login")} do set_ch_arg from ip:{self.request.remote_ip}.')
             id, arg = parse_attr_params(request.get('arg'))
-            
-            self.application.data.channelBase.get(id).set_arg(arg, [request.get('value')])
+
+            self.application.data.channelBase.get(
+                id).set_arg(arg, [request.get('value')])
             self.write(json.dumps(200, default=str))
 
     def get(self):
@@ -385,7 +393,7 @@ class ReportsHtmlHandler(BaseHandler):
     def get(self):
         try:
             # machine_id_list = logics.get_machine_from_user(self.user.get('id'))
-            machine_id = 2000                                                          #!!!!!!!!  dev !!!!!!!!!!!!!!!!!!!!
+            machine_id = 2000  # !!!!!!!!  dev !!!!!!!!!!!!!!!!!!!!
         except ValueError:
             logger.log(
                 'ERROR', f'wrong machine id in clients prequest args: {self.request.arguments}  from ip:{self.request.remote_ip}.')
@@ -394,7 +402,8 @@ class ReportsHtmlHandler(BaseHandler):
                     user=self.user.get('login'),
                     machine=machine_id,
                     wsserv=(self.application.settings['wsParams']+'_reps'),
-                    host_port=http_server_params['host'] + ':' + str(http_server_params['port']),
+                    host_port=http_server_params['host'] +
+                    ':' + str(http_server_params['port']),
                     idle_couses=json.dumps(
                         logics.get_machine_causes(machine_id), default=str),
                     state_channel=str(machine_id)+'.'+settings.STATE_ARG,
@@ -410,7 +419,7 @@ class DBHtmlHandler(BaseHandler):
     def get(self):
         try:
             # machine_id_list = logics.get_machine_from_user(self.user.get('id'))
-            machine_id = 2000                                                           #!!!!!!!!  dev  !!!!!!!!!!!!!!!!!!!!!!!!
+            machine_id = 2000  # !!!!!!!!  dev  !!!!!!!!!!!!!!!!!!!!!!!!
         except ValueError:
             logger.log(
                 'ERROR', f'wrong machine id in clients prequest args: {self.request.arguments}  from ip:{self.request.remote_ip}.')
@@ -466,7 +475,7 @@ class ReportsWSHandler(WebSocketHandler):
                     subscription = self.application.data.subscriptions.add_subscription(
                         new_subscription)
                     self.application.data.ws_clients.get_client(
-                                    self).subscriptions.append(subscription)
+                        self).subscriptions.append(subscription)
                     send_data = {arg: channel.get_arg(argument)}
                     send_data.update(
                         {'time': (datetime.now()).strftime('%Y-%m-%dT%H:%M:%S')})

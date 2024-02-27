@@ -6,9 +6,9 @@ from gathercore import consts
 DEMO_DB = True
 
 http_server_params = {
-                    'host': 'utrack.hcaskona.com',
+                    'host': '127.0.0.1',
                     'port': 8870,
-                    'wsserver': 'ws://utrack.hcaskona.com:8870/ws',
+                    'wsserver': 'ws://127.0.0.1:8870/ws',
                     'debug': True,
                     'static_path': 'web/webdata',
                     'template_path': 'web/webdata',

@@ -76,16 +76,11 @@ def signal_tout_2_counters(vars):
                             })
     
     if vars.counters_reset is False and vars.counters_reset_in is False:    # если был сигнал отмены сброс_счетчика 
-                                                                            # и он считан с источника, 
-                                                                            # выставляем его None чтобы не писался в регистр полстоянно
-            vars.counters_reset = None
+        vars.counters_reset = None
     
     if vars.counters_reset is True and vars.counter_2 == 0:                # если был сигнал отмены сброс_счетчика 
-                                                                            # и счетчик рулонов = 0, , сбрасываем его
-            vars.counters_reset = False
+        vars.counters_reset = False
     
-    # if vars.counters_reset == True and vars.counters_reset_in == True:   # если был сигнал сброс_счетчика и он считан с источника, сбрасываем его
-    #         vars.counters_reset = False
     
     if vars.write_counters:                     #           Запись счетчика
         logger.log('PROG','write_counters')

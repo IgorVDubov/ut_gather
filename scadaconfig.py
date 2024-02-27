@@ -61,7 +61,7 @@ source_list = [
      'format': ValTypes.INT32, 
      'params': {
                 'function':  ModbusFuncs.READ_HR, 
-                'ip': '172.19.10.244', 'port': '502',
+                'ip': '127.0.0.1', 'port': '502',
                 'unit': 0x1, 'address': 0, 'count': 2,
                 'order': Formats.ABCD,
                 }
@@ -72,7 +72,7 @@ source_list = [
      'format': ValTypes.INT32,
      'params': {
                 'function':  ModbusFuncs.READ_HR,
-                'ip': '172.19.10.244', 'port': '502',
+                'ip': '127.0.0.1', 'port': '502',
                 'unit': 0x1, 'address': 2, 'count': 2,
                 'order': Formats.ABCD,
                 },
@@ -83,7 +83,7 @@ source_list = [
      'format': ValTypes.INT16,
      'params': {
                 'function':  ModbusFuncs.READ_HR,
-                'ip': '172.19.10.244', 'port': '502',
+                'ip': '127.0.0.1', 'port': '502',
                 'unit': 0x1, 'address': 4, 'count': 1,
                 'order': Formats.AB,
                 }
@@ -94,7 +94,7 @@ source_list = [
      'format': ValTypes.INT16, 
      'params': {
                 'function':  ModbusFuncs.READ_HR, 
-                'ip': '172.19.10.244', 'port': '502',
+                'ip': '127.0.0.1', 'port': '502',
                 'unit': 0x1, 'address': 5, 'count': 1,
                 'order': Formats.AB,
                 }
@@ -103,7 +103,7 @@ source_list = [
      'direction': Direction.WRITE,
      'type': SourceTypes.MODBUS_TCP, 
      'params': {
-                'ip': '172.19.10.244', 'port': '502',
+                'ip': '127.0.0.1', 'port': '502',
                 'unit': 0x1, 'address': 0, 'count': 1,
                 'function':  ModbusFuncs.WRITE_CO, 
                 'format': ValTypes.BIT,
@@ -115,20 +115,20 @@ source_list = [
      'format': ValTypes.BIT,
      'params': {
                 'function':  ModbusFuncs.READ_CO, 
-                'ip': '172.19.10.244', 'port': '502',
+                'ip': '127.0.0.1', 'port': '502',
                 'unit': 0x1, 'address': 0, 'count': 1,
                 }
      },
-     {'name': 'write_init_reset',
-     'direction': Direction.WRITE,
-     'format': ValTypes.BIT,
-     'type': SourceTypes.MODBUS_TCP,
-     'params': {
-                'ip': '127.0.0.1', 'port': '5021',
-                'unit': 0x1, 'address': 0, 'count': 1,
-                'function':  ModbusFuncs.WRITE_CO, 
-                }
-     },
+    #  {'name': 'write_init_reset',
+    #  'direction': Direction.WRITE,
+    #  'format': ValTypes.BIT,
+    #  'type': SourceTypes.MODBUS_TCP,
+    #  'params': {
+    #             'ip': '127.0.0.1', 'port': '5021',
+    #             'unit': 0x1, 'address': 0, 'count': 1,
+    #             'function':  ModbusFuncs.WRITE_CO, 
+    #             }
+    #  },
      
 
     
@@ -136,15 +136,15 @@ source_list = [
 
 
 # словарь конфигурации каналов:
-# {'name':4209,'sourse':'test3','type':'AI','sourceIndexList':[0],
+# {'name':4209,'source':'test3','type':'AI','sourceIndexList':[0],
 #             'handler':channel_handlers.middle10,
 #             'args':{'name':val,...}}
 # id->int: id объекта контроля
-# sourse->str: модуль с входами датчиков от  объекта контроля
+# source->str: модуль с входами датчиков от  объекта контроля
 # type->: DI биты состояния [1,1,0,0] | [True, True, False,...],
 #            AI- аналоговые данные - одно значение, нет группового чтения
 #           LIST - list[int]
-# sourceIndexList->list: позиции (индексы с 0) данных массива результата чтения модуля sourse
+# sourceIndexList->list: позиции (индексы с 0) данных массива результата чтения модуля source
 # handler->str: имя функции обработчика результата (в модуле handler_funcs)
 # args: запись аргументов:
 #     'args':{
@@ -176,7 +176,7 @@ channels_config = [
         },
     # ----------------------'nodes'  ----------------------
         {'name': '2000',            # DEMO machine for idles
-         'sourse': None,
+         'source': None,
          'sourceIndexList': [0],
          'handler': r_level_timeout,
          'args':{
@@ -211,7 +211,7 @@ channels_config = [
             }
         },
         {'name': '2121',        # COCOS AI
-         'sourse': 'cocos_ai', 'sourceIndexList': [0],
+         'source': 'cocos_ai', 'sourceIndexList': [0],
          'handler': ai2021,
          'args': {
              'result': 'self.result',
@@ -226,7 +226,7 @@ channels_config = [
          }
          },
         {'name': '2120',        # COCOS STATUS
-         'sourse': 'cocos_di', 'sourceIndexList': [0, 1],
+         'source': 'cocos_di', 'sourceIndexList': [0, 1],
          'handler': signal_techtimeout,
          'args': {
              'machine_id': 2120,
@@ -263,7 +263,8 @@ channels_config = [
             }
         },
         {'name': '2040',                                        # Линия Синтепона status
-         'sourse': 'synth_status', 'sourceIndexList': [0],
+         'source': 'synth_status', 
+        #  'sourceIndexList': [0],
          'handler': signal_tout_2_counters,
          'args': {
              'machine_id': 2040,
@@ -304,13 +305,16 @@ channels_config = [
             }
          },
         {'name': '2041',                                        # Линия Синтепона счетчик продукции
-         'sourse': 'synth_product', 'sourceIndexList': [0],
+         'source': 'synth_product', 
+        #  'sourceIndexList': [0],
         },
         {'name': '2042',                                        # Линия Синтепона счетчик продукции
-         'sourse': 'synth_rulon', 'sourceIndexList': [0],
+         'source': 'synth_rulon', 
+        #  'sourceIndexList': [0],
         },
         {'name': '2043',                                        # Линия Синтепона скорость выхода продукции
-         'sourse': 'synth_v', 'sourceIndexList': [0],
+         'source': 'synth_v', 
+        #  'sourceIndexList': [0],
          'handler': lib.mult,
          'args': {
              'input': '2043.result_in',
@@ -319,13 +323,13 @@ channels_config = [
             },
         },
         {'name': '2044',                                        # Линия Синтепона запись сигнала сброса счетчиков выхода продукции
-         'sourse': 'synth_counters_reset_out',
+         'source': 'synth_counters_reset_out',
          },              
         {'name': '2045',                                        # Линия Синтепона чтение сигнала сброса счетчиков выхода продукции
-         'sourse': 'synth_counters_reset_in',
+         'source': 'synth_counters_reset_in',
          },              
         {'name': '2999',                                        # запись регистра общей записи write_init собственного MBExchangeServer
-         'sourse': 'write_init_reset',
+        #  'source': 'write_init_reset',
          },
 #-----------    'programms'   ------------------------
         {'name': "10001",       # wachdog seconds
@@ -421,14 +425,14 @@ channels_config = [
          },
     #   ------------------  'scheduler'  -------------------
         {'name': '13001',  # scheduller записть статусов
-         'time_list': ['07:00:02', '15:30:02', '23:30:02', '19:00:02'],
+         'time_list': ['07:00:02', '15:30:02', '23:30:02', '19:00:01'],
          'handler': write_init,
          'args': {
              'write_init': False,
             }
          },
         {'name': '13002',  # scheduller запись счетчиков
-         'time_list': ['06:59:59', '15:29:59', '23:29:59', '18:59:59'],
+         'time_list': ['06:59:59', '15:29:59', '23:29:59', '18:59:59', '18:37:00'],
          'handler':write_init,
          'args': {
              'write_init': False,

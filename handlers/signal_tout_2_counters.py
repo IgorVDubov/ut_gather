@@ -9,7 +9,7 @@ def signal_tout_2_counters(vars):
     '''
     signals values with timeout
     VARS:
-        'machine_id': 2000                          номкер станка
+        'm_id': 2000                          номкер станка
         'result_in':'5002.resultIn', -              вход от источника
         'dost': 'self.dost',                        достоверность
         'counter_1':'_.result',                     вход от источника счетчика1
@@ -68,7 +68,7 @@ def signal_tout_2_counters(vars):
                          'length': vars.counter_2
                          })
         dc.db_put_state(vars.db_quie,
-                        {'id': vars.machine_id,
+                        {'id': vars.m_id,
                         'project_id': vars.project_id,
                         'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
                         'status': vars.saved_status,
@@ -167,7 +167,7 @@ def signal_tout_2_counters(vars):
         # выставляем биты состояния статуса для доступа по модбас для внешних клиентов (совместимость с UTrack SCADA)
         vars.status_ch_b1, vars.status_ch_b2 = tuple(
             1 if b == '1' else 0 for b in reversed(bin(status)[2:].zfill(2)))
-        print(f'{vars.machine_id}:{status=}, {vars.status_ch_b1=}, {vars.status_ch_b2=}')
+        print(f'{vars.m_id}:{status=}, {vars.status_ch_b1=}, {vars.status_ch_b2=}')
 
         if vars.write_init or NA_status or vars.write_buffer:
             # сюда попали тк форсированная запись или статус NA или доп запись буфера 
@@ -276,12 +276,12 @@ def signal_tout_2_counters(vars):
             vars.buffered = False
 
     if db_write_flag:
-        logger.log('PROG',f'db_write: ch:{vars.machine_id} t={vars.saved_time.strftime("%Y-%m-%d %H:%M:%S")} s:{vars.saved_status} l:{int(round(vars.saved_length))}' )
+        logger.log('PROG',f'db_write: ch:{vars.m_id} t={vars.saved_time.strftime("%Y-%m-%d %H:%M:%S")} s:{vars.saved_status} l:{int(round(vars.saved_length))}' )
         db_write_flag = False
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
         if vars.saved_length > settings.MIN_STORED_STATE_LENGTH:
             dc.db_put_state(vars.db_quie,
-                            {'id': vars.machine_id,
+                            {'id': vars.m_id,
                              'project_id': vars.project_id,
                              'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
                              'status': vars.saved_status,

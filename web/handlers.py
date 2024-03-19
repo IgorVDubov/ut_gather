@@ -99,7 +99,7 @@ class MainHtmlHandler(BaseHandler):
             .channelBase\
             .get_by_name(
                 machine_channel.get_arg(
-                    'args.idle_channel_name'))
+                    'args.idle_channel_name').name)
         if idle_channel is None:
             raise ValueError(
                 f"Can't find idle_channel for machine id {machine_id}\

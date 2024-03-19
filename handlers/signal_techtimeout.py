@@ -45,7 +45,7 @@ def signal_techtimeout(vars):
     if vars.write_counter:
         vars.write_counter = False
         dc.db_put_state(vars.db_quie,
-                               {'id': vars.machine_id,
+                               {'id': vars.m_id,
                                 'project_id': vars.project_id,
                                 'time': time_now,
                                 'status': 7,
@@ -117,7 +117,7 @@ def signal_techtimeout(vars):
         vars.status_ch_b1, vars.status_ch_b2 = tuple(
             1 if b == '1' else 0 for b in reversed(bin(status)[2:].zfill(2)))
         print(
-            f'{vars.machine_id}:{status=}, {vars.status_ch_b1=}, {vars.status_ch_b2=}')
+            f'{vars.m_id}:{status=}, {vars.status_ch_b1=}, {vars.status_ch_b2=}')
 
         if vars.write_init or NA_status or vars.write_buffer:
             # если сюда попали тк форсированная запись или статус NA
@@ -208,7 +208,7 @@ def signal_techtimeout(vars):
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
         if vars.saved_length > settings.MIN_STORED_STATE_LENGTH:
             dc.db_put_state(vars.db_quie,
-                                   {'id': vars.machine_id,
+                                   {'id': vars.m_id,
                                     'project_id': vars.project_id,
                                     'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
                                     'status': vars.saved_status,

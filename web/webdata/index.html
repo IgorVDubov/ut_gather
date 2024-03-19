@@ -188,6 +188,7 @@
         overflow: auto; /* Enable scroll if needed*/
         background-color: rgba(0,0,0,0.4); 
       }
+      
       .loginWinodow{
         width: 85%; 
         height: 80%;
@@ -333,6 +334,22 @@
         .cRed{color:red;}
     
     </style>
+    <style> /* containers */
+    .screenCenter{
+      display: flex; 
+      justify-content: center;
+      align-items: center;
+      position: fixed; 
+      z-index: 1000; 
+      left: 0;
+      top: 0;
+      width: 100%; 
+      height: 100%; 
+      overflow: auto; /* Enable scroll if needed*/
+      background-color: rgba(0,0,0,0.4); 
+    }
+    </style>
+
     <style> /* progress bar */
       .progressBar {
         border: solid, rgb(209, 200, 200), 5px;
@@ -350,6 +367,17 @@
       .progressValue{
         color: rgb(201, 23, 23);
         font-size: 1em;
+      }
+    </style>
+    <style> /*offlineAlert*/
+      .offlineAlert{
+        width: 40%;
+        height: 30%;
+        border: solid gray 3px;
+        background-color: orange;
+        color: black;
+        font-size: larger;
+        font-weight: bold;
       }
     </style>
 </head>
@@ -381,7 +409,7 @@
                   </div>
                 </div>
               </div>
-            </div>
+          </div>
         </div>
         <div class="operatorContainer flex_center" id="operatorLogoutContainer">
           <div class="loginWinodow flex_center">
@@ -405,15 +433,25 @@
           <a class="fl_r pr1" >v{{ version }}</a>
           <a class="fl_r pr1" href="mailto:asu@alfa33.ru">Alfa <span class="fnt_0_6 pr1">решения в области промышленной автоматизации</span> 2023</a>
       </footer> 
+      <div class="screenCenter" id="offlineAlert">
+        <div class="offlineAlert flex_center" >
+          Нет связи с сервером!
+        </div>
+      </div>
       <div id="loader">
           <script>const loader=document.getElementById("loader");</script>
           <link rel="stylesheet" type="text/css" href="/css/loader.css"/>
       </div>
 </body>
 <script>
+
+    const SHOW_CAUSES =  false; // режим только отображения состояний
+
     moment.locale('ru');
     const STATUS_LIGHT_COLORS=['#e6e6e6','#b4b4b4','#fff134','#03e003']
     const STATES =['N/A', 'Откл', 'Простой', 'Работа']
+    const OPERATOR_LOGIN = {{ operator_login  }}
+    const MACHINE_CH='{{ m_ch }}'
     const MACHINE_ID={{ machine }}
     const WS_SERVER = '{{ wsserv }}';
     {% autoescape None %}
@@ -472,14 +510,32 @@
     var serverTimeElem
     var infoElem
     
+    
     var ws
 
-
+    const TEST_URL = '/test';
     const FlashColor='rgb(255, 0, 0)'
 
     const wsStatus=document.getElementById("wsStatus")
     const wsIndicator=document.getElementById("wsLight")
     
+    class OfflineAlert{
+      constructor(elem, show = false){
+        this.elem = elem;
+        this.displayVal = elem.style.display
+        if (!show){
+          this.off();
+        }
+      }
+      on(){
+        this.elem.style.display = this.displayVal;
+      }
+      off(){
+        this.elem.style.display = 'none';
+      }
+    }
+    const offlineAlert = new OfflineAlert(document.getElementById('offlineAlert'))
+
     class PerodicalCallback {
         constructor(callback, delay, start=true) {
           this.callback = callback;
@@ -622,82 +678,116 @@
     const techIdleTimer=new PerodicalCallback ("updateTechIdle()", 250,false);
     //const progressBar= new TimeoutProgressBar();
 
-    function wsConnect(){
-      let ws=new WebSocket(WS_SERVER);
-      
-      ws.onmessage = function(evt) {
-        let jsonMsg = JSON.parse(evt.data);
-        console.log(jsonMsg)
-        switch (jsonMsg.cmd) {  
-          case "reload":
-            location.reload()
-            break;
-        }
-        switch (jsonMsg.type) {
-          case "curr_operator":
-              if (jsonMsg.data==null){
-                currentOperator.name=null
-                currentOperator.id=null
-              }
-              else{
-                currentOperator.name=jsonMsg.data.name
-                currentOperator.id=jsonMsg.data.id
-              }
-              return true
-          case "set_operator":
-              if (jsonMsg.data==null){
-                selectedOperator.name=null
-                selectedOperator.id=null
-              }
-              else{
-                selectedOperator.name=jsonMsg.data.name
-                selectedOperator.id=jsonMsg.data.id
-              }
-              return true
-          break;
-          default:
-        }
-        if (firstWsMessageFlag){
-          firstWsMessageFlag=false
-        } else {
-          currentState.stateTime=jsonMsg[0].time;                                   //todo взять из запроса
-          currentState.state=jsonMsg[0][STATE_CHANNEL]
-        }
-        flashIndicator(wsIndicator,'lightgreen','green',400);
-        return true;
-      };
-        
-    
-      ws.onclose = function(evt) {
-          console.log(' Server close connection! No data!')
-          wsStatus.textContent='offline'
-          wsIndicator.style.color='Red'
-          // setTimeout(function (){wsConnect()},1000);
-          setTimeout(function (){location.reload()},5000);
-      };
-      ws.onerror = function(evt) {
-          console.log(' Server connection error ')
-          ws.close()
-      };
+    function checkServer(url, timeout) {
+      const controller = new AbortController();
+      const signal = controller.signal;
+      const options = { mode: 'no-cors', signal };
+      return fetch(url, options)
+        .then(setTimeout(() => { controller.abort() }, timeout))
+        .then(response => restart())
+        .catch(error => console.error('Check server error:', error.message));
+    }
 
-      ws.onopen = function(evt) {
+    function restart(){
+      location.reload()
+    }
+
+    function wsConnect(wsServer){
+      var webSocket
+      function connect(wsServer){
+        webSocket=new WebSocket(wsServer);
+        if (webSocket != undefined) {
+          wsEvents();
+        } else {
+          setTimeout(function (){connect(wsServer)},1000);
+        }
+      }
+      
+      function wsEvents() {
+        webSocket.onmessage = function(evt) {
+          let jsonMsg = JSON.parse(evt.data);
+          console.log(jsonMsg)
+          switch (jsonMsg.cmd) {  
+            case "reload":
+              location.reload()
+              break;
+          }
+          switch (jsonMsg.type) {
+            case "curr_operator":
+                if (jsonMsg.data==null){
+                  currentOperator.name=null
+                  currentOperator.id=null
+                }
+                else{
+                  currentOperator.name=jsonMsg.data.name
+                  currentOperator.id=jsonMsg.data.id
+                }
+                return true
+            case "set_operator":
+                if (jsonMsg.data==null){
+                  selectedOperator.name=null
+                  selectedOperator.id=null
+                }
+                else{
+                  selectedOperator.name=jsonMsg.data.name
+                  selectedOperator.id=jsonMsg.data.id
+                }
+                return true
+            break;
+            default:
+          }
+          if (firstWsMessageFlag){
+            firstWsMessageFlag=false
+          } else {
+            currentState.stateTime=jsonMsg[0].time;                                   //todo взять из запроса
+            currentState.state=jsonMsg[0][STATE_CHANNEL]
+          }
+          flashIndicator(wsIndicator,'lightgreen','green',400);
+          return true;
+        };
+          
+      
+        webSocket.onclose = function(evt) {
+            console.log(' Server close connection! No data!')
+            wsStatus.textContent='offline'
+            wsIndicator.style.color='Red'
+            offlineAlert.on()
+            setInterval(function (){checkServer(
+                                    TEST_URL,
+                                      1000
+                                      // restart()
+                                      )
+                                    },
+                                    1000);
+            // setTimeout(function (){location.reload()},5000);
+        };
+        webSocket.onerror = function(evt) {
+            console.log(' Server connection error ')
+            webSocket.close()
+        };
+
+        webSocket.onopen = function(evt) {
+          offlineAlert.off()
           wsStatus.textContent='online'
           wsIndicator.style.color='green'
           console.log(' Connection ok, send subscribe msg: ' + SUBSCRIBE_CHANNELS)
           wsSend(JSON.stringify({type:"subscribe",data:SUBSCRIBE_CHANNELS}))
           wsSend(JSON.stringify({type:"curr_operator",macine_id:MACHINE_ID}))
-      };
-      return ws
+        };
+      } 
+      connect(wsServer);
+      return webSocket
     } 
 
     let wsSend = function(data) {
-          if(ws.readyState != 1){
-              setTimeout(function (){
-                wsSend(data);
-              },1000);
-          }else{
-            ws.send(data);
-          }
+      if (ws == undefined) {return}
+      if(ws.readyState != 1){
+          setTimeout(function (){
+            wsSend(data);
+          },1000);
+      }else{
+        ws.send(data);
+      }
     };
 
     function updateTime(){
@@ -734,7 +824,12 @@
     
     function setOperator(){
       // operatorElem.innerHTML=currentOperator.name;
-      wsSend(JSON.stringify({type:"set_operator",macine_id:MACHINE_ID, operator_id:currentOperator.id}))
+      wsSend(JSON.stringify({
+                    type:"set_operator",
+                    macine_id:MACHINE_ID,
+                    m_ch:MACHINE_CH,
+                    operator_id:currentOperator.id
+                  }))
     }
     
     function showOperatorRequest(){
@@ -766,7 +861,12 @@
     }
 
     function logoutOperator(){
-      wsSend(JSON.stringify({type:"logout_operator",macine_id:MACHINE_ID, operator_id:currentOperator.id}))
+      wsSend(JSON.stringify({
+                    type:"logout_operator",
+                    macine_id:MACHINE_ID,
+                    m_ch:MACHINE_CH,
+                    operator_id:currentOperator.id
+                  }))
       // currentOperator.name=null
       // currentOperator.id=null
       hideOperatorLogout()
@@ -1035,8 +1135,10 @@
       displaySmallStaus();
       hideCauseStatusContainer();
       hideChangeCauseButton();
-      showFlashWaitWarning();
-      showCauseButtons();
+      if (SHOW_CAUSES){
+        showFlashWaitWarning();
+        showCauseButtons();
+      }
     }
 
     function displayBigStaus(){
@@ -1098,7 +1200,9 @@
         const causeButtonsContainer = block('',['w_v80 gridCauseButtons'],'causeButtonsContainer');
         for (i=0; i<Object.keys(IDLE_COUSES).length;i++){
           let id=Object.keys(IDLE_COUSES)[i]
-          if (id in DEFAULT_CAUSES) continue;          //фильтруем зарезервированные
+          if (DEFAULT_CAUSES.includes(parseInt(id))) {//фильтруем зарезервированные
+            continue
+          };          
           let cause=IDLE_COUSES[id]
           button=block(cause,['h100 w20rem flex_center databox dataLable fnt_2'],'buttonsContainer');
           button.dataset.id=id
@@ -1239,7 +1343,7 @@
         // progressElem=document.getElementById('causeProgress');
         stateTime=moment(currentState.begin_time);
         secondsTimer.restart();
-        ws=wsConnect();
+        ws=wsConnect(WS_SERVER);
         firstCurrentStateInit();
 
         

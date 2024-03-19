@@ -281,6 +281,7 @@
 
     moment.locale('ru');
     {% autoescape None %}
+    const MACHINE_CHANNEL='{{ m_ch }}'
     const MACHINE_ID={{ machine }}
     const WS_SERVER = '{{ wsserv }}';
     const IDLE_COUSES={{  idle_couses  }}
@@ -498,10 +499,15 @@
 
       ws.onopen = function(evt) {
           console.log(' Connection ok, send subscribe msg: ' )
-          wsSend(JSON.stringify({type:"first_read", id:MACHINE_ID}))
+          wsSend(JSON.stringify({type:"first_read", ch:MACHINE_ID}))
           wsSend(JSON.stringify({type:"subscribe",data:SUBSCRIBE_CHANNELS}))
-          wsSend(JSON.stringify({type:"get_ch_arg",id:MACHINE_ID, arg:'args.status'}))
-          wsSend(JSON.stringify({type:"get_ch_arg",id:MACHINE_ID, arg:'args.cause'}))
+          wsSend(JSON.stringify({type: "get_ch_arg",
+                                ch_name: MACHINE_CHANNEL,
+                                arg: 'args.status'}
+                                ))
+          wsSend(JSON.stringify({type:"get_ch_arg",
+                                 ch_name: MACHINE_CHANNEL,
+                                 arg: 'args.cause'}))
       };
     } 
 

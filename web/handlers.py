@@ -14,7 +14,7 @@ from gathercore.classes import SubscriptChannelArg
 from gathercore.webserver.classes import WSClient
 from gathercore.webserver.webconnector import BaseRequestHandler, BaseWSHandler
 
-from gathercore.channels.channels import parse_attr_params
+from gathercore.channels.channels import parse_attr_params_n
 from settings import web_server_path_params as path_params
 from config import http_server_params
 
@@ -76,6 +76,7 @@ class MainHtmlHandler(BaseHandler):
         try:
             if arg := self.request.arguments.get('m'):
                 machine_id = int(tornado.escape.xhtml_escape(arg[0]))
+
             else:
                 raise KeyError(
                     f'No machine id at index request /?m=xxxx from ip {self.request.remote_ip}')
@@ -85,21 +86,41 @@ class MainHtmlHandler(BaseHandler):
             return
             # logger.log('ERROR', f'wrong machine id in client login {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
             # self.redirect("/login")
-
+        machine_channel = self\
+            .application.data\
+            .channelBase\
+            .get_by_arg_value('args.m_id', machine_id)[0]
+        if machine_channel is None:
+            raise ValueError(
+                f"Can't find machine_channel for machine id {machine_id}\
+                        from {self.request.remote_ip}")
+        idle_channel = self\
+            .application.data\
+            .channelBase\
+            .get_by_name(
+                machine_channel.get_arg(
+                    'args.idle_channel_name'))
+        if idle_channel is None:
+            raise ValueError(
+                f"Can't find idle_channel for machine id {machine_id}\
+                        from {self.request.remote_ip}")
+        # ch_base = self.application.data.channelBase
         self.render('index.html',
                     user=machine_id,
                     # user=self.user.get('login'),
+                    m_ch=machine_channel.name,
                     machine=machine_id,
-                    state_channel=str(machine_id)+'.'+settings.STATE_ARG,
-                    tech_idle=logics.get_channel_arg(
-                        self.application.data.channelBase, machine_id, settings.TECH_IDLE_ARG),
-                    causeid_arg=logics.get_causeid_arg(
-                        self.application.data.channelBase.get_by_name(str(machine_id))),
+                    operator_login=int(settings.OPERATOR_LOGIN),
+                    state_channel=machine_channel.name + '.' + settings.STATE_ARG,
+                    tech_idle=machine_channel.get_arg(settings.TECH_IDLE_ARG),
+                    causeid_arg=idle_channel.name + '.' + settings.CAUSEID_ARG,
+                    # causeid_arg=logics.get_causeid_arg(
+                    #     ch_base.get_by_name(str(machine_id))),
                     idle_couses=json.dumps(logics.convert_none_2_str(
                         logics.get_machine_causes)(machine_id), default=str),
                     default_causes=settings.DEFAULT_CAUSES,
-                    current_state=logics.convert_none_2_str(logics.get_current_state)(
-                        self.application.data.channelBase, machine_id),
+                    current_state=logics.convert_none_2_str(
+                        logics.get_current_state)(machine_channel),
                     wsserv=self.application.settings['wsParams'] + \
                     '?m='+str(machine_id),
                     server_time=logics.get_server_time(),
@@ -107,6 +128,16 @@ class MainHtmlHandler(BaseHandler):
                     # operators=logics.get_machine_operators(machine_id),
                     version=settings.CLIENT_VERSION,
                     )
+class TestHtmlHandler(BaseHandler):
+    # @BaseHandler.check_user(CHECK_AUTORIZATION)
+    def get(self):
+        # self.set_header("Content-Type", "application/json")
+        # request = json.loads(self.request.body)
+        # print(request)
+        # if request.get('type') == 'te':
+            # logger.log(
+            #     'MESSAGE', f'client {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
+        self.write(json.dumps(200, default=str))
 
 
 class WSHandler(WebSocketHandler):
@@ -134,8 +165,12 @@ class WSHandler(WebSocketHandler):
             if jsonData.get('type') == "curr_operator":
                 logger.info(
                     f"ws_message: currentOperator for {jsonData.get('macine_id')} from ip:{self.request.remote_ip}")
-                msg = {'type': 'curr_operator', 'data': dc.get_current_operator(
-                    jsonData.get('macine_id'))}
+                if settings.OPERATOR_LOGIN:
+                    msg = {'type': 'curr_operator', 'data': dc.get_current_operator(
+                        jsonData.get('macine_id'))}
+                else:
+                    msg = {'type': 'curr_operator', 'data': dc.get_default_operator(
+                        jsonData.get('macine_id'))}
                 json_data = json.dumps(msg, default=str)
                 self.write_message(json_data)
             elif jsonData.get('type') == "get_operator":
@@ -150,7 +185,7 @@ class WSHandler(WebSocketHandler):
                     f"ws_message: set_operator_login for {jsonData.get('macine_id')}, operator {jsonData.get('operator_id')} from ip:{self.request.remote_ip}")
                 dc.set_operator_login(jsonData.get(
                     'macine_id'), jsonData.get('operator_id'))
-                self.application.data.channelBase.get(jsonData.get('macine_id')).set_arg(
+                self.application.data.channelBase.get_by_name(jsonData.get('m_ch')).set_arg(
                     'args.operator_id', jsonData.get('operator_id'))
             elif jsonData.get('type') == "logout_operator":
                 logger.info(
@@ -158,27 +193,27 @@ class WSHandler(WebSocketHandler):
                         for {jsonData.get('macine_id')}, \
                             operator {jsonData.get('operator_id')}\
                                 from ip:{self.request.remote_ip}"
-                            )
+                )
                 dc.set_operator_logout(jsonData.get(
                     'macine_id'), jsonData.get('operator_id'))
                 msg = {'type': 'curr_operator', 'data': dc.get_current_operator(
                     int(jsonData.get('macine_id')))}
-                self.application.data.channelBase.get(jsonData.get(
-                    'macine_id')).set_arg('args.operator_id', None)
+                self.application.data.channelBase.get_by_name(jsonData.get(
+                    'm_ch')).set_arg('args.operator_id', None)
                 json_data = json.dumps(msg, default=str)
                 self.write_message(json_data)
             elif jsonData.get('type') == "subscribe":
                 logger.debug(f"subscription {jsonData.get('data')}")
                 for_send = []
                 for arg in jsonData.get('data'):
-                    channel_id, argument = parse_attr_params(arg)
+                    channel_name, argument = parse_attr_params_n(arg)
                     channel = self.application.data.channelBase.get_by_name(
-                                                            str(channel_id))
+                        channel_name)
                     new_subscription = SubscriptChannelArg(channel, argument)
-                    subscription = self.application.data.subscriptions.add_subscription(
-                        new_subscription)
-                    stored_client = self.application.data.ws_clients.get_client(
-                        self)
+                    subscription = self.application.data\
+                        .subscriptions.add_subscription(new_subscription)
+                    stored_client = self.application.\
+                        data.ws_clients.get_client(self)
                     stored_client.subscriptions.append(subscription)
                     send_data = {arg: channel.get_arg(argument)}
                     send_data.update(
@@ -189,42 +224,32 @@ class WSHandler(WebSocketHandler):
                         self.write_message(json.dumps(for_send, default=str))
             elif jsonData.get('type') == "set":
                 if arg := jsonData.get('arg'):
-                    channel_id, argument = parse_attr_params(arg)
-                    channel = self.application.data.channelBase.get(channel_id)
+                    channel_name, argument = parse_attr_params_n(arg)
+                    channel = self.application.data\
+                        .channelBase.get_by_name(channel_name)
+                    if channel is None:
+                        raise ValueError(f'no channel {channel_name} form \
+                            WS request')
                     value = jsonData.get('val')
-                    self.application.data.channelBase.get(
-                        channel_id).set_arg(argument, value)
+                    channel.set_arg(argument, value)
                     if argument == settings.CAUSEID_ARG:
-                        self.application.data.channelBase.get(
-                            channel_id).set_arg('args.set_cause_flag', True)
+                        channel.set_arg('args.set_cause_flag', True)
                     logger.debug(f"set arg: {jsonData.get('arg')} to {value}")
 
             else:
                 logger.debug('Unsupported ws message: '+message)
 
     def on_close(self):
-        print('ws disconnecr')
+        print('ws disconnect')
         if client := self.application.data.ws_clients.get_client(self):
             for subscr in client.subscriptions:
                 self.application.data.subscriptions.del_subscription(subscr)
             self.application.data.ws_clients.remove(client)
+    def post(self):
+            self.set_header("Content-Type", "application/json")
+            request = json.loads(self.request.body)
+            print(request)
 
-
-class AdminHtmlHandler(BaseHandler):
-    @BaseHandler.check_user(CHECK_AUTORIZATION)
-    def get(self):
-        # print (f'in MainHtmlHandler, project {PROJECT["name"]}, user {self.user} ')
-        # try:
-        #     machine_id=logics.get_machine_from_user(self.user.get('login'))
-        # except ValueError:
-        #     logger.log('ERROR', f'wrong machine id in client login {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
-        #     self.redirect("/login")
-
-        self.render('idleadm.html',
-                    user=self.user.get('login'),
-                    idle_couses=json.dumps(logics.get_causes(), default=str),
-                    version=settings.CLIENT_VERSION,
-                    )
 
 
 class AdmRequestHtmlHandler(BaseHandler):
@@ -277,29 +302,29 @@ class MEmulRequestHtmlHandler(BaseHandler):
         if request.get('type') == 'get_ch':
             logger.log(
                 'MESSAGE', f'client {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
-            self.write(json.dumps(self.application.data.channelBase.get(
-                request.get('id')).to_dict(), default=str))
+            self.write(json.dumps(self.application.data.channelBase.get_by_name(
+                request.get('ch_name')).to_dict(), default=str))
         elif request.get('type') == 'get_ch_arg':
             logger.log(
                 'MESSAGE', f'client {self.user.get("login")} do get_ch_arg from ip:{self.request.remote_ip}.')
             print(
-                f"result: {self.application.data.channelBase.get(request.get('id')).get_arg(request.get('arg'))}")
-            self.write(json.dumps(self.application.data.channelBase.get(
-                request.get('id')).get_arg(request.get('arg')), default=str))
+                f"result: {self.application.data.channelBase.get_by_name(request.get('ch_name')).get_arg(request.get('arg'))}")
+            self.write(json.dumps(self.application.data.channelBase.get_by_name(
+                request.get('ch_name')).get_arg(request.get('arg')), default=str))
         elif request.get('type') == 'set_ch':
             logger.log(
                 'MESSAGE', f'client {self.user.get("login")} do set_ch from ip:{self.request.remote_ip}.')
             print(request)
-            self.application.data.channelBase.get(request.get('id')).set_arg(
+            self.application.data.channelBase.get_by_name(request.get('ch_name')).set_arg(
                 request.get('arg'), request.get('value'))
             self.write(json.dumps(200, default=str))
         elif request.get('type') == 'set_ch_arg':
             logger.log(
                 'MESSAGE', f'client {self.user.get("login")} do set_ch_arg from ip:{self.request.remote_ip}.')
-            id, arg = parse_attr_params(request.get('arg'))
+            name, arg = parse_attr_params_n(request.get('arg'))
 
-            self.application.data.channelBase.get(
-                id).set_arg(arg, [request.get('value')])
+            self.application.data.channelBase.get_by_name(
+                name).set_arg(arg, request.get('value'))
             self.write(json.dumps(200, default=str))
 
     def get(self):
@@ -354,8 +379,8 @@ class MEWSHandler(WebSocketHandler):
             elif jsonData.get('type') == "subscribe":
                 for_send = []
                 for arg in jsonData.get('data'):
-                    channel_id, argument = parse_attr_params(arg)
-                    channel = self.application.data.channelBase.get(channel_id)
+                    ch_name, argument = parse_attr_params_n(arg)
+                    channel = self.application.data.channelBase.get_by_name(ch_name)
                     new_subscription = SubscriptChannelArg(channel, argument)
                     subscription = self.application.data.subscriptions.add_subscription(
                         new_subscription)
@@ -420,20 +445,26 @@ class DBHtmlHandler(BaseHandler):
         try:
             # machine_id_list = logics.get_machine_from_user(self.user.get('id'))
             machine_id = 2000  # !!!!!!!!  dev  !!!!!!!!!!!!!!!!!!!!!!!!
+            m_channel = self.\
+                application.data.\
+                channelBase.get_by_arg_value('args.m_id', machine_id)[0]
         except ValueError:
             logger.log(
-                'ERROR', f'wrong machine id in clients prequest args: {self.request.arguments}  from ip:{self.request.remote_ip}.')
+                'ERROR', f'wrong machine id in clients \
+                    prequest args: {self.request.arguments} \
+                        from ip:{self.request.remote_ip}.')
             return
         self.render('dbdemo.html',
                     user=self.user.get('login'),
+                    m_ch=m_channel.name,
                     machine=machine_id,
                     wsserv=(self.application.settings['wsParams']+'_reps'),
                     idle_couses=json.dumps(
                         logics.get_machine_causes(machine_id), default=str),
-                    state_channel=str(machine_id)+'.'+settings.STATE_ARG,
+                    state_channel=m_channel.name + '.'+settings.STATE_ARG,
                     # state_input=str(machine_id)+'.result_in',
-                    state_input=str(machine_id)+'.result',
-                    causeid_arg=str(machine_id)+'.'+settings.CAUSEID_ARG,
+                    state_input=m_channel.name + '.result_in',
+                    causeid_arg=m_channel.name + '.'+settings.CAUSEID_ARG,
                     project=5,
                     version=0.1,
                     )
@@ -469,8 +500,9 @@ class ReportsWSHandler(WebSocketHandler):
                 print(f'subscribe {jsonData.get("data")}')
                 for_send = []
                 for arg in jsonData.get('data'):
-                    channel_id, argument = parse_attr_params(arg)
-                    channel = self.application.data.channelBase.get(channel_id)
+                    channel_name, argument = parse_attr_params_n(arg)
+                    channel = self.application.data\
+                        .channelBase.get_by_name(channel_name)
                     new_subscription = SubscriptChannelArg(channel, argument)
                     subscription = self.application.data.subscriptions.add_subscription(
                         new_subscription)
@@ -509,8 +541,8 @@ class ReportsWSHandler(WebSocketHandler):
                 logger.debug(
                     f'client do get_ch_arg from ip:{self.request.remote_ip}.')
                 try:
-                    result = self.application.data.channelBase.get(
-                        jsonData.get('id')).get_arg(jsonData.get('arg'))
+                    result = self.application.data.channelBase.get_by_name(
+                        jsonData.get('ch_name')).get_arg(jsonData.get('arg'))
                 except AttributeError:
                     result = None
                 # result = result if result != None else str(None)
@@ -559,8 +591,8 @@ class LogoutHandler(BaseHandler):
 
 handlers = [
     (r"/", MainHtmlHandler),
-    # (r"/request",RequestHtmlHandler),
-    (r"/adm", AdminHtmlHandler),
+    (r"/test", TestHtmlHandler),
+    # (r"/adm", AdminHtmlHandler),
     (r"/reps", ReportsHtmlHandler),
     (r"/db", DBHtmlHandler),
     (r"/arequest", AdmRequestHtmlHandler),

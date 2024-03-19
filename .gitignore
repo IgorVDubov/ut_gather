@@ -8,6 +8,6 @@ __pycache__/*.pyc
 .docignore
 
 .config.py
-.scadaconfig.py
+scadaconfig*.py*
 
 /gathercore/

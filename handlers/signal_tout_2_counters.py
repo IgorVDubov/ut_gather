@@ -40,7 +40,7 @@ def signal_tout_2_counters(vars):
         'dbQuie':'12001',                       связь с очередью записи в БД
         'cuase':'17002.args.cause_id',          текущая причина простоя
         'cause_time': '17003.args.current_cause_time', текущее время начала простоя
-        'idle_handler_id':17002,                канал обработчика простоев
+        'idle_handler_name':17002,                канал обработчика простоев
         'project_id': 3,                        id проекта к которому относится канал
         'operator_id': None,                    текущий оператор
         'stop_signal': False,                   сигнал остановки системы
@@ -69,11 +69,11 @@ def signal_tout_2_counters(vars):
                          })
         dc.db_put_state(vars.db_quie,
                         {'id': vars.machine_id,
-                            'project_id': vars.project_id,
-                            'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
-                            'status': vars.saved_status,
-                            'length': int(round((time_now-vars.saved_time).total_seconds()))                # 02/08 (was buffer_time)
-                            })
+                        'project_id': vars.project_id,
+                        'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
+                        'status': vars.saved_status,
+                        'length': int(round((time_now-vars.saved_time).total_seconds()))                # 02/08 (was buffer_time)
+                        })
     
     if vars.counters_reset is False and vars.counters_reset_in is False:    # если был сигнал отмены сброс_счетчика 
         vars.counters_reset = None

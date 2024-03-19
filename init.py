@@ -1,4 +1,5 @@
 import logics
 
-def init(channel_base):
-    logics.load_machines_idle()
+def init(databus):
+    db_interface = databus.get_object('db_interface')
+    logics.load_machines_idle(db_interface)

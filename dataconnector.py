@@ -59,6 +59,11 @@ def get_current_operator(machine_id: int):
     else:
         return None
 
+def get_default_operator(machine_id: int):
+    return {
+        'id': settings.DEFAILT_OPERATOR,
+        'name': get_machine_operators(machine_id)[settings.DEFAILT_OPERATOR]['name']}
+
 
 def get_operator(machine_id, operator_id):
     if oper_id := next((oper for oper in get_machine_operators(machine_id) if oper == operator_id), None):

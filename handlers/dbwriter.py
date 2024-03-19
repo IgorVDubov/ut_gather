@@ -26,6 +26,10 @@ def db_writer(vars):
     if vars.scheduller_write_states:
         vars.write_init_2120 = True
         vars.write_init_2040 = True
+        vars.write_init_1416 = True
+        vars.write_init_1501 = True
+        vars.write_init_2901 = True
+        vars.write_init_2902 = True
         
     if vars.scheduller_write_counters:
         vars.write_counter_2120 = True
@@ -37,6 +41,10 @@ def db_writer(vars):
         vars.write_counter_2120 = True
         vars.write_init_2040 = True
         vars.write_counter_2040 = True
+        vars.write_init_1416 = True
+        vars.write_init_1501 = True
+        vars.write_init_2901 = True
+        vars.write_init_2902 = True
 
     if vars.scheduller_write_states:
         vars.scheduller_write_states = False

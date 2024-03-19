@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-
-
 from gathercore.app import app_builder
 
 from gathercore.mylib import logger as loggerLib

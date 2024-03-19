@@ -33,7 +33,7 @@ def signal_techtimeout(vars):
         'was_write_init':False,                 флаг произошедшей принудительной записи в БД
         'db_write_flag':False,                  флаг принудительной записи в БД
         'dbQuie':'12001',                       связь с очередью записи в БД
-        'idle_handler_id':17002,                канал обработчика простоев
+        'idle_handler_name':17002,                канал обработчика простоев
     '''
     time_now = datetime.now()
     db_write_flag = False

@@ -8,9 +8,9 @@ from models import Idle
 
 
 def insert_state(db_quie, state_rec: dict):
-    print(f'db_put_state {state_rec}')
-    sql = f'insert into track_{state_rec.get(
-        "project_id", "")} values  (%s,%s,%s,%s)'
+    #print(f'db_put_state {state_rec}')
+    sql = f'''insert into track_{state_rec.get(
+        "project_id", "")} values  (%s,%s,%s,%s)'''
     params = (state_rec.get('id'),
               state_rec.get('time'),
               state_rec.get('status'),
@@ -22,8 +22,8 @@ def insert_state(db_quie, state_rec: dict):
 
 
 def insert_idle(db_quie, ilde_rec):
-    sql = f'insert into idles_{ilde_rec.get(
-        "project_id", "")} values  (%s,%s,%s,%s,%s,%s)'
+    sql = f'''insert into idles_{ilde_rec.get(
+        "project_id", "")} values  (%s,%s,%s,%s,%s,%s)'''
     params = (ilde_rec.get('id'),
               ilde_rec.get('cause'),
               ilde_rec.get('operator_id',),

@@ -64,9 +64,9 @@ def idle(vars):
                     # устанавливаем idle как "нет причины",
                     # устанавливаем флаг обновления причины на клиенте
                     print(
-                        f'store from backend {(datetime.now()-idle.cause_time
+                        f'''store from backend {(datetime.now()-idle.cause_time
                                                ).total_seconds(
-                                                   ) >= vars.techidle_lenhth}')
+                                                   ) >= vars.techidle_lenhth}''')
                     # logics.current_idle_store(vars.machine_id)
                     logics.current_idle_add_cause(vars.machine_id,
                                                   vars.operator_id,

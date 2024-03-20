@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 loguru = "*"
-pymodbus = "*"
+pymodbus = "==3.6.6"
 mysql-connector-python = "*"
 
 [dev-packages]

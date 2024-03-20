@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "7297f4203ce8f96a2f2ba68ea990fc2ba77d73d00f6f6f7ab01d273c3092deb3"
+            "sha256": "eebf263e7c9c360ca255a41e07ffa85372f13e4a6ca3f5a8bb49e267fe30da3c"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -30,7 +30,6 @@
                 "sha256:e671a53522515f34fd406340ee968cb9ecafbc4b36c679da03c18fd8d0bd51ac"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.5'",
             "version": "==0.7.2"
         },
         "mysql-connector-python": {
@@ -63,7 +62,6 @@
                 "sha256:f7acacdf9fd4260702f360c00952ad9a9cc73e8b7475e0d0c973c085a3dd7b7d"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.8'",
             "version": "==8.3.0"
         },
         "pymodbus": {
@@ -72,7 +70,6 @@
                 "sha256:c4d556a0954d00a9e1c8f1d0de03f41c4800336e6d785e820f2917eeb4ee7736"
             ],
             "index": "pypi",
-            "markers": "python_full_version >= '3.8.0'",
             "version": "==3.6.6"
         },
         "win32-setctime": {

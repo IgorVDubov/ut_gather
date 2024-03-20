@@ -6,9 +6,9 @@ from gathercore import consts
 DEMO_DB = True
 
 http_server_params = {
-                    'host': '127.0.0.1',
+                    'host': '192.168.10.101',
                     'port': 8870,
-                    'wsserver': 'ws://127.0.0.1:8870/ws',
+                    'wsserver': 'ws://192.168.10.101:8870/ws',
                     'debug': True,
                     'static_path': 'web/webdata',
                     'template_path': 'web/webdata',

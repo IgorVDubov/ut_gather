@@ -207,7 +207,8 @@ def signal_techtimeout(vars):
         db_write_flag = False
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
         if vars.saved_length > settings.MIN_STORED_STATE_LENGTH:
-            dc.db_put_state(vars.db_quie,
+            if vars.saved_status is not None:
+                dc.db_put_state(vars.db_quie,
                                    {'id': vars.m_id,
                                     'project_id': vars.project_id,
                                     'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),

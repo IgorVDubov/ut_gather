@@ -43,7 +43,7 @@ def r_level_timeout(vars):
         vars.saved_length = 0
         vars.saved_time = time_now
         
-    if vars.stop_signal:
+    if vars.stop_signal and vars.saved_status is not None:
         logger.log('PROG', '!!!!!!!!!!!!!!!!!    get stop signal       !!!!!!!!!!!!!!!!!!!!!!!!!')
         dc.db_put_state(vars.db_quie,
                         {'id': vars.m_id,
@@ -160,7 +160,8 @@ def r_level_timeout(vars):
         dbWriteFlag = False
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
         if vars.saved_length > 10 or vars.saved_length < 90000:
-            dc.db_put_state(vars.db_quie,
+            if vars.saved_status is not None:
+                dc.db_put_state(vars.db_quie,
                                 {'id': vars.m_id,
                                     'project_id': vars.project_id,
                                     'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),

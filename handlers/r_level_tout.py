@@ -32,6 +32,7 @@ def r_level_timeout(vars):
     min_length : USINT := 20 END_VAR # минимальный отрезок времени сменеы статуса (если меньше, статус не меняется)
     VAR time_now : DATE_AND_TIME END_VAR
     '''
+
     time_now = datetime.now()
     dostChangeFlag = False
     dbWriteFlag = False
@@ -42,24 +43,25 @@ def r_level_timeout(vars):
         vars.na_status = False
         vars.saved_length = 0
         vars.saved_time = time_now
-        
+
     if vars.stop_signal and vars.saved_status is not None:
-        logger.log('PROG', '!!!!!!!!!!!!!!!!!    get stop signal       !!!!!!!!!!!!!!!!!!!!!!!!!')
+        logger.log(
+            'PROG', '!!!!!!!!!!!!!!!!!    get stop signal       !!!!!!!!!!!!!!!!!!!!!!!!!')
         dc.db_put_state(vars.db_quie,
                         {'id': vars.m_id,
-                        'project_id': vars.project_id,
-                        'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
-                        'status': vars.saved_status,
-                        'length': int(round((time_now-vars.saved_time).total_seconds()))                # 02/08 (was buffer_time)
-                        })
-    
-    
+                         'project_id': vars.project_id,
+                         'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
+                         'status': vars.saved_status,
+                         # 02/08 (was buffer_time)
+                         'length': int(round((time_now-vars.saved_time).total_seconds()))
+                         })
+
     #  если нет источника или входящий результат пустой массив
     if vars.result_in is None:
         result_in_error = True
-        
+
     na_status = False
-    
+
     if vars.dost == False or result_in_error:
         vars.not_dost_counter += 1
         if vars.not_dost_counter > vars.dost_timeout:
@@ -69,7 +71,7 @@ def r_level_timeout(vars):
             return
     else:
         vars.not_dost_counter = 0
-        
+
     if vars.na_status_before != na_status:
         dostChangeFlag = True
         vars.na_status_before = na_status
@@ -79,11 +81,17 @@ def r_level_timeout(vars):
     # определяем текущий статус
     interval = vars.current_interval
     if not result_in_error:
-        result_in = vars.result_in
-        if result_in < vars.gr_stand:  # откл
+        vars.v5 = vars.v4
+        vars.v4 = vars.v3
+        vars.v3 = vars.v2
+        vars.v2 = vars.v1
+        vars.v1 = vars.result_in
+        vars.result = (vars.v1 + vars.v2 + vars.v3 + vars.v4 + vars.v5)/5
+        result = vars.result
+        if result < vars.gr_stand:  # откл
             status = 1
             interval = 1
-        elif result_in > vars.gr_stand and result_in < vars.gr_work:  # простой
+        elif result > vars.gr_stand and result < vars.gr_work:  # простой
             status = 2
             interval = 2
         else:                   # работа
@@ -91,7 +99,7 @@ def r_level_timeout(vars):
             interval = 3
     else:
         status = 0
-            
+
     # если меняется интервал или принудительная инициализации записи
     if interval != vars.current_interval or vars.write_init or dostChangeFlag:
 
@@ -117,7 +125,8 @@ def r_level_timeout(vars):
             vars.saved_status = vars.current_state
             vars.saved_time = vars.current_state_time  # аналогично время
             # и длительность
-            vars.saved_length = (time_now - vars.current_state_time).total_seconds()
+            vars.saved_length = (
+                time_now - vars.current_state_time).total_seconds()
             vars.current_state = status  # задаес текущий отрезок: статус
             vars.current_state_time = time_now  # время
             dbWriteFlag = True
@@ -149,7 +158,8 @@ def r_level_timeout(vars):
                     time_now - vars.current_state_time).total_seconds()
                 vars.current_state = status  # задаем новй текущий отрезок: статус
                 vars.current_state_time = time_now  # начала отрезка
-            vars.current_interval = interval  # в любом случае текущий интервал = интервал канала
+            # в любом случае текущий интервал = интервал канала
+            vars.current_interval = interval
     if vars.buffered:
         # если есть отрезок ожидающий записи - пишем его по прошествии min_length
         if (time_now-vars.current_state_time).total_seconds() >= vars.tech_timeout:

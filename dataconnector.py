@@ -1,7 +1,8 @@
 from datetime import datetime
 
 import config
-from gathercore.consts import Formats  # TODO move Consts.DATE_FORMAT_DB from Consts
+# TODO move Consts.DATE_FORMAT_DB from Consts
+from gathercore.consts import Formats
 
 import dbqueries as dbc
 import settings
@@ -11,23 +12,33 @@ from gathercore.gtyping import DBInterface
 import dbqueries as db_queries
 
 
-def db_get_all_states(id: int):
+def db_get_all_states(machine_id: int):
     return [rec for rec in project_globals.states_db]
 
 
-def db_get_all_idles(id: int):
+def db_get_all_idles(machine_id: int):
     # return [rec for rec in project_globals.idles_db if (rec and rec.get('id')==id)]
     return [rec for rec in project_globals.idles_db]
 
+
 def db_get_all_operators():
-    result= [rec for rec in project_globals.operators_db]
-    [rec.update({'operator': (settings.OPERATORS[rec['operator_id']]['name'])}) for rec in result]
+    result = [rec for rec in project_globals.operators_db]
+    [rec.update({'operator': (settings.OPERATORS[rec['operator_id']]['name'])})
+     for rec in result]
     return result
 
 
-def get_causes(id: int) -> dict[int:str]:
+def get_machine_causes(db_interface: DBInterface,
+                       machine_id: int,
+                       project_id: int) -> dict:
     return settings.IDLE_CAUSES
-    # return dbc.querry_causes(id)
+    if project_id == settings.DEMO_PROJECT or db_interface is None:
+        return settings.IDLE_CAUSES
+    else:
+        reply = dbc.querry_causes(db_interface, machine_id, project_id)
+        return {machine_id: (name, position) for machine_id,
+                name,
+                position in reply}
 
 
 def get_allowed_machines() -> dict:
@@ -59,6 +70,7 @@ def get_current_operator(machine_id: int):
     else:
         return None
 
+
 def get_default_operator(machine_id: int):
     return {
         'id': settings.DEFAILT_OPERATOR,
@@ -77,10 +89,10 @@ def get_operator(machine_id, operator_id):
 
 
 def get_logged_operator(machine_id: int):
-    return next((oper for oper in project_globals.operators_db 
-                    if (oper['machine_id']==machine_id) 
-                        and (oper['logout'] is None)
-                ),None)
+    return next((oper for oper in project_globals.operators_db
+                 if (oper['machine_id'] == machine_id)
+                 and (oper['logout'] is None)
+                 ), None)
 
 
 def set_operator_login(macine_id, operator_id):
@@ -89,15 +101,13 @@ def set_operator_login(macine_id, operator_id):
     '''
     print(
         f'operator {get_machine_operators(1).get(operator_id, None)} logit to {macine_id}')
-    rec={'operator_id': operator_id,
-        'machine_id': macine_id,
-        'login': datetime.now().strftime(Formats.DATE_FORMAT_DB),
-        'logout': None}
+    rec = {'operator_id': operator_id,
+           'machine_id': macine_id,
+           'login': datetime.now().strftime(Formats.DATE_FORMAT_DB),
+           'logout': None}
     project_globals.operators_db.append(rec)
     rec.update({'operator': settings.OPERATORS[operator_id]['name']})
     project_globals.operators_buffer.append(rec)
-    
-    
 
 
 def set_operator_logout(macine_id, operator_id):
@@ -105,15 +115,16 @@ def set_operator_logout(macine_id, operator_id):
     ищем у macine_id незакрытую сессию и пишем туда время окончания
     '''
     try:
-        rec=get_logged_operator(macine_id)
+        rec = get_logged_operator(macine_id)
         rec['logout'] = datetime.now().strftime(
             Formats.DATE_FORMAT_DB)
     except (KeyError, TypeError):
         print(f'no logout operators at {macine_id}')
-    rec.update({'operator': settings.OPERATORS[operator_id]['name']})    
+    rec.update({'operator': settings.OPERATORS[operator_id]['name']})
     project_globals.operators_buffer.append(rec)
     print(
         f'operator {get_machine_operators(1).get(operator_id, None)} logout to {macine_id}')
+
 
 def jsdb_put_state(state_rec: dict):
     if state_rec.get('length') and state_rec['length'] > 0:
@@ -123,7 +134,7 @@ def jsdb_put_state(state_rec: dict):
 
 def db_put_state(db_quie: DBInterface, state_rec: dict):
     print(f'in dc: db_put_state {state_rec}')
-    if state_rec['status'] != 7 and state_rec['length'] == 0:     #если не запись счетчика
+    if state_rec['status'] != 7 and state_rec['length'] == 0:  # если не запись счетчика
         return
     else:
         if state_rec.get('project_id') == 0:
@@ -140,3 +151,13 @@ def db_put_state(db_quie: DBInterface, state_rec: dict):
 #     else:
 #         db_queries.insert_state(db_quie, state_rec)
 
+
+if __name__ == '__main__':
+    from gathercore.interfaces.db import create_db_interface
+    db_interface = create_db_interface('db_interface',
+                                       config.DB_TYPE,
+                                       config.DB_PARAMS
+                                       )
+    result = get_machine_causes(db_interface, 1416, 2)
+    print(result)
+    # [print(_) for _ in result]

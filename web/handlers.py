@@ -117,8 +117,13 @@ class MainHtmlHandler(BaseHandler):
                     # causeid_arg=logics.get_causeid_arg(
                     #     ch_base.get_by_name(str(machine_id))),
                     idle_couses=json.dumps(logics.convert_none_2_str(
-                        logics.get_machine_causes)(machine_id), default=str),
-                    default_causes=settings.DEFAULT_CAUSES,
+                        dc.get_machine_causes)(
+                            self.application\
+                                .data.databus\
+                        .get_object('db_interface'),
+                            machine_channel.get_arg('args.m_id'),
+                            machine_channel.get_arg('args.project_id')
+                    ), default=str),
                     current_state=logics.convert_none_2_str(
                         logics.get_current_state)(machine_channel),
                     wsserv=self.application.settings['wsParams'] + \
@@ -128,6 +133,8 @@ class MainHtmlHandler(BaseHandler):
                     # operators=logics.get_machine_operators(machine_id),
                     version=settings.CLIENT_VERSION,
                     )
+
+
 class TestHtmlHandler(BaseHandler):
     # @BaseHandler.check_user(CHECK_AUTORIZATION)
     def get(self):
@@ -135,8 +142,8 @@ class TestHtmlHandler(BaseHandler):
         # request = json.loads(self.request.body)
         # print(request)
         # if request.get('type') == 'te':
-            # logger.log(
-            #     'MESSAGE', f'client {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
+        # logger.log(
+        #     'MESSAGE', f'client {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
         self.write(json.dumps(200, default=str))
 
 
@@ -245,11 +252,41 @@ class WSHandler(WebSocketHandler):
             for subscr in client.subscriptions:
                 self.application.data.subscriptions.del_subscription(subscr)
             self.application.data.ws_clients.remove(client)
-    def post(self):
-            self.set_header("Content-Type", "application/json")
-            request = json.loads(self.request.body)
-            print(request)
 
+    def post(self):
+        self.set_header("Content-Type", "application/json")
+        request = json.loads(self.request.body)
+        print(request)
+
+class GatherRequestHtmlHandler(BaseHandler):
+    # @BaseHandler.check_user(CHECK_AUTORIZATION)
+    def post(self):
+        self.set_header("Content-Type", "application/json")
+        self.set_header("Access-Control-Allow-Origin", "*")
+        request = json.loads(self.request.body)
+        print(request)
+        msg = json.dumps({"msg": "ok"}, default=str)
+        self.write(msg)
+        # if request.get('type') == 'addCause':
+        #     new_cause = request.get("cause")
+        #     if new_cause and new_cause != '' and new_cause != 'underfined':
+        #         logics.addCause(new_cause)
+        #         logger.log(
+        #             'MESSAGE', f'client {self.user.get("login")} from ip:{self.request.remote_ip} add cause {new_cause}.')
+        #         self.write(json.dumps(200, default=str))
+        #     else:
+        #         self.write(json.dumps(400, default=str))
+        # elif request.get('type') == 'resetCauses':
+        #     logics.reset_causes()
+        #     self.write(json.dumps(200, default=str))
+        # elif request.get('type') == 'cmd':
+        #     cmd = request.get('cmd')
+        #     if cmd and cmd != '' and cmd != 'underfined':
+        #         logger.log(
+        #             'MESSAGE', f'{self.user.get("login")} send command {cmd} from ip:{self.request.remote_ip}')
+        #         if cmd == 'resetClient':
+        #             for client in self.application.data.ws_clients:
+        #                 client.write_message(json.dumps({'cmd': 'reload'}))
 
 
 class AdmRequestHtmlHandler(BaseHandler):
@@ -380,7 +417,8 @@ class MEWSHandler(WebSocketHandler):
                 for_send = []
                 for arg in jsonData.get('data'):
                     ch_name, argument = parse_attr_params_n(arg)
-                    channel = self.application.data.channelBase.get_by_name(ch_name)
+                    channel = self.application.data.channelBase.get_by_name(
+                        ch_name)
                     new_subscription = SubscriptChannelArg(channel, argument)
                     subscription = self.application.data.subscriptions.add_subscription(
                         new_subscription)
@@ -419,24 +457,29 @@ class ReportsHtmlHandler(BaseHandler):
         try:
             # machine_id_list = logics.get_machine_from_user(self.user.get('id'))
             machine_id = 2000  # !!!!!!!!  dev !!!!!!!!!!!!!!!!!!!!
+            machine_channel = self.application\
+                .data.channelBase.get_by_arg_value('args.m_id', machine_id)[0]
         except ValueError:
             logger.log(
-                'ERROR', f'wrong machine id in clients prequest args: {self.request.arguments}  from ip:{self.request.remote_ip}.')
+                'ERROR', f'wrong machine id in\
+                clients prequest args: {self.request.arguments} \
+                from ip:{self.request.remote_ip}.')
             return
-        self.render('reports.html',
-                    user=self.user.get('login'),
-                    machine=machine_id,
-                    wsserv=(self.application.settings['wsParams']+'_reps'),
-                    host_port=http_server_params['host'] +
-                    ':' + str(http_server_params['port']),
-                    idle_couses=json.dumps(
-                        logics.get_machine_causes(machine_id), default=str),
-                    state_channel=str(machine_id)+'.'+settings.STATE_ARG,
-                    state_input=str(machine_id)+'.result',
-                    causeid_arg=str(machine_id)+'.'+settings.CAUSEID_ARG,
-                    project=5,
-                    version=0.1,
-                    )
+        self.render(
+            'reports.html',
+            user=self.user.get('login'),
+            machine=machine_id,
+            wsserv=(self.application.settings['wsParams']+'_reps'),
+            host_port=http_server_params['host'] +
+            ':' + str(http_server_params['port']),
+            idle_couses=json.dumps(
+                dc.get_machine_causes(None, machine_id, 0), default=str),
+            state_channel=str(machine_channel.name)+'.'+settings.STATE_ARG,
+            # state_input=str(machine_channel.name)+'.result',
+            causeid_arg=str(machine_channel.name)+'.'+settings.CAUSEID_ARG,
+            project=5,
+            version=0.1,
+        )
 
 
 class DBHtmlHandler(BaseHandler):
@@ -460,7 +503,7 @@ class DBHtmlHandler(BaseHandler):
                     machine=machine_id,
                     wsserv=(self.application.settings['wsParams']+'_reps'),
                     idle_couses=json.dumps(
-                        logics.get_machine_causes(machine_id), default=str),
+                        dc.get_machine_causes(None, machine_id, 0), default=str),
                     state_channel=m_channel.name + '.'+settings.STATE_ARG,
                     # state_input=str(machine_id)+'.result_in',
                     state_input=m_channel.name + '.result_in',
@@ -593,6 +636,7 @@ handlers = [
     (r"/", MainHtmlHandler),
     (r"/test", TestHtmlHandler),
     # (r"/adm", AdminHtmlHandler),
+    (r"/grequest", GatherRequestHtmlHandler),
     (r"/reps", ReportsHtmlHandler),
     (r"/db", DBHtmlHandler),
     (r"/arequest", AdmRequestHtmlHandler),

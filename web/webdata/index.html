@@ -446,6 +446,7 @@
 <script>
 
     const SHOW_CAUSES =  false; // режим только отображения состояний
+    //const SHOW_CAUSES =  true; // режим только отображения состояний
 
     moment.locale('ru');
     const STATUS_LIGHT_COLORS=['#e6e6e6','#b4b4b4','#fff134','#03e003']
@@ -456,7 +457,6 @@
     const WS_SERVER = '{{ wsserv }}';
     {% autoescape None %}
     const IDLE_COUSES={{  idle_couses  }}
-    const DEFAULT_CAUSES={{default_causes}}
     const STATE_CHANNEL='{{state_channel}}'
     const CAUSEID_ARG='{{ causeid_arg }}'
     const TECH_IDLE_LENGTH={{ tech_idle }}
@@ -751,18 +751,19 @@
             console.log(' Server close connection! No data!')
             wsStatus.textContent='offline'
             wsIndicator.style.color='Red'
-            offlineAlert.on()
-            setInterval(function (){checkServer(
-                                    TEST_URL,
-                                      1000
-                                      // restart()
-                                      )
-                                    },
-                                    1000);
+            // offlineAlert.on()
+            
+            // setInterval(function (){checkServer(
+            //                         TEST_URL,
+            //                           1000
+            //                           // restart()
+            //                           )
+            //                         },
+            //                         1000);
             // setTimeout(function (){location.reload()},5000);
         };
         webSocket.onerror = function(evt) {
-            console.log(' Server connection error ')
+            console.log(' Server connection error ', evt)
             webSocket.close()
         };
 
@@ -1010,7 +1011,7 @@
     
     function displayCauseStatus(){
       if (currentState.cause!=undefined){
-        causeStatusElem.innerText=IDLE_COUSES[currentState.cause]
+        causeStatusElem.innerText=IDLE_COUSES[currentState.cause][0]
       }
       if (currentState.causeTime!=undefined){
         causeTimeElem.innerText=moment(currentState.causeTime).format('DD.MM.YY HH:mm:ss')
@@ -1198,17 +1199,31 @@
         
 
         const causeButtonsContainer = block('',['w_v80 gridCauseButtons'],'causeButtonsContainer');
-        for (i=0; i<Object.keys(IDLE_COUSES).length;i++){
-          let id=Object.keys(IDLE_COUSES)[i]
-          if (DEFAULT_CAUSES.includes(parseInt(id))) {//фильтруем зарезервированные
-            continue
-          };          
-          let cause=IDLE_COUSES[id]
+        let causeArr = []
+        for (idle in IDLE_COUSES){
+          if (IDLE_COUSES[idle][1]!=0){
+            causeArr[IDLE_COUSES[idle][1]-1]=[idle, IDLE_COUSES[idle][0]]
+          }
+        }
+        for (idle of causeArr){
+          let id=idle[0]
+          let cause=idle[1]
           button=block(cause,['h100 w20rem flex_center databox dataLable fnt_2'],'buttonsContainer');
           button.dataset.id=id
           button.addEventListener('click', clickHandler);
           causeButtonsContainer.append(button)
         }
+        // for (i=0; i<Object.keys(IDLE_COUSES).length;i++){
+        //   let id=Object.keys(IDLE_COUSES)[i]
+        //   if (IDLE_COUSES[id][1]==0) {//фильтруем c позицией 0
+        //     continue
+        //   };          
+        //   let cause=IDLE_COUSES[id][0]
+        //   button=block(cause,['h100 w20rem flex_center databox dataLable fnt_2'],'buttonsContainer');
+        //   button.dataset.id=id
+        //   button.addEventListener('click', clickHandler);
+        //   causeButtonsContainer.append(button)
+        // }
         container.append(causeButtonsContainer);
         let changeCauseButton=block('изменить причину простоя',['buttonBox flex_center w_v80 h_v20 fnt_3 bold cWhite'],'changeCauseButton')
         changeCauseButton.addEventListener('click', changeCauseclickHandler);
@@ -1245,7 +1260,7 @@
     
     function makeNumKeyboard(gridContainer, keyClass){
       function makeKey(code, keyClass, txt){
-        let key=block(code, keyClass, 'key_'+parseInt(i))
+        let key=block(code, keyClass, 'key_'+parseInt(code))
         key.dataset.code=code
         key.onclick=function(){pushButton(this.dataset.code)}
         key.innerText=txt

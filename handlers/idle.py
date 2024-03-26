@@ -20,7 +20,7 @@ def idle(vars):
             operator_id - текущий оператор
 
     '''
-    idle = logics.current_idle_get(vars.machine_id)
+    idle = logics.get_current_idle(vars.machine_id)
 
     if vars.set_cause_flag:
         print(f'set cause flag to {vars.machine_id} to {vars.cause_id}')
@@ -57,16 +57,13 @@ def idle(vars):
         if idle:             # простой уже зафиксирован
             if idle.cause:  # уже есть причина
                 if (idle.cause == settings.TECH_IDLE_ID
-                    ) and (
-                        (datetime.now()-idle.cause_time).total_seconds(
-                        ) >= vars.techidle_lenhth):
+                        ) and (idle.calc_length() >= vars.techidle_lenhth):
                     # если был техпростой и он кончился  - записываем,
                     # устанавливаем idle как "нет причины",
                     # устанавливаем флаг обновления причины на клиенте
                     print(
-                        f'''store from backend {(datetime.now()-idle.cause_time
-                                               ).total_seconds(
-                                                   ) >= vars.techidle_lenhth}''')
+                        f'''store from backend {idle.calc_length()
+                                                >= vars.techidle_lenhth}''')
                     # logics.current_idle_store(vars.machine_id)
                     logics.current_idle_add_cause(vars.machine_id,
                                                   vars.operator_id,

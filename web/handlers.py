@@ -31,6 +31,21 @@ WebSocketHandler = BaseWSHandler
 class BaseHandler(RequestHandlerClass):
     user: User
 
+    def set_default_headers(self):
+        print("setting headers!!!")
+        self.set_header("access-control-allow-origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        self.set_header('Access-Control-Allow-Methods',
+                        'GET, PUT, DELETE, OPTIONS')
+        # HEADERS!
+        self.set_header("Access-Control-Allow-Headers",
+                        "access-control-allow-origin,authorization,content-type")
+
+    def options(self):
+        # no body
+        self.set_status(204)
+        self.finish()
+
     def get_current_user(self):
         return self.get_secure_cookie("user")
 
@@ -258,16 +273,39 @@ class WSHandler(WebSocketHandler):
         request = json.loads(self.request.body)
         print(request)
 
+
 class GatherRequestHtmlHandler(BaseHandler):
     # @BaseHandler.check_user(CHECK_AUTORIZATION)
     def post(self):
         self.set_header("Content-Type", "application/json")
-        self.set_header("Access-Control-Allow-Origin", "*")
         request = json.loads(self.request.body)
         print(request)
-        msg = json.dumps({"msg": "ok"}, default=str)
-        self.write(msg)
-        # if request.get('type') == 'addCause':
+
+        if request.get('type') == 'stateQuerry':
+            # data = []
+            for m_id in request.get('machines', []):
+                machine_channel = self\
+                    .application.data\
+                    .channelBase\
+                    .get_by_arg_value('args.m_id', m_id)[0]
+                if machine_channel is None:
+                    raise ValueError(
+                        f"Can't find machine_channel for machine id {m_id}\
+                                from {self.request.remote_ip}")
+                data={
+                        'machine_id': m_id,
+                        'state': machine_channel.get_arg('args.current_state'),
+                        'state_time': machine_channel.get_arg
+                            ('args.current_state_time')
+                            .strftime('%Y-%m-%dT%H:%M:%S'),
+                        'operator_id': machine_channel.get_arg
+                            ('args.operator_id'),
+                        'cause_id': machine_channel.get_arg('args.cause_id'),
+                        'cause_time': machine_channel.get_arg
+                            ('args.cause_time').strftime('%Y-%m-%dT%H:%M:%S'),
+                    }
+            self.write(json.dumps({"allStates": data}, default=str))
+
         #     new_cause = request.get("cause")
         #     if new_cause and new_cause != '' and new_cause != 'underfined':
         #         logics.addCause(new_cause)

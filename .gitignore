@@ -7,7 +7,7 @@ __pycache__/*.pyc
 
 .docignore
 
-.config.py
+config.py
 scadaconfig*.py*
 
 /gathercore/

@@ -1,4 +1,4 @@
-# from gather.interfaces.db.dbinterface import DBInterface
+from gathercore.interfaces.db import DBInterface
 from gathercore.interfaces.db.dbcommands import (
     DBInsert,
     DBCommit,
@@ -56,31 +56,25 @@ def delete_current_idle_tmp(db_quie, machine_id):
     db_quie.put(DBCommit(sql, params))
 
 
-def select_temp_idles(db_interface):
+def select_temp_idles(db_interface: DBInterface) -> list:
     sql = '''select * from temp_idles'''
 
     reply = db_interface.direct_call(DBSelect(sql))
     
     return reply
 
-
-# def insert_idle(connection, params):
-#     cur = connection.cursor()
-#     cur.execute(
-#     f'insert into idles_{params.get("project_id","")} values  (%s,%s,%s,%s,%s,%s)',
-#                         (params.get('id'),
-#                         params.get('cause'),
-#                         params.get('operator_id',),
-#                         params.get('cause_time'),
-#                         params.get('cause_set_time'),
-#                         params.get('length')))
-#     connection.commit()
-
-# def insert_state(connection, params):
-#     cur = connection.cursor()
-#     cur.execute(f'insert into track_{params.get("project_id","")} values  (%s,%s,%s,%s)',
-#                         (params.get('id'),
-#                         params.get('time'),
-#                         params.get('status'),
-#                         params.get('length')))
-#     connection.commit()
+def querry_causes(db_interface: DBInterface,
+                  machine_id: int,
+                  project_id: int) -> list:
+    sql = f'''SELECT 
+                cause_id, 
+                (select name from idle_causes 
+                WHERE idle_causes.id = machine_causes_{project_id}.cause_id) 
+                AS name, 
+                position 
+                FROM machine_causes_{project_id} WHERE machine_id = %s'''
+    params = (
+        machine_id,
+    )
+    reply = db_interface.direct_call(DBSelect(sql, params))
+    return reply

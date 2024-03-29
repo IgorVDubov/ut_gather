@@ -445,8 +445,8 @@
 </body>
 <script>
 
-    const SHOW_CAUSES =  false; // режим только отображения состояний
-    //const SHOW_CAUSES =  true; // режим только отображения состояний
+    // const SHOW_CAUSES =  false; // режим только отображения состояний
+    const SHOW_CAUSES = false; 
 
     moment.locale('ru');
     const STATUS_LIGHT_COLORS=['#e6e6e6','#b4b4b4','#fff134','#03e003']
@@ -734,14 +734,17 @@
                 }
                 return true
             break;
+            case "subscribe_data":
+              // console.log(jsonMsg)
+              currentState.stateTime=jsonMsg.time;                                   //todo взять из запроса
+              currentState.state=jsonMsg.data[0][STATE_CHANNEL]
+              break;
             default:
           }
-          if (firstWsMessageFlag){
-            firstWsMessageFlag=false
-          } else {
-            currentState.stateTime=jsonMsg[0].time;                                   //todo взять из запроса
-            currentState.state=jsonMsg[0][STATE_CHANNEL]
-          }
+          // if (firstWsMessageFlag){
+          //   firstWsMessageFlag=false
+          // } else {
+          // }
           flashIndicator(wsIndicator,'lightgreen','green',400);
           return true;
         };
@@ -751,16 +754,14 @@
             console.log(' Server close connection! No data!')
             wsStatus.textContent='offline'
             wsIndicator.style.color='Red'
-            // offlineAlert.on()
+            offlineAlert.on()
             
-            // setInterval(function (){checkServer(
-            //                         TEST_URL,
-            //                           1000
-            //                           // restart()
-            //                           )
-            //                         },
-            //                         1000);
-            // setTimeout(function (){location.reload()},5000);
+            setInterval(function (){checkServer(
+                                    TEST_URL,
+                                      1000
+                                      )
+                                    },
+                                    1000);
         };
         webSocket.onerror = function(evt) {
             console.log(' Server connection error ', evt)

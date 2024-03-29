@@ -109,6 +109,15 @@ def idle(vars):
                                       )
         else:                 # работа - выход
             pass
+        # при переходе в работу текущая причина None
+        if idle:
+            idle.cause = None 
+            idle.cause_time = None
+    
     if idle:
         vars.current_cause = idle.cause
         vars.current_cause_time = idle.cause_time
+    else:
+        vars.current_cause = None
+        vars.current_cause_time = None
+        

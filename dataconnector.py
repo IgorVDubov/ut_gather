@@ -27,11 +27,25 @@ def db_get_all_operators():
      for rec in result]
     return result
 
+def get_idels_data(db_interface: DBInterface, machine_id, time1, time2, project_id):
+    reply = dbc.querry_idels(db_interface, machine_id, time1, time2, project_id)
+    if reply is not None:
+        data = []
+        for m_id, cause_id, operator_id, cause_time, cause_set_time, cause_length in reply:
+            data.append({
+                'm_id':m_id, 
+                'cause_id':cause_id, 
+                'operator_id':operator_id, 
+                'cause_time':cause_time.strftime('%Y-%m-%dT%H:%M:%S'), 
+                'cause_set_time':cause_set_time.strftime('%Y-%m-%dT%H:%M:%S'), 
+                'cause_length':cause_length
+                })
+        
+    return data
 
 def get_machine_causes(db_interface: DBInterface,
                        machine_id: int,
                        project_id: int) -> dict:
-    return settings.IDLE_CAUSES
     if project_id == settings.DEMO_PROJECT or db_interface is None:
         return settings.IDLE_CAUSES
     else:
@@ -40,6 +54,19 @@ def get_machine_causes(db_interface: DBInterface,
                 name,
                 position in reply}
 
+
+def get_causes_name(db_interface: DBInterface,
+                       machine_id: int,
+                       project_id: int) -> dict:
+    if project_id == settings.DEMO_PROJECT or db_interface is None:
+        return {machine_id: name for machine_id,
+                (name,
+                position) in settings.IDLE_CAUSES.items()}
+    else:
+        reply = dbc.querry_causes(db_interface, machine_id, project_id)
+        return {machine_id: name for machine_id,
+                name,
+                position in reply}
 
 def get_allowed_machines() -> dict:
     if config.DEMO_DB:

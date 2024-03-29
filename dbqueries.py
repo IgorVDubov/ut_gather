@@ -33,6 +33,7 @@ def insert_idle(db_quie, ilde_rec):
     db_quie.put(DBInsert(sql, params))
 
 
+
 def replace_current_idle_tmp(db_quie, tmp_ilde_rec):
     sql = 'replace into temp_idles values  (%s,%s,%s,%s,%s,%s,%s,%s,%s)'
     params = (tmp_ilde_rec.get('machine_id'),
@@ -76,5 +77,15 @@ def querry_causes(db_interface: DBInterface,
     params = (
         machine_id,
     )
+    reply = db_interface.direct_call(DBSelect(sql, params))
+    return reply
+
+def querry_idels(db_interface: DBInterface, machine_id, time1, time2, project_id):
+    sql = f'''SELECT * FROM idles_{project_id} 
+                WHERE machine_id = %s 
+                AND 
+                cause_time BETWEEN %s AND %s 
+                order by cause_time'''
+    params = (machine_id, time1, time2)
     reply = db_interface.direct_call(DBSelect(sql, params))
     return reply

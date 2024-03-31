@@ -12,7 +12,7 @@ def idle(vars):
             machine_id - id станка
             cause_id - id причины
             techidle_lenhth - длительность техпростоя
-            reset_idle_flag - принудительный сброс текущего простоя без записи
+            split_idle_flag - принудительный сброс текущего простоя без записи
             set_cause_flag - флаг указания причины оператором
             restore_idle_flag - текущая причина записывается с 
                                 временной меткой и создается 
@@ -34,17 +34,34 @@ def idle(vars):
 
     # записываем текущий простой и начинаем новый с текущего
     # времени (например в конце смены)
-    if vars.restore_idle_flag:
-        vars.restore_idle_flag = False
-        logics.current_idle_store(vars.machine_id,
-                                  vars.project_id,
-                                  vars.db_quie)
-        logics.current_idle_add_cause(vars.machine_id,
-                                      vars.operator_id,
-                                      idle.cause_id,
-                                      datetime.now(),
-                                      vars.project_id,
-                                      vars.db_quie)
+    if vars.split_idle_flag:
+        vars.split_idle_flag = False
+        if idle is not None:
+            print(f'split idle {idle}')
+            logics.current_idle_store(vars.machine_id,
+                                    vars.project_id,
+                                    vars.db_quie)
+            current_cause = idle.cause
+            logics.current_idle_reset(vars.db_quie,
+                                  vars.machine_id,
+                                  vars.project_id)
+            
+            logics.current_idle_set(vars.db_quie,
+                                    vars.machine_id,
+                                    vars.project_id,
+                                    vars.state,
+                                    vars.techidle_lenhth,
+                                    vars.operator_id,
+                                    current_cause,
+                                    datetime.now(),
+                                    datetime.now())
+            # logics.current_idle_add_cause(vars.machine_id,
+            #                             vars.operator_id,
+            #                             idle.cause,
+            #                             datetime.now(),
+            #                             vars.project_id,
+            #                             vars.db_quie)
+            return
 
     # принудительный сброс текущего простоя без записи
     if vars.reset_idle_flag:

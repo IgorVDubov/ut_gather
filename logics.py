@@ -347,6 +347,9 @@ def current_idle_reset(db_quie, machine_id: int, project_id: int):
 
 
 def current_idle_store(machine_id: int, prj_id: int, db_quie: DBInterface):
+    '''
+    сохраняем простой в БД
+    '''
     if idle := get_current_idle(machine_id):
         if idle.set_length() < settings.MIN_STORED_IDLE_LENGTH:
             print(

@@ -31,6 +31,7 @@ def r_level_timeout(vars):
     dost_Timeout : USINT := 5 END_VAR # таймаут НЕдостоверности канала
     min_length : USINT := 20 END_VAR # минимальный отрезок времени сменеы статуса (если меньше, статус не меняется)
     VAR time_now : DATE_AND_TIME END_VAR
+    split_idle: сигнал записи простоя и его возобновления
     '''
 
     time_now = datetime.now()
@@ -167,6 +168,7 @@ def r_level_timeout(vars):
             vars.buffered = False
     vars.status = vars.current_state
     if dbWriteFlag:
+        vars.split_idle = True
         dbWriteFlag = False
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
         if vars.saved_length > 10 or vars.saved_length < 90000:

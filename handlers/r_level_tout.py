@@ -5,33 +5,48 @@ import dataconnector as dc
 
 def r_level_timeout(vars):
     '''
-    result_in level with timeout
-    VARS:
-        'channel':'4209',
-        'write_init':'10001.args.write_init',
-        'statusCh':'100.result_in',
-        'gr_stand':1,
-        'gr_work':8,
-        'dost_timeout':5,
-        'tech_timeout':20,
-    ******************************************************        
-    channel - привязка к каналу
-    VAR_INPUT value_in :  IN вход канала
-            * vars.saved_status : USINT END_VAR # статус отрезка для записи БД
-            * vars.saved_length : UDINT END_VAR # длительность отрезка для записи БД
-            * vars.saved_time : DATE_AND_TIME END_VAR # начало отрезка для записи БД
-            * db_write : BOOL END_VAR # флаг записи в БД -> DB_in
-    VAR_OUTPUT status : текущее состояние (для отображения)
-    VAR_INPUT dost :  достоверность аргумент от канала к источнику
-    VAR_INOUT write_init : BOOL := 1 END_VAR # принудительная инициализация записи
-    VAR_OUTPUT status_bit1 : BOOL END_VAR # бит1 статуса для HEX канала состояния
-    VAR_OUTPUT status_bit2 : BOOL END_VAR # бит2 статуса для HEX состояния
-    gr_stand  граница простоя
-    gr_work : REAL END_VAR # граница рботы
-    dost_Timeout : USINT := 5 END_VAR # таймаут НЕдостоверности канала
-    min_length : USINT := 20 END_VAR # минимальный отрезок времени сменеы статуса (если меньше, статус не меняется)
-    VAR time_now : DATE_AND_TIME END_VAR
-    split_idle: сигнал записи простоя и его возобновления
+    обработка аналогового сигнала источника
+    по бегущему среднему
+    с техпроcтоем
+    -------------------
+    args:
+    'm_id'                                                          id станка
+    'result_in':'канал_станка.resultIn',                            вход от источника
+    'result': 'канал_станка.result',                                значение канала (бегущее среднее)
+    'dost':'канал_станка.dost'                                      достоверность канала к источнику
+    'gr_stand':1                                                    граница откл/простой
+    'gr_work':8                                                     граница простой/работа
+    'dost_timeout':'канал_настроек.args.dost_timeout' или int(cек)  таймаут недостоверности ,с
+    'tech_timeout':'канал_настроек.args.minLength' или int(cек)     техпростой ,с
+    'write_init':'db_writer2.args.writeInit',                       сигнал принудительной записи
+    'status_ch_b1':'канал_статуса.args.b1',                         бит1 канала статуса
+    'status_ch_b2':'канал_статуса.args.b2',                         бит2 канала статуса
+    'status':0,                                                     текущий статус
+    'saved_status':0,                                               сохраненный (подвешенный) отрезок статус
+    'saved_length':0,                                               сохраненный (подвешенный) отрезок длительность
+    'saved_time':0,                                                 сохраненный (подвешенный) отрезок начало
+    'current_state': 0,                                             текущий отрезок: статус
+    'current_state_time': 0,                                        текущий отрезок: время смены статуса
+    'current_interval': 0,                                          текущий интервал границ (откл-простой-работа)
+    'buffered':False,                                               флаг наличия буферезированный отрезок
+    'status_db': 0,
+    'lengthDB': 0,
+    'time_db': 0,
+    'init':True,                                                    флаг инициализации (выполняется только при первом запуске)
+    'dbQuie':'databus.db_interface',                                связь с очередью записи в БД через объект БД databus-а
+    'idle_handler_name':отбработчик_простоя,                        канал обработчика простоев
+    'project_id': 5,                                                id проекта к которому относится станок
+    'operator_id': None,                                            текущий оператор
+    'cause_id': 'отбработчик_простоя.args.current_cause',           текущая причина id
+    'cause_time': 'отбработчик_простоя.args.current_cause_time',    текущая причина время начала
+    'split_idle': 'отбработчик_простоя.args.split_idle_flag',       флаг разделения отрезка простоя (при переходе смены)
+    'stop_signal': False,                                           сигнал сотановки от ядра для записи текущих отрезков
+    'v1': 0,    переменная текущего среднего
+    'v2': 0,    переменная текущего среднего
+    'v3': 0,    переменная текущего среднего
+    'v4': 0,    переменная текущего среднего
+    'v5': 0,    переменная текущего среднего
+    
     '''
 
     time_now = datetime.now()
@@ -128,8 +143,8 @@ def r_level_timeout(vars):
             # и длительность
             vars.saved_length = (
                 time_now - vars.current_state_time).total_seconds()
-            vars.current_state = status  # задаес текущий отрезок: статус
-            vars.current_state_time = time_now  # время
+            vars.current_state = status  # задает текущий отрезок: статус
+            vars.current_state_time = time_now  # задает текущий отрезок: время
             dbWriteFlag = True
             vars.buffered = False									    		# если отрезок был подвешен - сбрасываем флаг
         else:

@@ -8,17 +8,18 @@ def signal_techtimeout(vars):
     '''
     signals values with timeout
     VARS:
-        'result_in':'5002.resultIn', -          вход от источника
-        'counter':'5003.result',             вход от источника счетчика
-        'counter_reset':'5004.result',          вход от источника сброс счетчика
-        'write_init':'13001.args.writeInit',    сигнал принудительной записи
-        'write_counter':'13001.args.write_counter' сигнал записи счетчика
-        'status_ch_b1':'11001.args.b1',         бит1 канала статуса
-        'status_ch_b2':'11001.args.b2',         бит2 канала статуса
-        'dost_timeout':'1001.args.dost_timeout', таймаут достоверности ,с
-        'tech_timeout':'1001.args.minLength',   техпростой ,с
+        'm_id' - id станка
+        'result_in':'канал_станка.resultIn', -          вход от источника
+        'counter':'канал_счетчика.result',             вход от источника счетчика
+        'counter_reset':'канал_сброс_счетчика.result',          вход от источника сброс счетчика
+        'write_init':'db_writer2.args.writeInit',    сигнал принудительной записи
+        'write_counter':'db_writer1.args.write_counter' сигнал записи счетчика
+        'status_ch_b1':'канал_статуса.args.b1',         бит1 канала статуса
+        'status_ch_b2':'канал_статуса.args.b2',         бит2 канала статуса
+        'dost_timeout':'канал_настроек.args.dost_timeout', таймаут достоверности ,с
+        'tech_timeout':'канал_настроек.args.minLength',   техпростой ,с
         'status':0,                             текущий статус
-        'cuase':'17002.args.cause_id',          текущая причина простоя
+        'cuase':'отбработчик_простоя.args.cause_id', текущая причина простоя
         'not_dost_counter':0,                   счетчик времени недостоверности
         'init':True,                            флаг инициализации
         'saved_status':0,                       сохраненный (подвешенный) отрезок статус
@@ -33,7 +34,7 @@ def signal_techtimeout(vars):
         'was_write_init':False,                 флаг произошедшей принудительной записи в БД
         'db_write_flag':False,                  флаг принудительной записи в БД
         'dbQuie':'12001',                       связь с очередью записи в БД
-        'idle_handler_name':17002,                канал обработчика простоев
+        'idle_handler_name':отбработчик_простоя,                канал обработчика простоев
     '''
     time_now = datetime.now()
     db_write_flag = False

@@ -8,16 +8,21 @@ def idle(vars):
     '''
         idle serving programm (обработка простоев)
         vars:
-            state - current state
-            machine_id - id станка
-            cause_id - id причины
-            techidle_lenhth - длительность техпростоя
-            split_idle_flag - принудительный сброс текущего простоя без записи
-            set_cause_flag - флаг указания причины оператором
-            restore_idle_flag - текущая причина записывается с 
-                                временной меткой и создается 
-                                такая же длящаяся далее
-            operator_id - текущий оператор
+            'status'                                            текущий статус
+            'saved_status': 'канал_станка.args.saved_status',   отрезок предшествующий текущему: статус
+            'saved_length': 'канал_станка.args.saved_length',   отрезок предшествующий текущему: длительность
+            'machine_id': 'канал_станка.args.m_id'              id станка
+            'operator_id': 'канал_станка.args.operator_id',     текущий оператор
+            'techidle_lenhth': 'канал_станка.args.tech_timeout' длительность техпростоя
+            'cause_id' -                                        id текущей причины
+            'reset_idle_flag' -                                 флаг принудительного сброса текущего простоя без записи
+            'set_cause_flag' -                                  флаг указания причины оператором
+            'split_idle_flag' -                                 текущая причина записывается с 
+                                                                временной меткой и создается 
+                                                                такая же длящаяся далее
+            'db_quie': 'databus.db_interface',                  БД интерфейс
+            'project_id': 'канал_станка.args.project_id'        id проекта
+            'min_work_len': 20,                                  минимальная длительность работы (в сек)
 
     '''
     idle = logics.get_current_idle(vars.machine_id)
@@ -37,7 +42,6 @@ def idle(vars):
     if vars.split_idle_flag:
         vars.split_idle_flag = False
         if idle is not None:
-            print(f'split idle {idle}')
             logics.current_idle_store(vars.machine_id,
                                     vars.project_id,
                                     vars.db_quie)
@@ -49,7 +53,7 @@ def idle(vars):
             logics.current_idle_set(vars.db_quie,
                                     vars.machine_id,
                                     vars.project_id,
-                                    vars.state,
+                                    vars.status,
                                     vars.techidle_lenhth,
                                     vars.operator_id,
                                     current_cause,
@@ -69,8 +73,9 @@ def idle(vars):
         logics.current_idle_reset(vars.db_quie,
                                   vars.machine_id,
                                   vars.project_id)
+    
     # если текущий статус является простем
-    if vars.state in settings.IDLE_STATES:
+    if vars.status in settings.IDLE_STATES:
         if idle:             # простой уже зафиксирован
             if idle.cause:  # уже есть причина
                 if (idle.cause == settings.TECH_IDLE_ID
@@ -95,18 +100,25 @@ def idle(vars):
                 #   ) >=settings.CAUSE_CHECK_TIMEOUT:
             #        ...      # нe указана причина за отведенное время
 
-        else:                # появился новый простой - авто техпростой
-            logics.current_idle_set(vars.db_quie,
+        else:                # появился новый простой - формируем авто техпростой
+            if vars.saved_status == 3\
+                and vars.saved__length > vars.min_work_len:     # только если предыдущее состояние 
+                                                                # было работа и она 
+                                                                # была дольше минимума
+                logics.current_idle_set(
+                                    vars.db_quie,
                                     vars.machine_id,
                                     vars.project_id,
-                                    vars.state,
+                                    vars.status,
                                     vars.techidle_lenhth,
                                     vars.operator_id,
                                     settings.TECH_IDLE_ID,
                                     datetime.now(),
-                                    datetime.now())
+                                    datetime.now()
+                )
     else:
         if idle:             # если был простой и переход в работу
+#TODO добавить проверку на длятельность работы, если короче минимума не сбрасывать причину
             if idle.cause:      # если указана причина
                 pass
             else:  # если причина не указана

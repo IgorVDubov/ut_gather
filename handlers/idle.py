@@ -102,7 +102,7 @@ def idle(vars):
 
         else:                # появился новый простой - формируем авто техпростой
             if vars.saved_status == 3\
-                and vars.saved__length > vars.min_work_len:     # только если предыдущее состояние 
+                and vars.saved_length > vars.min_work_len:     # только если предыдущее состояние 
                                                                 # было работа и она 
                                                                 # была дольше минимума
                 logics.current_idle_set(

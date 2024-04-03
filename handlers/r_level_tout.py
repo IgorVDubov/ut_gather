@@ -97,12 +97,17 @@ def r_level_timeout(vars):
     # определяем текущий статус
     interval = vars.current_interval
     if not result_in_error:
+        vars.v10 = vars.v9
+        vars.v9 = vars.v8
+        vars.v8 = vars.v7
+        vars.v7 = vars.v6
+        vars.v6 = vars.v5
         vars.v5 = vars.v4
         vars.v4 = vars.v3
         vars.v3 = vars.v2
         vars.v2 = vars.v1
         vars.v1 = vars.result_in
-        vars.result = (vars.v1 + vars.v2 + vars.v3 + vars.v4 + vars.v5)/5
+        vars.result = (vars.v1 + vars.v2 + vars.v3 + vars.v4 + vars.v5 + vars.v6 + vars.v7 + vars.v8 + vars.v9 + vars.v10)/10
         result = vars.result
         if result < vars.gr_stand:  # откл
             status = 1

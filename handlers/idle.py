@@ -27,6 +27,7 @@ def idle(vars):
     '''
     idle = logics.get_current_idle(vars.machine_id)
 
+    #   если через АПИ установили причину простоя записываем в текущий простой причину
     if vars.set_cause_flag:
         print(f'set cause flag to {vars.machine_id} to {vars.cause_id}')
         vars.set_cause_flag = False
@@ -36,7 +37,8 @@ def idle(vars):
                                       datetime.now(),
                                       vars.project_id,
                                       vars.db_quie)
-
+        return
+    
     # записываем текущий простой и начинаем новый с текущего
     # времени (например в конце смены)
     if vars.split_idle_flag:
@@ -65,7 +67,7 @@ def idle(vars):
             #                             datetime.now(),
             #                             vars.project_id,
             #                             vars.db_quie)
-            return
+        return
 
     # принудительный сброс текущего простоя без записи
     if vars.reset_idle_flag:
@@ -73,11 +75,12 @@ def idle(vars):
         logics.current_idle_reset(vars.db_quie,
                                   vars.machine_id,
                                   vars.project_id)
+        return
     
     # если текущий статус является простем
     if vars.status in settings.IDLE_STATES:
-        if idle:             # простой уже зафиксирован
-            if idle.cause:  # уже есть причина
+        if idle is not None:             # простой уже зафиксирован
+            if idle.cause is not None:  # уже есть причина
                 if (idle.cause == settings.TECH_IDLE_ID
                         ) and (idle.calc_length() >= vars.techidle_lenhth):
                     # если был техпростой и он кончился  - записываем,
@@ -119,7 +122,7 @@ def idle(vars):
     else:
         if idle:             # если был простой и переход в работу
 #TODO добавить проверку на длятельность работы, если короче минимума не сбрасывать причину
-            if idle.cause:      # если указана причина
+            if idle.cause is not None:      # если указана причина
                 pass
             else:  # если причина не указана
                 logics.current_idle_add_cause(vars.machine_id,

@@ -326,7 +326,7 @@ def current_idle_add_cause(machine_id: int,
             elif current_idle.cause == settings.TECH_IDLE_ID:
                 current_idle_store(machine_id, prj_id, 0, db_quie)
                 if current_idle.calc_length() > current_idle.tech_idle:
-                    project_globals.machines_idle[machine_id].cause_time = current_idle.cause_time + timedelta(
+                    current_idle.cause_time = current_idle.cause_time + timedelta(
                         0, current_idle.tech_idle)
         else: # причина не была указана (автотехростой)
             current_idle.cause_time = current_idle.begin_time

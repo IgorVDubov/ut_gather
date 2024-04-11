@@ -321,8 +321,7 @@ def current_idle_add_cause(machine_id: int,
             # причины оставляем от момента сброса
             if current_idle.cause != 0:  
                 current_idle_store(machine_id, prj_id, 0, db_quie)
-                project_globals\
-                    .machines_idle[machine_id].cause_time = cause_time
+                current_idle.cause_time = datetime.now()
             elif current_idle.cause == settings.TECH_IDLE_ID:
                 current_idle_store(machine_id, prj_id, 0, db_quie)
                 if current_idle.calc_length() > current_idle.tech_idle:

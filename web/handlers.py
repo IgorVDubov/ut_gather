@@ -326,7 +326,7 @@ class GatherRequestHtmlHandler(BaseHandler):
                             .strftime('%Y-%m-%dT%H:%M:%S'),
                         'operator_id': machine_channel.get_arg
                             ('args.operator_id'),
-                        'cause_id': machine_channel.get_arg('args.current_cause'),
+                        'cause_id': machine_channel.get_arg('args.cause_id'),
                         'cause_time': cause_time,
                     })
             self.write(json.dumps({"allStates": data}, default=str))

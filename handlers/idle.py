@@ -93,8 +93,8 @@ def idle(vars):
                     # если был техпростой и он кончился  - записываем,
                     # устанавливаем idle как "нет причины",
                     # устанавливаем флаг обновления причины на клиенте
-                    logger.info(
-                        f'''auto add NOT_CHEKED_CAUSE {vars.machine_id}''')
+                    # logger.info(
+                    #     f'''auto add NOT_CHEKED_CAUSE {vars.machine_id}''')
                     logics.current_idle_add_cause(vars.machine_id,
                                                   vars.operator_id,
                                                   settings.NOT_CHEKED_CAUSE,
@@ -115,7 +115,7 @@ def idle(vars):
                                                                 # была дольше минимума
             if not vars.buffer_state:   # когда минимальное время состояния вышло
                                         # записываем техпростой с current_state_time
-                logger.info(f'current_idle_set {idle}')
+                # logger.info(f'current_idle_set {idle}')
                 logics.current_idle_set(
                                     vars.db_quie,
                                     vars.machine_id,
@@ -135,7 +135,7 @@ def idle(vars):
             if idle.cause is not None:      # если указана причина
                 pass
             else:  # если причина не указана
-                logger.info(f'переход в работу причина не указана current_idle_add_cause {idle}')
+                # logger.info(f'переход в работу причина не указана current_idle_add_cause {idle}')
                 logics.current_idle_add_cause(vars.machine_id,
                                               vars.operator_id,
                                               settings.NOT_CHEKED_CAUSE,
@@ -144,14 +144,14 @@ def idle(vars):
                                               vars.db_quie
                                               )
             if not vars.buffer_state:
-                logger.info(f'переход в работу buffer_state=1 current_idle_store {idle}')
+                # logger.info(f'переход в работу buffer_state=1 current_idle_store {idle}')
                 logics.current_idle_store(
                     vars.machine_id,
                     vars.project_id,
                     vars.min_state_len,
                     vars.db_quie
                     )
-                logger.info(f'переход в работу buffer_state=1 current_idle_reset {vars.machine_id}')
+                # logger.info(f'переход в работу buffer_state=1 current_idle_reset {vars.machine_id}')
                 logics.current_idle_reset(vars.db_quie,
                                         vars.machine_id,
                                         vars.project_id

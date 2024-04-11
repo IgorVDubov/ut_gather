@@ -19,17 +19,17 @@ def r_level_timeout(vars):
     'dost_timeout':'канал_настроек.args.dost_timeout' или int(cек)  таймаут недостоверности ,с
     'tech_timeout':'канал_настроек.args.minLength' или int(cек)     техпростой ,с
     'write_init':'db_writer2.args.writeInit',                       сигнал принудительной записи
-    'status_ch_b1':'канал_статуса.args.b1',                         бит1 канала статуса
-    'status_ch_b2':'канал_статуса.args.b2',                         бит2 канала статуса
-    'status':0,                                                     текущий статус
-    'saved_status':0,                                               сохраненный (подвешенный) отрезок статус
+    'state_ch_b1':'канал_статуса.args.b1',                         бит1 канала статуса
+    'state_ch_b2':'канал_статуса.args.b2',                         бит2 канала статуса
+    'state':0,                                                     текущий статус
+    'saved_state':0,                                               сохраненный (подвешенный) отрезок статус
     'saved_length':0,                                               сохраненный (подвешенный) отрезок длительность
     'saved_time':0,                                                 сохраненный (подвешенный) отрезок начало
     'current_state': 0,                                             текущий отрезок: статус
     'current_state_time': 0,                                        текущий отрезок: время смены статуса
     'current_interval': 0,                                          текущий интервал границ (откл-простой-работа)
     'buffered':False,                                               флаг наличия буферезированный отрезок
-    'status_db': 0,
+    'state_db': 0,
     'lengthDB': 0,
     'time_db': 0,
     'init':True,                                                    флаг инициализации (выполняется только при первом запуске)
@@ -56,18 +56,18 @@ def r_level_timeout(vars):
     if vars.init:
         vars.init = False
         vars.current_state_time = time_now
-        vars.na_status = False
+        vars.na_state = False
         vars.saved_length = 0
         vars.saved_time = time_now
 
-    if vars.stop_signal and vars.saved_status is not None:
+    if vars.stop_signal and vars.saved_state is not None:
         logger.log(
             'PROG', '!!!!!!!!!!!!!!!!!    get stop signal       !!!!!!!!!!!!!!!!!!!!!!!!!')
         dc.db_put_state(vars.db_quie,
                         {'id': vars.m_id,
                          'project_id': vars.project_id,
                          'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
-                         'status': vars.saved_status,
+                         'state': vars.saved_state,
                          # 02/08 (was buffer_time)
                          'length': int(round((time_now-vars.saved_time).total_seconds()))
                          })
@@ -76,21 +76,21 @@ def r_level_timeout(vars):
     if vars.result_in is None:
         result_in_error = True
 
-    na_status = False
+    na_state = False
 
     if vars.dost == False or result_in_error:
         vars.not_dost_counter += 1
         if vars.not_dost_counter > vars.dost_timeout:
-            na_status = True
+            na_state = True
             vars.not_dost_counter = vars.dost_timeout+1
         else:
             return
     else:
         vars.not_dost_counter = 0
 
-    if vars.na_status_before != na_status:
+    if vars.na_state_before != na_state:
         dostChangeFlag = True
-        vars.na_status_before = na_status
+        vars.na_state_before = na_state
     else:
         dostChangeFlag = False
 
@@ -108,47 +108,50 @@ def r_level_timeout(vars):
         vars.v2 = vars.v1
         vars.v1 = vars.result_in
         vars.result = (vars.v1 + vars.v2 + vars.v3 + vars.v4 + vars.v5 + vars.v6 + vars.v7 + vars.v8 + vars.v9 + vars.v10)/10
+# !!!! ------------- dev-------------------        
+        vars.result = vars.result_in
+# !!!! ------------- dev-------------------        
         result = vars.result
         if result < vars.gr_stand:  # откл
-            status = 1
+            state = 1
             interval = 1
         elif result > vars.gr_stand and result < vars.gr_work:  # простой
-            status = 2
+            state = 2
             interval = 2
         else:                   # работа
-            status = 3
+            state = 3
             interval = 3
     else:
-        status = 0
+        state = 0
 
     # если меняется интервал или принудительная инициализации записи
     if interval != vars.current_interval or vars.write_init or dostChangeFlag:
 
-        if na_status:
-            status = 0  # NA
+        if na_state:
+            state = 0  # NA
         # выставляем биты состояния статуса для доступа по модбас для внешних клиентов
-        # vars.statusCh=status
-        if status == 0:
-            vars.status_ch_b1 = 0
-            vars.status_ch_b2 = 0
-        elif status == 1:
-            vars.status_ch_b1 = 1
-            vars.status_ch_b2 = 0
-        elif status == 2:
-            vars.status_ch_b1 = 0
-            vars.status_ch_b2 = 1
-        elif status == 3:
-            vars.status_ch_b1 = 1
-            vars.status_ch_b2 = 1
+        # vars.stateCh=state
+        if state == 0:
+            vars.state_ch_b1 = 0
+            vars.state_ch_b2 = 0
+        elif state == 1:
+            vars.state_ch_b1 = 1
+            vars.state_ch_b2 = 0
+        elif state == 2:
+            vars.state_ch_b1 = 0
+            vars.state_ch_b2 = 1
+        elif state == 3:
+            vars.state_ch_b1 = 1
+            vars.state_ch_b2 = 1
 
-        if vars.write_init or na_status:  # если форсированная запись или статус NA
+        if vars.write_init or na_state:  # если форсированная запись или статус NA
             # задаем отрезок для записи: текущий статус до смены
-            vars.saved_status = vars.current_state
+            vars.saved_state = vars.current_state
             vars.saved_time = vars.current_state_time  # аналогично время
             # и длительность
             vars.saved_length = (
                 time_now - vars.current_state_time).total_seconds()
-            vars.current_state = status  # задает текущий отрезок: статус
+            vars.current_state = state  # задает текущий отрезок: статус
             vars.current_state_time = time_now  # задает текущий отрезок: время
             dbWriteFlag = True
             vars.buffered = False									    		# если отрезок был подвешен - сбрасываем флаг
@@ -162,22 +165,22 @@ def r_level_timeout(vars):
                 # увеличиваем длину подвешенного отрезка на длину текущего
                 vars.saved_length = vars.saved_length + \
                     (time_now - vars.current_state_time).total_seconds()
-                if status == vars.saved_status:  # если  текущий статус стал такой же как у подвешеного отрезка
-                    vars.current_state = vars.saved_status  # подвешенный отрезок
+                if state == vars.saved_state:  # если  текущий статус стал такой же как у подвешеного отрезка
+                    vars.current_state = vars.saved_state  # подвешенный отрезок
                     vars.current_state_time = vars.saved_time  # становится текущим
                     vars.buffered = False  # снимаем отрезок с ожидания записи
                 else:  # если статус меняется
-                    vars.current_state = status  # обновляем статус и
+                    vars.current_state = state  # обновляем статус и
                     vars.current_state_time = time_now  # время текущего отрезка
                     vars.buffered = True  # и подвешиваем- ожидание записи
             else:													                    # если статус меняется после таймаута
                 # задаем отрезок для записи (подвешенный): статус
-                vars.saved_status = vars.current_state
+                vars.saved_state = vars.current_state
                 vars.saved_time = vars.current_state_time  # время
                 # длительность
                 vars.saved_length = (
                     time_now - vars.current_state_time).total_seconds()
-                vars.current_state = status  # задаем новй текущий отрезок: статус
+                vars.current_state = state  # задаем новй текущий отрезок: статус
                 vars.current_state_time = time_now  # начала отрезка
             # в любом случае текущий интервал = интервал канала
             vars.current_interval = interval
@@ -186,17 +189,17 @@ def r_level_timeout(vars):
         if (time_now-vars.current_state_time).total_seconds() >= vars.tech_timeout:
             dbWriteFlag = True
             vars.buffered = False
-    vars.status = vars.current_state
+    vars.state = vars.current_state
     if dbWriteFlag:
         vars.split_idle = True
         dbWriteFlag = False
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
         if vars.saved_length > 10 or vars.saved_length < 90000:
-            if vars.saved_status is not None:
+            if vars.saved_state is not None:
                 dc.db_put_state(vars.db_quie,
                                 {'id': vars.m_id,
                                     'project_id': vars.project_id,
                                     'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
-                                    'status': vars.saved_status,
+                                    'state': vars.saved_state,
                                     'length': int(round(vars.saved_length))
                                  })

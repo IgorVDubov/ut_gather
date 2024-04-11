@@ -303,6 +303,7 @@ def current_idle_set(db_quie,
 def current_idle_add_cause(machine_id: int,
                            operator_id: int,
                            cause_id: int,
+                        #    cause_time: datetime,
                            cause_set_time: datetime,
                            prj_id: int,
                            db_quie: DBInterface
@@ -312,7 +313,7 @@ def current_idle_add_cause(machine_id: int,
     '''
     if current_idle := get_current_idle(machine_id):
         set_operator(machine_id, operator_id)
-        if current_idle.cause is not None:
+        if current_idle.cause is not None: # причина была указана (смена причины)
             print(
                 f'change cause idle to {machine_id}\
                     from {current_idle.cause} to {cause_id}')
@@ -321,18 +322,18 @@ def current_idle_add_cause(machine_id: int,
             if current_idle.cause != 0:  
                 current_idle_store(machine_id, prj_id, db_quie)
                 project_globals\
-                    .machines_idle[machine_id].cause_time = datetime.now()
+                    .machines_idle[machine_id].cause_time = cause_time
             elif current_idle.cause == settings.TECH_IDLE_ID:
                 current_idle_store(machine_id, prj_id, db_quie)
                 if current_idle.calc_length() > current_idle.tech_idle:
                     project_globals.machines_idle[machine_id].cause_time = current_idle.cause_time + timedelta(
                         0, current_idle.tech_idle)
-        else:
-            project_globals.machines_idle[machine_id].cause_time = current_idle.begin_time
+        else: # причина не была указана (автотехростой)
+            current_idle.cause_time = current_idle.begin_time
 
         print(f'add cause idle to {machine_id} cause:{cause_id}')
-        project_globals.machines_idle[machine_id].cause = cause_id
-        project_globals.machines_idle[machine_id].cause_set_time = cause_set_time
+        current_idle.cause = cause_id
+        current_idle.cause_set_time = cause_set_time
         save_machines_idle(db_quie, machine_id, prj_id)
     else:
         print(project_globals.machines_idle)
@@ -346,12 +347,18 @@ def current_idle_reset(db_quie, machine_id: int, project_id: int):
     save_machines_idle(db_quie, machine_id, project_id)
 
 
-def current_idle_store(machine_id: int, prj_id: int, db_quie: DBInterface):
+def current_idle_store(machine_id: int,
+                       prj_id: int,
+                       buffer_time: int,
+                       db_quie: DBInterface):
     '''
     сохраняем простой в БД
+    buffer_time - время ожидания сброса состояния по мин времени
     '''
     if idle := get_current_idle(machine_id):
-        if idle.set_length() < settings.MIN_STORED_IDLE_LENGTH:
+        idle.set_length()
+        idle.length -= buffer_time
+        if idle.length < settings.MIN_STORED_IDLE_LENGTH:
             print(
                 f'{colors.CREDBG}machime {machine_id} \
                     idle.length < settings.MIN_STORED_IDLE_LENGTH, \

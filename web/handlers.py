@@ -32,7 +32,6 @@ class BaseHandler(RequestHandlerClass):
     user: User
 
     def set_default_headers(self):
-        print("setting headers!!!")
         self.set_header("access-control-allow-origin", "*")
         self.set_header("Access-Control-Allow-Headers", "x-requested-with")
         self.set_header('Access-Control-Allow-Methods',
@@ -327,7 +326,7 @@ class GatherRequestHtmlHandler(BaseHandler):
                             .strftime('%Y-%m-%dT%H:%M:%S'),
                         'operator_id': machine_channel.get_arg
                             ('args.operator_id'),
-                        'cause_id': machine_channel.get_arg('args.cause_id'),
+                        'cause_id': machine_channel.get_arg('args.current_cause'),
                         'cause_time': cause_time,
                     })
             self.write(json.dumps({"allStates": data}, default=str))

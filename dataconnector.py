@@ -161,7 +161,7 @@ def jsdb_put_state(state_rec: dict):
 
 def db_put_state(db_quie: DBInterface, state_rec: dict):
     print(f'in dc: db_put_state {state_rec}')
-    if state_rec['status'] != 7 and state_rec['length'] == 0:  # если не запись счетчика
+    if state_rec['state'] != 7 and state_rec['length'] == 0:  # если не запись счетчика
         return
     else:
         if state_rec.get('project_id') == 0:

@@ -13,7 +13,7 @@ def insert_state(db_quie, state_rec: dict):
         "project_id", "")} values  (%s,%s,%s,%s)'''
     params = (state_rec.get('id'),
               state_rec.get('time'),
-              state_rec.get('status'),
+              state_rec.get('state'),
               state_rec.get('length'))
     db_quie.put(DBInsert(sql, params))
     # db_quie.put({

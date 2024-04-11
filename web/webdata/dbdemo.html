@@ -503,7 +503,7 @@
           wsSend(JSON.stringify({type:"subscribe",data:SUBSCRIBE_CHANNELS}))
           wsSend(JSON.stringify({type: "get_ch_arg",
                                 ch_name: MACHINE_CHANNEL,
-                                arg: 'args.status'}
+                                arg: 'args.state'}
                                 ))
           wsSend(JSON.stringify({type:"get_ch_arg",
                                  ch_name: MACHINE_CHANNEL,

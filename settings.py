@@ -1,6 +1,6 @@
 
 CLIENT_VERSION = 0.1
-STATE_ARG = 'args.status'
+STATE_ARG = 'args.state'
 STATE_TIME_ARG = 'args.current_state_time'
 TECH_IDLE_ARG = 'args.tech_timeout'
 CAUSEID_ARG = 'args.cause_id'

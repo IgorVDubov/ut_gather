@@ -153,6 +153,7 @@ def r_level_timeout(vars):
                 time_now - vars.current_state_time).total_seconds()
             vars.current_state = state  # задает текущий отрезок: статус
             vars.current_state_time = time_now  # задает текущий отрезок: время
+            vars.split_idle = True # сигнал разделить текущий простой
             dbWriteFlag = True
             vars.buffered = False									    		# если отрезок был подвешен - сбрасываем флаг
         else:
@@ -191,7 +192,6 @@ def r_level_timeout(vars):
             vars.buffered = False
     vars.state = vars.current_state
     if dbWriteFlag:
-        vars.split_idle = True
         dbWriteFlag = False
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
         if vars.saved_length > 10 or vars.saved_length < 90000:

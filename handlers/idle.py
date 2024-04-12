@@ -36,7 +36,7 @@ def idle(vars):
     
     #   если через АПИ установили причину простоя записываем в текущий простой причину
     if vars.set_cause_flag:
-        print(f'set cause flag to {vars.machine_id} to {vars.current_cause}')
+        logger.info(f'set cause flag to {vars.machine_id} to {idle.cause}  {idle.cause_time}')
         vars.set_cause_flag = False
         logics.current_idle_add_cause(vars.machine_id,
                                       vars.operator_id,
@@ -52,6 +52,8 @@ def idle(vars):
         vars.split_idle_flag = False
         if idle is not None:
             current_cause = idle.cause
+            logger.info(f'split_idle_flag to {idle.cause}  {idle.cause_time}')
+        
             logics.current_idle_store(vars.machine_id,
                                     vars.project_id,
                                     0,
@@ -79,6 +81,7 @@ def idle(vars):
     # принудительный сброс текущего простоя без записи
     if vars.reset_idle_flag:
         vars.reset_idle_flag = False
+        logger.info(f'current_idle_reset {idle.cause}  {idle.cause_time}')
         logics.current_idle_reset(vars.db_quie,
                                   vars.machine_id,
                                   vars.project_id)
@@ -93,8 +96,8 @@ def idle(vars):
                     # если был техпростой и он кончился  - записываем,
                     # устанавливаем idle как "нет причины",
                     # устанавливаем флаг обновления причины на клиенте
-                    # logger.info(
-                    #     f'''auto add NOT_CHEKED_CAUSE {vars.machine_id}''')
+                    logger.info(
+                        f'''auto add NOT_CHEKED_CAUSE {vars.machine_id}''')
                     logics.current_idle_add_cause(vars.machine_id,
                                                   vars.operator_id,
                                                   settings.NOT_CHEKED_CAUSE,
@@ -115,7 +118,7 @@ def idle(vars):
                                                                 # была дольше минимума
             if not vars.buffer_state:   # когда минимальное время состояния вышло
                                         # записываем техпростой с current_state_time
-                # logger.info(f'current_idle_set {idle}')
+                logger.info(f'current_idle_set {idle}')
                 logics.current_idle_set(
                                     vars.db_quie,
                                     vars.machine_id,
@@ -135,7 +138,7 @@ def idle(vars):
             if idle.cause is not None:      # если указана причина
                 pass
             else:  # если причина не указана
-                # logger.info(f'переход в работу причина не указана current_idle_add_cause {idle}')
+                logger.info(f'переход в работу причина не указана current_idle_add_cause {idle}')
                 logics.current_idle_add_cause(vars.machine_id,
                                               vars.operator_id,
                                               settings.NOT_CHEKED_CAUSE,
@@ -144,14 +147,14 @@ def idle(vars):
                                               vars.db_quie
                                               )
             if not vars.buffer_state:
-                # logger.info(f'переход в работу buffer_state=1 current_idle_store {idle}')
+                logger.info(f'переход в работу buffer_state=1 current_idle_store {idle}')
                 logics.current_idle_store(
                     vars.machine_id,
                     vars.project_id,
                     vars.min_state_len,
                     vars.db_quie
                     )
-                # logger.info(f'переход в работу buffer_state=1 current_idle_reset {vars.machine_id}')
+                logger.info(f'переход в работу buffer_state=1 current_idle_reset {vars.machine_id}')
                 logics.current_idle_reset(vars.db_quie,
                                         vars.machine_id,
                                         vars.project_id

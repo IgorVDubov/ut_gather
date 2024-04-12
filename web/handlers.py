@@ -126,8 +126,10 @@ class MainHtmlHandler(BaseHandler):
                     machine=machine_id,
                     operator_login=int(settings.OPERATOR_LOGIN),
                     state_channel=machine_channel.name + '.' + settings.STATE_ARG,
+                    state_time=machine_channel.name + '.' + settings.STATE_TIME_ARG,
                     tech_idle=machine_channel.get_arg(settings.TECH_IDLE_ARG),
                     causeid_arg=idle_channel.name + '.' + settings.CAUSEID_ARG,
+                    cause_time_arg=idle_channel.name + '.' + settings.CAUSE_TIME_ARG,
                     # causeid_arg=logics.get_causeid_arg(
                     #     ch_base.get_by_name(str(machine_id))),
                     idle_couses=json.dumps(logics.convert_none_2_str(

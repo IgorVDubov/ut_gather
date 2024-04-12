@@ -458,7 +458,9 @@
     {% autoescape None %}
     const IDLE_COUSES={{  idle_couses  }}
     const STATE_CHANNEL='{{state_channel}}'
+    const STATE_TIME='{{state_time}}'
     const CAUSEID_ARG='{{ causeid_arg }}'
+    const CAUSE_TIME_ARG='{{ cause_time_arg }}'
     const TECH_IDLE_LENGTH={{ tech_idle }}
     const SUBSCRIBE_CHANNELS=[STATE_CHANNEL]
     const WORK_STATE=3
@@ -483,7 +485,8 @@
       currentState.cause = (initState.cause_id!=null)?initState.cause_id:undefined;
       currentState.causeTime = (initState.cause_time!=null)?initState.cause_time:undefined;
       currentState.pred
-    var progressBar
+    
+      var progressBar
 
     var operatorElem
     var operatorLoginContainerElem 
@@ -534,6 +537,7 @@
         this.elem.style.display = 'none';
       }
     }
+    
     const offlineAlert = new OfflineAlert(document.getElementById('offlineAlert'))
 
     class PerodicalCallback {
@@ -682,8 +686,8 @@
       const controller = new AbortController();
       const signal = controller.signal;
       const options = { mode: 'no-cors', signal };
-      return fetch(url, options)
-        .then(setTimeout(() => { controller.abort() }, timeout))
+      return (url, options)
+        .then(fetchsetTimeout(() => { controller.abort() }, timeout))
         .then(response => restart())
         .catch(error => console.error('Check server error:', error.message));
     }
@@ -691,7 +695,17 @@
     function restart(){
       location.reload()
     }
-
+    
+    async function stateRequest(machineID) {
+      let response = await fetch('/grequest', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(
+                              { type: 'stateQuerry',
+                                machines: [machineID]})
+                            })
+      return await response.json()
+    }
     function wsConnect(wsServer){
       var webSocket
       function connect(wsServer){
@@ -736,8 +750,15 @@
             break;
             case "subscribe_data":
               // console.log(jsonMsg)
-              currentState.stateTime=jsonMsg.time;                                   //todo взять из запроса
-              currentState.state=jsonMsg.data[0][STATE_CHANNEL]
+              // currentState.state=jsonMsg.data[0][STATE_CHANNEL]
+              //currentState.stateTime=jsonMsg.time;                                   //todo взять из запроса
+              stateRequest(MACHINE_ID).then(response => {
+                console.log(response)
+                data = response.allStates[0]
+                console.log(data)
+                currentState.stateTime = data.status_time
+                currentState.state = data.status;
+              })
               break;
             default:
           }
@@ -1341,7 +1362,6 @@
         hideConfirmOperatorContainer()
         
         makeNumKeyboard(keyboardElem,'key')
-        // operatorLoginContainerElem.onkeydown = function(e){
         operatorLoginContainerElem.addEventListener('keydown', keyDownListener)
 
         stateBlockElem=document.getElementById('stateBlock')

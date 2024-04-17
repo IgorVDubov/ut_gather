@@ -1,7 +1,7 @@
 import json
 from dataclasses import asdict
 from datetime import datetime, timedelta
-from typing import TypedDict
+from loguru import logger
 
 from gathercore.mylib import colors
 
@@ -130,8 +130,10 @@ def save_to_db(db_quie, machine_id, machines_idle: dict):
                          'cause_time': idle.cause_time.strftime(settings.TIME_FORMAT) if idle.cause_time else None,
                          'cause_set_time': idle.cause_set_time.strftime(settings.TIME_FORMAT) if idle.cause_set_time else None,
                          'length': idle.length})
+            logger.log('PROG', f' {machine_id} update temp_idle: {data}')
             db_queries.replace_current_idle_tmp(db_quie, data)
         else:
+            logger.log('PROG', f' {machine_id} delete temp_idle')
             db_queries.delete_current_idle_tmp(db_quie, machine_id)
 
 
@@ -376,6 +378,7 @@ def current_idle_store(machine_id: int,
                     {key: val.strftime('%Y-%m-%d %H:%M:%S')})  # type: ignore
 
         print(f'{colors.CYELLOWBG}db_quie:{store_dict} {colors.CEND}')
+        logger.log('PROG', f' {machine_id} db_quie:{store_dict}')
         if prj_id == 0:
             jsdb_put_idle(store_dict)  # локально для демо проекта с инд 0!!!
         else:

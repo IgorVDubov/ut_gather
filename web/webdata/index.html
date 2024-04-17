@@ -423,6 +423,7 @@
             </div>
         </div>
         <!-- <div id="container"></div> -->
+         
         </main>  
         <footer class='footer'>
           <span class ="pl1 "></spanclass>{{ user }} </span>
@@ -432,16 +433,17 @@
           <span class ="pl0_5" id="info"> </span>
           <a class="fl_r pr1" >v{{ version }}</a>
           <a class="fl_r pr1" href="mailto:asu@alfa33.ru">Alfa <span class="fnt_0_6 pr1">решения в области промышленной автоматизации</span> 2023</a>
-      </footer> 
-      <div class="screenCenter" id="offlineAlert">
-        <div class="offlineAlert flex_center" >
-          Нет связи с сервером!
+          
+        </footer> 
+        <div class="screenCenter" id="offlineAlert">
+          <div class="offlineAlert flex_center" >
+            Нет связи с сервером!
+          </div>
         </div>
-      </div>
-      <div id="loader">
-          <script>const loader=document.getElementById("loader");</script>
-          <link rel="stylesheet" type="text/css" href="/css/loader.css"/>
-      </div>
+        <div id="loader">
+            <script>const loader=document.getElementById("loader");</script>
+            <link rel="stylesheet" type="text/css" href="/css/loader.css"/>
+        </div>
 </body>
 <script>
 
@@ -686,8 +688,8 @@
       const controller = new AbortController();
       const signal = controller.signal;
       const options = { mode: 'no-cors', signal };
-      return (url, options)
-        .then(fetchsetTimeout(() => { controller.abort() }, timeout))
+      return fetch(url, options)
+        .then(setTimeout(() => { controller.abort() }, timeout))
         .then(response => restart())
         .catch(error => console.error('Check server error:', error.message));
     }

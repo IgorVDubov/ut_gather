@@ -36,7 +36,10 @@ def idle(vars):
     
     #   если через АПИ установили причину простоя записываем в текущий простой причину
     if vars.set_cause_flag:
-        logger.log('PROG', f'set cause flag to {vars.machine_id} to {idle.cause}  {idle.cause_time}')
+        if idle is not None:
+            logger.log('PROG', f'set cause flag to {vars.machine_id} to {idle.cause}  {idle.cause_time}')
+        else:
+            logger.log('PROG', f'set cause flag to {vars.machine_id} idle is None!!')
         vars.set_cause_flag = False
         logics.current_idle_add_cause(vars.machine_id,
                                       vars.operator_id,
@@ -81,7 +84,10 @@ def idle(vars):
     # принудительный сброс текущего простоя без записи
     if vars.reset_idle_flag:
         vars.reset_idle_flag = False
-        logger.log('PROG', f'{vars.machine_id} current_idle_reset {idle.cause}  {idle.cause_time}')
+        if idle is not None:
+            logger.log('PROG', f'{vars.machine_id} current_idle_reset {idle.cause}  {idle.cause_time}')
+        else:
+            logger.log('PROG', f'current_idle_reset {vars.machine_id} idle is None!!')
         logics.current_idle_reset(vars.db_quie,
                                   vars.machine_id,
                                   vars.project_id)

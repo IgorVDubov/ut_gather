@@ -269,8 +269,10 @@ def get_current_state(machine_channel: Channel) -> CurrentStateProtocol:
 def get_current_idle(machine_id: int) -> Idle | None:
     return project_globals.machines_idle.get(machine_id)
 
+
 def set_operator(machine_id: int, operator_id: int):
     project_globals.machines_idle[machine_id].operator = operator_id
+
 
 def current_idle_set(db_quie,
                      machine_id: int,

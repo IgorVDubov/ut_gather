@@ -1,80 +1,27 @@
-#!/usr/bin/env python3
-"""Pymodbus Server With Callbacks.
+def run_middle_5():
+    v1 = 0
+    v2 = 0
+    v3 = 0
+    v4 = 0
+    v5 = 0
+    def inner(v):
+        nonlocal v1, v2, v3, v4, v5
+        v_middle = (v + v1 + v2 + v3 + v4) / 5 
+        v4 = v3
+        v3 = v2
+        v2 = v1
+        v1 = v
+        return v_middle
+    return inner
 
-This is an example of adding callbacks to a running modbus server
-when a value is written to it.
-"""
-import asyncio
-import logging
+c = run_middle_5()
+b = run_middle_5()
 
-import pymodbus.server as server
-
-from pymodbus.datastore import (
-    ModbusSequentialDataBlock,
-    ModbusServerContext,
-    ModbusSlaveContext,
-)
-
-
-_logger = logging.getLogger(__name__)
-_logger.setLevel(logging.DEBUG)
-
-
-class CallbackDataBlock(ModbusSequentialDataBlock):
-    """A datablock that stores the new value in memory,.
-
-    and passes the operation to a message queue for further processing.
-    """
-
-    def __init__(self, queue, addr, values):
-        """Initialize."""
-        self.queue = queue
-        super().__init__(addr, values)
-
-    def setValues(self, address, value):
-        """Set the requested values of the datastore."""
-        super().setValues(address, value)
-        print(f'setValues data: {address}, {value}')
-        txt = f"Callback from setValues with address {address}, value {value}"
-        _logger.debug(txt)
-
-    def getValues(self, address, count=1):
-        """Return the requested values from the datastore."""
-        result = super().getValues(address, count=count)
-        print(f'getValues data: {result}')
-        txt = f"Callback from getValues with address {address}, count {count}, data {result}"
-        _logger.debug(txt)
-        return result
-
-    def validate(self, address, count=1):
-        """Check to see if the request is in range."""
-        result = super().validate(address, count=count)
-        print(f'validate data: {result}')
-        txt = f"Callback from validate with address {address}, count {count}, data {result}"
-        _logger.debug(txt)
-        return result
-
-async def reader(queue: asyncio.Queue):
-    while True:
-        # print(queue.qsize())
-        while not queue.empty():
-            print(f'dara: {await queue.get()}')
-        await asyncio.sleep(1)
-
-async def run_callback_server(cmdline=None):
-    """Define datastore callback for server and do setup."""
-    queue = asyncio.Queue()
-    block = CallbackDataBlock(queue, 0x00, [17] * 100)
-    block.setValues(1, 15)
-    store = ModbusSlaveContext(di=block, co=block, hr=block, ir=block)
-    context = ModbusServerContext(slaves=store, single=True)
-    print('create_task')
-    asyncio.create_task(reader(queue))
-    print('start server')
-    await server.StartAsyncTcpServer(context=context,
-                                     address=('127.0.0.1', 5023)
-    )
-
-
-if __name__ == "__main__":
-    asyncio.run(run_callback_server(), debug=True)
+print(f'C:{c(1)}')
+print(f'C:{c(1)}')
+print(f'C:{c(1)}')
+print(f'C:{c(1)}')
+print(f'C:{c(1)}')
+print(f'b:{b(2)}')
+print(f'C:{c(1)}')
+print(f'b:{b(2)}')

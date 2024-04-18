@@ -108,31 +108,32 @@ def load_from_file():
     return records
 
 
-def save_machines_idle(db_quie, machine_id, project_id):
+def save_machine_idle(db_quie, machine_id, project_id):
     if project_id != 0:  # проекты с индексом 0 - демо: не пишем в БД
-        save_to_db(db_quie, machine_id, project_globals.machines_idle)
+        save_to_temp_db(db_quie, machine_id, project_globals.machines_idle)
     # else:
     #     save_to_file(project_globals.machines_idle)
 
 
-def save_to_db(db_quie, machine_id, machines_idle: dict):
+def save_to_temp_db(db_quie, machine_id, machines_idle: dict):
     '''
-    saves temp idle to db
+    saves current idle of machine_id to temp_idle db
     '''
-    for machine_id, idle in machines_idle.items():
-        if idle is not None:
-            data = dict({'machine_id': machine_id,
-                        'state': idle.state,
-                         'tech_idle': idle.tech_idle,
-                         'begin_time': idle.begin_time.strftime(settings.TIME_FORMAT) if idle.begin_time else None,
-                         'operator_id': idle.operator,
-                         'cause_id': idle.cause,
-                         'cause_time': idle.cause_time.strftime(settings.TIME_FORMAT) if idle.cause_time else None,
-                         'cause_set_time': idle.cause_set_time.strftime(settings.TIME_FORMAT) if idle.cause_set_time else None,
-                         'length': idle.length})
-            db_queries.replace_current_idle_tmp(db_quie, data)
-        else:
-            db_queries.delete_current_idle_tmp(db_quie, machine_id)
+    idle = machines_idle.get(machine_id)
+    # for machine_id, idle in machines_idle.items():
+    if idle is not None:
+        data = dict({'machine_id': machine_id,
+                    'state': idle.state,
+                        'tech_idle': idle.tech_idle,
+                        'begin_time': idle.begin_time.strftime(settings.TIME_FORMAT) if idle.begin_time else None,
+                        'operator_id': idle.operator,
+                        'cause_id': idle.cause,
+                        'cause_time': idle.cause_time.strftime(settings.TIME_FORMAT) if idle.cause_time else None,
+                        'cause_set_time': idle.cause_set_time.strftime(settings.TIME_FORMAT) if idle.cause_set_time else None,
+                        'length': idle.length})
+        db_queries.replace_current_idle_tmp(db_quie, data)
+    else:
+        db_queries.delete_current_idle_tmp(db_quie, machine_id)
 
 
 def save_to_file(machines_idle: dict):
@@ -297,7 +298,7 @@ def current_idle_set(db_quie,
                                 None)
                 }
     project_globals.machines_idle.update(idle_data)
-    save_machines_idle(db_quie, machine_id, project_id)
+    save_machine_idle(db_quie, machine_id, project_id)
 
 
 def current_idle_add_cause(machine_id: int,
@@ -333,7 +334,7 @@ def current_idle_add_cause(machine_id: int,
         print(f'add cause idle to {machine_id} cause:{cause_id}')
         current_idle.cause = cause_id
         current_idle.cause_set_time = cause_set_time
-        save_machines_idle(db_quie, machine_id, prj_id)
+        save_machine_idle(db_quie, machine_id, prj_id)
     else:
         print(project_globals.machines_idle)
         raise KeyError(
@@ -343,7 +344,7 @@ def current_idle_add_cause(machine_id: int,
 def current_idle_reset(db_quie, machine_id: int, project_id: int):
     print(f'reset idle {machine_id} ')
     project_globals.machines_idle.update({machine_id: None})
-    save_machines_idle(db_quie, machine_id, project_id)
+    save_machine_idle(db_quie, machine_id, project_id)
 
 
 def current_idle_store(machine_id: int,

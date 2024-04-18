@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import logics
 import settings
@@ -123,8 +123,8 @@ def idle(vars):
                                                                 # было работа и она 
                                                                 # была дольше минимума
             if not vars.buffer_state:   # когда минимальное время состояния вышло
-                                        # записываем техпростой с current_state_time
-                logger.log('PROG', f'{vars.machine_id} current_idle_set {idle}')
+                                        # записываем техпростой вычитая min_state_len из тек времени
+                logger.log('PROG', f'{vars.machine_id} current_idle_set new Idle with TECH_IDLE cause')
                 logics.current_idle_set(
                                     vars.db_quie,
                                     vars.machine_id,
@@ -133,10 +133,10 @@ def idle(vars):
                                     vars.techidle_lenhth,
                                     vars.operator_id,
                                     settings.TECH_IDLE_ID,
-                                    vars.current_state_time,
-                                    vars.current_state_time
-                                    # datetime.now(),
-                                    # datetime.now()
+                                    datetime.now()-timedelta(seconds=vars.min_state_len),
+                                    datetime.now()-timedelta(seconds=vars.min_state_len),
+                                    # vars.current_state_time,
+                                    # vars.current_state_time
                 )
     else:               # если был простой и переход в работу
         

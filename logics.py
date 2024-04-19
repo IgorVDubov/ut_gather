@@ -306,7 +306,6 @@ def current_idle_set(db_quie,
 def current_idle_add_cause(machine_id: int,
                            operator_id: int,
                            cause_id: int,
-                        #    cause_time: datetime,
                            cause_set_time: datetime,
                            prj_id: int,
                            db_quie: DBInterface

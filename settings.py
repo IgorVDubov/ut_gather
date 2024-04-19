@@ -3,7 +3,7 @@ CLIENT_VERSION = 0.1
 STATE_ARG = 'args.state'
 STATE_TIME_ARG = 'args.current_state_time'
 TECH_IDLE_ARG = 'args.tech_timeout'
-CAUSEID_ARG = 'args.cause_id'
+CAUSEID_ARG = 'args.current_cause'
 CAUSE_TIME_ARG = 'args.cause_time'
 IDLE_HANDLERID_ARG = 'args.idle_handler_name'
 DEMO_PROJECT = 0
@@ -12,10 +12,10 @@ CAUSE_CHECK_TIMEOUT = 120  # таймаут указания причины пр
 IDLE_CAUSES = {
     1: ('Не подтверждена', 0), 
     2: ('Технологический простой', 0),
-    # 3: ("Авария", 1),
-    # 4: ("Нет сырья", 2),
-    # 5: ("Нет задания", 3),
-    # 6: ("Плановый простой", 4),
+    3: ("Авария", 1),
+    4: ("Нет сырья", 2),
+    5: ("Нет задания", 3),
+    6: ("Плановый простой", 4),
     }
 DEFAILT_IDLE_CAUSES = {
     1: 'Не подтверждена',

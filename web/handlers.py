@@ -151,18 +151,6 @@ class MainHtmlHandler(BaseHandler):
                     )
 
 
-class TestHtmlHandler(BaseHandler):
-    # @BaseHandler.check_user(CHECK_AUTORIZATION)
-    def get(self):
-        # self.set_header("Content-Type", "application/json")
-        # request = json.loads(self.request.body)
-        # print(request)
-        # if request.get('type') == 'te':
-        # logger.log(
-        #     'MESSAGE', f'client {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
-        self.write(json.dumps(200, default=str))
-
-
 class WSHandler(WebSocketHandler):
     def open(self):
         try:
@@ -389,6 +377,21 @@ class AdmRequestHtmlHandler(BaseHandler):
                 if cmd == 'resetClient':
                     for client in self.application.data.ws_clients:
                         client.write_message(json.dumps({'cmd': 'reload'}))
+
+#------------------------------------------------------------------#
+#               FOR DEMO HANDLERS                                  #
+#------------------------------------------------------------------#
+
+class TestHtmlHandler(BaseHandler):
+    # @BaseHandler.check_user(CHECK_AUTORIZATION)
+    def get(self):
+        # self.set_header("Content-Type", "application/json")
+        # request = json.loads(self.request.body)
+        # print(request)
+        # if request.get('type') == 'te':
+        # logger.log(
+        #     'MESSAGE', f'client {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
+        self.write(json.dumps(200, default=str))
 
 
 class MEmulHtmlHandler(BaseHandler):
@@ -708,19 +711,20 @@ class LogoutHandler(BaseHandler):
 
 handlers = [
     (r"/", MainHtmlHandler),
-    (r"/test", TestHtmlHandler),
-    # (r"/adm", AdminHtmlHandler),
     (r"/grequest", GatherRequestHtmlHandler),
-    (r"/reps", ReportsHtmlHandler),
-    (r"/db", DBHtmlHandler),
     (r"/arequest", AdmRequestHtmlHandler),
     (r'/ws', WSHandler),
+    # handlers for demo
+    (r"/test", TestHtmlHandler),
+    (r"/reps", ReportsHtmlHandler),
+    (r"/db", DBHtmlHandler),
     (r"/me", MEmulHtmlHandler),
     (r"/merequest", MEmulRequestHtmlHandler),
     (r"/login", LoginHandler),
     (r"/logout", LogoutHandler),
     (r'/ws_me', MEWSHandler),
     (r'/ws_reps', ReportsWSHandler),
+    # handlers for staric content
     (r"/static/(.*)", StaticFileHandler,
      {"path": os.path.join(*path_params.get('static', 'web/webdata').split('/'))}),
     (r'/js/(.*)', StaticFileHandler,

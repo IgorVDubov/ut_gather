@@ -22,13 +22,13 @@ def r_level_timeout(vars):
     'state_ch_b1':'канал_статуса.args.b1',                         бит1 канала статуса
     'state_ch_b2':'канал_статуса.args.b2',                         бит2 канала статуса
     'state':0,                                                     текущий статус
-    'saved_state':0,                                               сохраненный (подвешенный) отрезок статус
-    'saved_length':0,                                               сохраненный (подвешенный) отрезок длительность
-    'saved_time':0,                                                 сохраненный (подвешенный) отрезок начало
-    'current_state': 0,                                             текущий отрезок: статус
-    'current_state_time': 0,                                        текущий отрезок: время смены статуса
-    'current_interval': 0,                                          текущий интервал границ (откл-простой-работа)
-    'buffered':False,                                               флаг наличия буферезированный отрезок
+    'saved_state':0,                                               сохраненный предыдущий отрезок статус
+    'saved_length':0,                                              сохраненный предыдущий отрезок длительность
+    'saved_time':0,                                                сохраненный предыдущий отрезок начало
+    'current_state': 0,                                            текущий отрезок: статус
+    'current_state_time': 0,                                       текущий отрезок: время смены статуса
+    'current_interval': 0,                                         текущий интервал границ (откл-простой-работа)
+    'buffered':False,                                              флаг наличия буферезированный отрезок
     'state_db': 0,
     'lengthDB': 0,
     'time_db': 0,
@@ -62,14 +62,14 @@ def r_level_timeout(vars):
 
     if vars.stop_signal and vars.saved_state is not None:
         logger.log(
-            'PROG', '!!!!!!!!!!!!!!!!!    get stop signal       !!!!!!!!!!!!!!!!!!!!!!!!!')
+            'PROG', f' {vars.m_id}  !!    get stop signal       !!')
         dc.db_put_state(vars.db_quie,
                         {'id': vars.m_id,
                          'project_id': vars.project_id,
-                         'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
-                         'state': vars.saved_state,
+                         'time': vars.current_state_time.strftime("%Y-%m-%d %H:%M:%S"),
+                         'state': vars.current_state,
                          # 02/08 (was buffer_time)
-                         'length': int(round((time_now-vars.saved_time).total_seconds()))
+                         'length': int(round((time_now-vars.current_state_time).total_seconds()))
                          })
 
     #  если нет источника или входящий результат пустой массив

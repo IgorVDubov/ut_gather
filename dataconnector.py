@@ -11,7 +11,10 @@ from models import Operator
 from gathercore.gtyping import DBInterface
 import dbqueries as db_queries
 
-
+def insert_sql(db_quie, sql: str, params: tuple):
+    dbc.insert_sql(db_quie, sql, params)
+    
+    
 def db_get_all_states(machine_id: int):
     return [rec for rec in project_globals.states_db]
 

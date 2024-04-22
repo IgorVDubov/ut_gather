@@ -203,3 +203,14 @@ def r_level_timeout(vars):
                                     'state': vars.saved_state,
                                     'length': int(round(vars.saved_length))
                                  })
+
+def db_logger(vars):
+    sql = 'insert into db_logger values (%s, %s, %s, %s, %s)'
+    params = (
+        vars.mch_id,
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        vars.result_in,
+        vars.result,
+        vars.current_state
+    )
+    dc.insert_sql(vars.db_quie, sql, params)

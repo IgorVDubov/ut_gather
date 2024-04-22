@@ -6,6 +6,8 @@ from gathercore.interfaces.db.dbcommands import (
 )
 from models import Idle
 
+def insert_sql(db_quie, sql: str, params: tuple):
+    db_quie.put(DBInsert(sql, params))
 
 def insert_state(db_quie, state_rec: dict):
     #print(f'db_put_state {state_rec}')

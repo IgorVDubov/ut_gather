@@ -72,7 +72,7 @@ def querry_causes(db_interface: DBInterface,
      
     sql = f'''SELECT cause_id, NAME, color, position 
                 FROM machine_causes_{project_id} 
-                JOIN idle_causes ON idle_causes.id = machine_causes_2.cause_id
+                JOIN idle_causes ON idle_causes.id = machine_causes_{project_id}.cause_id
                 WHERE machine_id = %s'''
     params = (
         machine_id,

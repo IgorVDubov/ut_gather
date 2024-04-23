@@ -53,12 +53,13 @@ def get_machine_causes(db_interface: DBInterface,
         return settings.IDLE_CAUSES
     else:
         reply = dbc.querry_causes(db_interface, machine_id, project_id)
-        return {machine_id: (name, position) for machine_id,
+        return {machine_id: (name, position, color) for machine_id,
                 name,
+                color,
                 position in reply}
 
 
-def get_causes_name(db_interface: DBInterface,
+def _get_machine_causes(db_interface: DBInterface,
                        machine_id: int,
                        project_id: int) -> dict:
     if project_id == settings.DEMO_PROJECT or db_interface is None:

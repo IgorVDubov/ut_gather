@@ -69,13 +69,11 @@ def select_temp_idles(db_interface: DBInterface) -> list:
 def querry_causes(db_interface: DBInterface,
                   machine_id: int,
                   project_id: int) -> list:
-    sql = f'''SELECT 
-                cause_id, 
-                (select name from idle_causes 
-                WHERE idle_causes.id = machine_causes_{project_id}.cause_id) 
-                AS name, 
-                position 
-                FROM machine_causes_{project_id} WHERE machine_id = %s'''
+     
+    sql = f'''SELECT cause_id, NAME, color, position 
+                FROM machine_causes_{project_id} 
+                JOIN idle_causes ON idle_causes.id = machine_causes_2.cause_id
+                WHERE machine_id = %s'''
     params = (
         machine_id,
     )

@@ -285,7 +285,7 @@ class GatherRequestHtmlHandler(BaseHandler):
                     raise ValueError(
                         f"Can't find machine_channel for machine id {m_id}\
                                 from {self.request.remote_ip}")
-                data.update(dc.get_causes_name(
+                data.update(dc.get_machine_causes(
                             self.application\
                                 .data.databus\
                         .get_object('db_interface'),

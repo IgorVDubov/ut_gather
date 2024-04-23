@@ -18,6 +18,7 @@ def r_level_timeout(vars):
     'gr_work':8                                                     граница простой/работа
     'dost_timeout':'канал_настроек.args.dost_timeout' или int(cек)  таймаут недостоверности ,с
     'tech_timeout':'канал_настроек.args.minLength' или int(cек)     техпростой ,с
+    'work_timeout':'канал_настроек.args.min_work_length' или int(cек) минимальный регистрируемый отрезок работы ,с
     'write_init':'db_writer2.args.writeInit',                       сигнал принудительной записи
     'state_ch_b1':'канал_статуса.args.b1',                         бит1 канала статуса
     'state_ch_b2':'канал_статуса.args.b2',                         бит2 канала статуса
@@ -109,7 +110,7 @@ def r_level_timeout(vars):
         vars.v1 = vars.result_in
         vars.result = (vars.v1 + vars.v2 + vars.v3 + vars.v4 + vars.v5 + vars.v6 + vars.v7 + vars.v8 + vars.v9 + vars.v10)/10
 # !!!! ------------- dev-------------------        
-        # vars.result = vars.result_in
+        vars.result = vars.result_in
 # !!!! ------------- dev-------------------        
         result = vars.result
         if result < vars.gr_stand:  # откл
@@ -160,7 +161,11 @@ def r_level_timeout(vars):
             # подвешиваем запись и ждем не изменится ли статус в течении таймаута (min_length): ожидание записи
             vars.buffered = True
             # если статус меняется до таймаута
-            if (time_now - vars.current_state_time).total_seconds() <= vars.tech_timeout:
+            if state == 3:
+                section_timeout = vars.work_timeout
+            else:
+                section_timeout = vars.tech_timeout
+            if (time_now - vars.current_state_time).total_seconds() <= section_timeout:
                 # state_value не меняется
                 # state_time не меняется
                 # увеличиваем длину подвешенного отрезка на длину текущего
@@ -187,7 +192,11 @@ def r_level_timeout(vars):
             vars.current_interval = interval
     if vars.buffered:
         # если есть отрезок ожидающий записи - пишем его по прошествии min_length
-        if (time_now-vars.current_state_time).total_seconds() >= vars.tech_timeout:
+        if state == 3:
+            section_timeout = vars.work_timeout
+        else:
+            section_timeout = vars.tech_timeout
+        if (time_now-vars.current_state_time).total_seconds() >= section_timeout:
             dbWriteFlag = True
             vars.buffered = False
     vars.state = vars.current_state

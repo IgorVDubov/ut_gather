@@ -174,7 +174,6 @@ class WSHandler(WebSocketHandler):
     def on_message(self, message):
         try:
             jsonData = json.loads(message)
-            print(jsonData)
         except json.JSONDecodeError:
             logger.error("json loads Error for message: {0}".format(message))
         else:
@@ -256,8 +255,8 @@ class WSHandler(WebSocketHandler):
                 logger.debug('Unsupported ws message: '+message)
 
     def on_close(self):
-        print('ws disconnect')
         if client := self.application.data.ws_clients.get_client(self):
+            logger.info(f'ws client {self.request.remote_ip} disconnect')
             for subscr in client.subscriptions:
                 self.application.data.subscriptions.del_subscription(subscr)
             self.application.data.ws_clients.remove(client)
@@ -273,7 +272,7 @@ class GatherRequestHtmlHandler(BaseHandler):
     def post(self):
         self.set_header("Content-Type", "application/json")
         request = json.loads(self.request.body)
-        print(request)
+        # print(request)
 
         if request.get('type') == 'causesQuerry':
             data = {}
@@ -356,7 +355,6 @@ class AdmRequestHtmlHandler(BaseHandler):
     def post(self):
         self.set_header("Content-Type", "application/json")
         request = json.loads(self.request.body)
-        print(request)
         if request.get('type') == 'addCause':
             new_cause = request.get("cause")
             if new_cause and new_cause != '' and new_cause != 'underfined':
@@ -412,7 +410,7 @@ class MEmulRequestHtmlHandler(BaseHandler):
     def post(self):
         self.set_header("Content-Type", "application/json")
         request = json.loads(self.request.body)
-        print(request)
+        # print(request)
         if request.get('type') == 'get_ch':
             logger.log(
                 'MESSAGE', f'client {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
@@ -428,7 +426,6 @@ class MEmulRequestHtmlHandler(BaseHandler):
         elif request.get('type') == 'set_ch':
             logger.log(
                 'MESSAGE', f'client {self.user.get("login")} do set_ch from ip:{self.request.remote_ip}.')
-            print(request)
             self.application.data.channelBase.get_by_name(request.get('ch_name')).set_arg(
                 request.get('arg'), request.get('value'))
             self.write(json.dumps(200, default=str))
@@ -444,10 +441,7 @@ class MEmulRequestHtmlHandler(BaseHandler):
     def get(self):
         self.set_header("Content-Type", "application/x-www-form-urlencoded")
         requestHeader = self.request.headers
-        print(f'GET request!!!!!!!!!!!!!')
-        print(f'requestHeader:{requestHeader}')
         requestBody = self.request.body
-        print(f'requestBody:{requestBody}')
 
 
 class MEWSHandler(WebSocketHandler):
@@ -481,7 +475,6 @@ class MEWSHandler(WebSocketHandler):
     def on_message(self, message):
         try:
             jsonData = json.loads(message)
-            print(jsonData)
         except json.JSONDecodeError:
             logger.error("json loads Error for message: {0}".format(message))
         else:
@@ -617,7 +610,6 @@ class ReportsWSHandler(WebSocketHandler):
                 logger.debug(f"ws_message: first_read")
                 self.write_message(json_data)
             elif jsonData.get('type') == "subscribe":
-                print(f'subscribe {jsonData.get("data")}')
                 for_send = []
                 for arg in jsonData.get('data'):
                     channel_name, argument = parse_attr_params_n(arg)
@@ -670,7 +662,6 @@ class ReportsWSHandler(WebSocketHandler):
                         jsonData.get('arg'): result}]
                 json_data = json.dumps(msg, default=str)
                 self.write_message(json_data)
-                print(f"result: {msg}")
                 # self.write(json.dumps([], default=str))
             else:
                 logger.debug('Unsupported ws message: '+message)

@@ -22,15 +22,15 @@ def signal_techtimeout(vars):
         'cuase':'отбработчик_простоя.args.current_cause', текущая причина простоя
         'not_dost_counter':0,                   счетчик времени недостоверности
         'init':True,                            флаг инициализации
-        'saved_state':0,                       сохраненный (подвешенный) отрезок статус
-        'saved_length':0,                       сохраненный (подвешенный) отрезок
-        'saved_time':0,                         сохраненный (подвешенный) отрезок
+        'saved_state':0,                        сохраненный  отрезок для записи в БД статус
+        'saved_length':0,                       сохраненный  отрезок для записи в БД
+        'saved_time':0,                         сохраненный  отрезок для записи в БД
         'write_buffer':False,                   флаг для исключения повторной записи
         'buffered':False,                       флаг наличия буферезированный отрезок
-        'buffer_time':0,                        буферезированный отрезок
-        'buffer_state':0,                      буферезированный отрезок
-        'dost_length':0,                        буферезированный отрезок
-        'NA_state_before':False,               сохраненный предыдущий статус NA
+        'buffer_time':0,                        буферезированный текущий отрезок
+        'buffer_state':0,                       буферезированный текущий отрезок
+        'dost_length':0,                        буферезированный текущий отрезок
+        'NA_state_before':False,                сохраненный предыдущий статус NA
         'was_write_init':False,                 флаг произошедшей принудительной записи в БД
         'db_write_flag':False,                  флаг принудительной записи в БД
         'dbQuie':'12001',                       связь с очередью записи в БД
@@ -101,7 +101,6 @@ def signal_techtimeout(vars):
             vars.saved_state = 0
         else:
             vars.saved_state = state
-        vars.currentStateTime = time_now
         vars.saved_time = time_now
         vars.saved_length = 0
         vars.buffer_state = state
@@ -176,7 +175,7 @@ def signal_techtimeout(vars):
                         vars.buffer_state = state
                         # buffer_time=time_now; прибавляем время отрезка "неработа" время если меньше таймаута
                         vars.buffered = True
-            else:
+            else:   # Если техпростой закончился и сменился статус
                 if vars.saved_state == 3 and vars.buffer_state == 3:				# ------_----
                     vars.saved_state = vars.buffer_state
                     vars.saved_length = vars.saved_length + \

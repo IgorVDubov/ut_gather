@@ -192,6 +192,30 @@ def r_level_timeout(vars):
             db_write_flag = True
             vars.buffered = False
     
+    if db_write_flag:
+        
+        vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
+        if vars.saved_length > 10 or vars.saved_length < 90000:
+            if vars.saved_state is not None:
+                print(
+                f'{colors.CBEIGEBG2}machime {vars.m_id} \
+                project_id: {vars.project_id},\
+                time: {vars.saved_time.strftime("%Y-%m-%d %H:%M:%S")},\
+                state: {vars.saved_state},\
+                length: {int(round(vars.saved_length))}\
+                {colors.CEND}')
+            
+                dc.db_put_state(vars.db_quie,
+                                {'id': vars.m_id,
+                                    'project_id': vars.project_id,
+                                    'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
+                                    'state': vars.saved_state,
+                                    'length': int(round(vars.saved_length))
+                                 })
+        #vars.saved_length = 0   
+        #vars.saved_time = vars.current_state_time
+        #vars.saved_state = vars.current_state
+        db_write_flag = False
     # пока оставить для совместимости аргументов, потом убрать
     vars.state = vars.current_state
     # vars.state = state

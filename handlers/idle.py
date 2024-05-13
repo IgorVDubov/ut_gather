@@ -28,10 +28,12 @@ def idle(vars):
 
     '''
     idle = logics.get_current_idle(vars.machine_id)
-    
-    if (datetime.now() - vars.current_state_time).seconds < vars.min_state_len:
-        vars.buffer_state = True
-    else:
+    try:
+        if (datetime.now() - vars.current_state_time).seconds < vars.min_state_len:
+            vars.buffer_state = True
+        else:
+            vars.buffer_state = False
+    except TypeError:
         vars.buffer_state = False
     
     #   если через АПИ установили причину простоя записываем в текущий простой причину

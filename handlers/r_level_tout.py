@@ -91,7 +91,7 @@ def r_level_timeout(vars):
         dostChangeFlag = False
 
     # определяем текущий статус
-    if not result_in_error:
+    if not result_in_error and vars.dost:
         vars.v10 = vars.v9
         vars.v9 = vars.v8
         vars.v8 = vars.v7
@@ -104,7 +104,7 @@ def r_level_timeout(vars):
         vars.v1 = vars.result_in
         vars.result = (vars.v1 + vars.v2 + vars.v3 + vars.v4 + vars.v5 + vars.v6 + vars.v7 + vars.v8 + vars.v9 + vars.v10)/10
 # !!!! ------------- dev-------------------        
-        vars.result = vars.result_in
+       # vars.result = vars.result_in
 # !!!! ------------- dev-------------------        
         result = vars.result
         if result < vars.gr_stand:  # откл

@@ -155,14 +155,18 @@ class WSHandler(WebSocketHandler):
     def open(self):
         try:
             # m_arg = self.request.arguments.get('m')
-            if m_arg := self.request.arguments.get('m'): #запрос с панели
+            if m_arg := self.request.arguments.get('m'):  # запрос с панели
                 machine_id = int(tornado.escape.xhtml_escape(m_arg[0]))
-                logics.check_allowed_machine(machine_id, self.request.remote_ip)
-                logger.info(f'Web Socket open by panel, IP:{self.request.remote_ip} ')
+                logics.check_allowed_machine(
+                    machine_id, self.request.remote_ip)
+                logger.info(f'Web Socket open by panel, IP:{
+                            self.request.remote_ip} ')
             else:
-                if m_arg := self.request.arguments.get('prj'): # запрос с API клиента
-                    #TODO можно включить проверку разрешенных клиентов
-                    logger.info(f'Web Socket open by API client, IP:{self.request.remote_ip} ')
+                # запрос с API клиента
+                if m_arg := self.request.arguments.get('prj'):
+                    # TODO можно включить проверку разрешенных клиентов
+                    logger.info(f'Web Socket open by API client, IP:{
+                                self.request.remote_ip} ')
         except ValueError as error:
             logger.error(error)
             return
@@ -286,12 +290,12 @@ class GatherRequestHtmlHandler(BaseHandler):
                         f"Can't find machine_channel for machine id {m_id}\
                                 from {self.request.remote_ip}")
                 data.update(dc.get_machine_causes(
-                            self.application\
-                                .data.databus\
-                        .get_object('db_interface'),
+                            self.application
+                                .data.databus
+                            .get_object('db_interface'),
                             m_id,
                             machine_channel.get_arg('args.project_id')))
-            self.write(json.dumps({"causes": data}, default=str))    
+            self.write(json.dumps({"causes": data}, default=str))
         elif request.get('type') == 'stateQuerry':
             data = []
             for m_id in request.get('machines', []):
@@ -305,19 +309,23 @@ class GatherRequestHtmlHandler(BaseHandler):
                                 from {self.request.remote_ip}")
                 idle_time = machine_channel.get_arg('args.cause_time')
                 cause_time = None if idle_time is None else idle_time\
-                                            .strftime('%Y-%m-%dT%H:%M:%S')
+                    .strftime('%Y-%m-%dT%H:%M:%S')
                 data.append({
-                        'machine_id': m_id,
-                        'channel_name': machine_channel.name,
-                        'status': machine_channel.get_arg('args.current_state'),
-                        'status_time': machine_channel.get_arg
-                            ('args.current_state_time')
-                            .strftime('%Y-%m-%dT%H:%M:%S'),
-                        'operator_id': machine_channel.get_arg
+                    'machine_id': m_id,
+                    'channel_name': machine_channel.name,
+                    'status': machine_channel.get_arg('args.current_state'),
+                    'status_time': machine_channel
+                                    .get_arg('args.current_state_time')
+                                    .strftime('%Y-%m-%dT%H:%M:%S') if 
+                                    machine_channel
+                                    .get_arg('args.current_state_time'
+                                    ) is not None else 0,
+                            'operator_id': machine_channel.get_arg
                             ('args.operator_id'),
-                        'cause_id': machine_channel.get_arg('args.cause_id'),
-                        'cause_time': cause_time,
-                    })
+                            'cause_id': machine_channel
+                                            .get_arg('args.cause_id'),
+                            'cause_time': cause_time,
+                            })
             self.write(json.dumps({"allStates": data}, default=str))
         elif request.get('type') == 'iData':
             machine_id = request['params']['id']
@@ -328,8 +336,8 @@ class GatherRequestHtmlHandler(BaseHandler):
                 logger.error(f'Wrong machine_id in request: {machine_id}')
                 return
             dbi = self.application\
-                        .data.databus\
-                        .get_object('db_interface')
+                .data.databus\
+                .get_object('db_interface')
             date = request['params']['date']
             project_id = request['params']['project']
             date1 = datetime.strptime(date, '%Y-%m-%d')
@@ -337,13 +345,16 @@ class GatherRequestHtmlHandler(BaseHandler):
                 f"client request idles Data id={machine_id} date={date}, project_id {project_id}")
             time1 = date1-timedelta(minutes=30)
             time2 = date1+timedelta(hours=6, minutes=59)
-            idels_1 = dc.get_idels_data(dbi, machine_id, time1, time2, project_id)
+            idels_1 = dc.get_idels_data(
+                dbi, machine_id, time1, time2, project_id)
             time1 = date1+timedelta(hours=7, minutes=0)
             time2 = date1+timedelta(hours=15, minutes=29)
-            idels_2 = dc.get_idels_data(dbi, machine_id, time1, time2, project_id)
+            idels_2 = dc.get_idels_data(
+                dbi, machine_id, time1, time2, project_id)
             time1 = date1+timedelta(hours=15, minutes=30)
             time2 = date1+timedelta(hours=23, minutes=29)
-            idels_3 = dc.get_idels_data(dbi, machine_id, time1, time2, project_id)
+            idels_3 = dc.get_idels_data(
+                dbi, machine_id, time1, time2, project_id)
 
             msg = [{"machine_id": machine_id}, {
                 "date": date}, idels_1, idels_2, idels_3]
@@ -376,9 +387,10 @@ class AdmRequestHtmlHandler(BaseHandler):
                     for client in self.application.data.ws_clients:
                         client.write_message(json.dumps({'cmd': 'reload'}))
 
-#------------------------------------------------------------------#
+# ------------------------------------------------------------------#
 #               FOR DEMO HANDLERS                                  #
-#------------------------------------------------------------------#
+# ------------------------------------------------------------------#
+
 
 class TestHtmlHandler(BaseHandler):
     # @BaseHandler.check_user(CHECK_AUTORIZATION)

@@ -159,14 +159,12 @@ class WSHandler(WebSocketHandler):
                 machine_id = int(tornado.escape.xhtml_escape(m_arg[0]))
                 logics.check_allowed_machine(
                     machine_id, self.request.remote_ip)
-                logger.info(f'Web Socket open by panel, IP:{
-                            self.request.remote_ip} ')
+                logger.info(f'Web Socket open by panel, IP:{self.request.remote_ip} ')
             else:
                 # запрос с API клиента
                 if m_arg := self.request.arguments.get('prj'):
                     # TODO можно включить проверку разрешенных клиентов
-                    logger.info(f'Web Socket open by API client, IP:{
-                                self.request.remote_ip} ')
+                    logger.info(f'Web Socket open by API client, IP:{self.request.remote_ip} ')
         except ValueError as error:
             logger.error(error)
             return

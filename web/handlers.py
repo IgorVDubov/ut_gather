@@ -221,7 +221,6 @@ class WSHandler(WebSocketHandler):
                 self.write_message(json_data)
             elif jsonData.get('type') == "subscribe":
                 logger.debug(f"subscription {jsonData.get('data')}")
-                for_send = []
                 for arg in jsonData.get('data'):
                     channel_name, argument = parse_attr_params_n(arg)
                     channel = self.application.data.channelBase.get_by_name(
@@ -232,13 +231,15 @@ class WSHandler(WebSocketHandler):
                     stored_client = self.application.\
                         data.ws_clients.get_client(self)
                     stored_client.subscriptions.append(subscription)
-                    send_data = {arg: channel.get_arg(argument)}
-                    send_data.update(
-                        {'time': (datetime.now()).strftime('%Y-%m-%dT%H:%M:%S')})
-                    for_send.append(send_data)
-                    if len(for_send):
-                        logger.debug(f"echo subscription {for_send}")
-                        self.write_message(json.dumps(for_send, default=str))
+                    # for_send = {
+                    #     'type': 'subscribe_data',
+                    #     'time': (datetime.now()).strftime('%Y-%m-%dT%H:%M:%S'),
+                    #     'data': [subscription.to_dict()]
+                    # }
+                    msg = self.application.data\
+                        .subscriptions.responce([subscription])
+                    logger.debug(f"echo subscription {msg}")
+                    self.write_message(json.dumps(msg, default=str))
             elif jsonData.get('type') == "set":
                 if arg := jsonData.get('arg'):
                     channel_name, argument = parse_attr_params_n(arg)
@@ -318,12 +319,11 @@ class GatherRequestHtmlHandler(BaseHandler):
                                     machine_channel
                                     .get_arg('args.current_state_time'
                                     ) is not None else 0,
-                            'operator_id': machine_channel.get_arg
-                            ('args.operator_id'),
-                            'cause_id': machine_channel
-                                            .get_arg('args.cause_id'),
-                            'cause_time': cause_time,
-                            })
+                    'operator_id': machine_channel.get_arg('args.operator_id'),
+                    'cause_id': machine_channel
+                                    .get_arg('args.cause_id'),
+                    'cause_time': cause_time,
+                    })
             self.write(json.dumps({"allStates": data}, default=str))
         elif request.get('type') == 'iData':
             machine_id = request['params']['id']
@@ -494,7 +494,6 @@ class MEWSHandler(WebSocketHandler):
                 json_data = json.dumps(msg, default=str)
                 self.write_message(json_data)
             elif jsonData.get('type') == "subscribe":
-                for_send = []
                 for arg in jsonData.get('data'):
                     ch_name, argument = parse_attr_params_n(arg)
                     channel = self.application.data.channelBase.get_by_name(
@@ -504,12 +503,9 @@ class MEWSHandler(WebSocketHandler):
                         new_subscription)
                     self.application.data.ws_clients.get_client(
                         self).subscriptions.append(subscription)
-                    send_data = {arg: channel.get_arg(argument)}
-                    send_data.update(
-                        {'time': (datetime.now()).strftime('%Y-%m-%dT%H:%M:%S')})
-                    for_send.append(send_data)
-                    if len(for_send):
-                        self.write_message(json.dumps(for_send, default=str))
+                    msg = self.application.data\
+                        .subscriptions.responce([subscription])
+                    self.write_message(json.dumps(msg, default=str))
                 # print (f'in ws:{self.application.data.subscriptions}')
             elif jsonData.get('type') == "msg":
                 logger.debug(f"ws_message: {jsonData.get('data')}")
@@ -587,7 +583,8 @@ class DBHtmlHandler(BaseHandler):
                     state_channel=m_channel.name + '.'+settings.STATE_ARG,
                     # state_input=str(machine_id)+'.result_in',
                     state_input=m_channel.name + '.result_in',
-                    causeid_arg=m_channel.name + '.'+settings.CAUSEID_ARG,
+                    causeid_arg=m_channel.get_arg(
+                    'args.idle_channel_name').name + '.'+settings.CAUSEID_ARG,
                     project=5,
                     version=0.1,
                     )
@@ -620,7 +617,6 @@ class ReportsWSHandler(WebSocketHandler):
                 logger.debug(f"ws_message: first_read")
                 self.write_message(json_data)
             elif jsonData.get('type') == "subscribe":
-                for_send = []
                 for arg in jsonData.get('data'):
                     channel_name, argument = parse_attr_params_n(arg)
                     channel = self.application.data\
@@ -630,12 +626,9 @@ class ReportsWSHandler(WebSocketHandler):
                         new_subscription)
                     self.application.data.ws_clients.get_client(
                         self).subscriptions.append(subscription)
-                    send_data = {arg: channel.get_arg(argument)}
-                    send_data.update(
-                        {'time': (datetime.now()).strftime('%Y-%m-%dT%H:%M:%S')})
-                    for_send.append(send_data)
-                if len(for_send):
-                    self.write_message(json.dumps(for_send, default=str))
+                    msg = self.application.data\
+                        .subscriptions.responce([subscription])
+                    self.write_message(json.dumps(msg, default=str))
             elif jsonData.get('type') == "update_data":
                 if len(project_globals.states_buffer) > 0:
                     # logger.debug(

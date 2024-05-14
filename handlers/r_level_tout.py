@@ -195,7 +195,7 @@ def r_level_timeout(vars):
     if db_write_flag:
         
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
-        if vars.saved_length > 10 or vars.saved_length < 90000:
+        if vars.saved_length > 10:
             if vars.saved_state is not None:
                 print(
                 f'{colors.CBEIGEBG2}machime {vars.m_id} \
@@ -308,7 +308,7 @@ def r_level_timeout_v2(vars):
         dostChangeFlag = False
 
     # определяем текущий статус
-    if not result_in_error:
+    if not result_in_error and vars.dost:
         vars.v10 = vars.v9
         vars.v9 = vars.v8
         vars.v8 = vars.v7
@@ -321,7 +321,7 @@ def r_level_timeout_v2(vars):
         vars.v1 = vars.result_in
         vars.result = (vars.v1 + vars.v2 + vars.v3 + vars.v4 + vars.v5 + vars.v6 + vars.v7 + vars.v8 + vars.v9 + vars.v10)/10
 # !!!! ------------- dev-------------------        
-        vars.result = vars.result_in
+        # vars.result = vars.result_in
 # !!!! ------------- dev-------------------        
         result = vars.result
         if result < vars.gr_stand:  # откл
@@ -445,8 +445,13 @@ def r_level_timeout_v2(vars):
                 vars.current_state = state          # формируется новый буферизированный отрезок
                 vars.current_state_time = time_now  # формируется новый буферизированный отрезок
                 vars.was_write_init = False
-
-                vars.buffered = True # есть буферизированный отрезок (ждем таймаут и пишем его)
+                # пишем сразу если откл - хх
+                if vars.current_state in [0, 1, 2] and vars.saved_state in [0, 1, 2]:
+                    vars.buffered = False # не ждем таймаут,  
+                    db_write_flag = True  # сразу пишем отрезок
+                else: # если с простоя в работу пишем сразу
+                    vars.buffered = True # есть буферизированный отрезок (ждем таймаут и пишем его)
+                
                 
                 # v1
                 # if vars.saved_state == 3 and vars.current_state == 3:	# если в работе был простой меньше таймаута и сейчас стал простой ------_----_
@@ -496,7 +501,7 @@ def r_level_timeout_v2(vars):
     if db_write_flag:
         
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
-        if vars.saved_length > 10 or vars.saved_length < 90000:
+        if vars.saved_length > 10:
             if vars.saved_state is not None:
                 print(
                 f'{colors.CBEIGEBG2}machime {vars.m_id} \

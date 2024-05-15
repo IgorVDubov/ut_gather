@@ -324,7 +324,7 @@ def r_level_timeout_v2(vars):
         # vars.result = vars.result_in
 # !!!! ------------- dev-------------------        
         result = vars.result
-        if result < vars.gr_stand:  # откл
+        if result <= vars.gr_stand:  # откл
             state = 1
         elif result > vars.gr_stand and result < vars.gr_work:  # простой
             state = 2
@@ -345,7 +345,7 @@ def r_level_timeout_v2(vars):
         
     # если меняется интервал или принудительная инициализации записи
     if state != vars.current_state or vars.write_init or dostChangeFlag:
-        print('----------------------------change state------------------------')
+        print(f'------------------------{ vars.m_id} change state to {state}, processing...-----------')
         if na_state:
             state = 0  # NA
         # выставляем биты состояния статуса для доступа по модбас для внешних клиентов

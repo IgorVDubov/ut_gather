@@ -201,13 +201,33 @@
       align-self: center;
     }
 
-    .gridCauseButtons {
+    .gridCauseButtons_2x2 {
       display: grid;
       grid-gap: 1em;
       justify-items: center;
       grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr 1fr;
-
+    }
+    .gridCauseButtons_2x3 {
+      display: grid;
+      grid-gap: 1em;
+      justify-items: center;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
+    }
+    .gridCauseButtons_3x2 {
+      display: grid;
+      grid-gap: 1em;
+      justify-items: center;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+    .gridCauseButtons_3x3 {
+      display: grid;
+      grid-gap: 1em;
+      justify-items: center;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
     }
   </style>
   <style>
@@ -1439,9 +1459,15 @@
     let flashWaitWarning = block('Необходимо указать причину простоя', ['databox flex_center w_v80 h_v10 fnt_2 bold cWhite flashBackground'], 'flashWaitWarning')
     container.append(flashWaitWarning)
 
+    let displayCauseCount = Object.keys(IDLE_COUSES).length - 2;
+    let gridClass
+    if (displayCauseCount <= 4) {gridClass = 'gridCauseButtons_2x2'}
+    if (displayCauseCount > 4 &&  displayCauseCount <= 6) {gridClass = 'gridCauseButtons_2x3'}
+    if (displayCauseCount > 6 &&  displayCauseCount <= 9) {gridClass = 'gridCauseButtons_3x3'}
+    if (displayCauseCount > 9 ) {gridClass = 'gridCauseButtons_3x3'}
 
 
-    const causeButtonsContainer = block('', ['w_v80 gridCauseButtons'], 'causeButtonsContainer');
+    const causeButtonsContainer = block('', [gridClass], 'causeButtonsContainer');
     let causeArr = []
 
     for (idle in IDLE_COUSES) {

@@ -58,7 +58,7 @@ class BaseHandler(RequestHandlerClass):
             userId = int(tornado.escape.xhtml_escape(self.current_user))
             # user=[user for user in self.application.data.users if user['id']==userId][0]
             if user := next(filter(lambda user: user['id'] == userId, self.application.data.users), None):
-                # logger.debug('user '+user['login']+' ok')
+                # logger.info('user '+user['login']+' ok')
                 return user
             else:
                 return None
@@ -173,11 +173,11 @@ class WSHandler(WebSocketHandler):
             logger.info(
                 f'add, websocket IP:{self.request.remote_ip} Online {len(self.application.data.ws_clients)} clients')
 
-    def on_message(self, message):
+    def on_message(self, msg):
         try:
-            jsonData = json.loads(message)
+            jsonData = json.loads(msg)
         except json.JSONDecodeError:
-            logger.error("json loads Error for message: {0}".format(message))
+            logger.error("json loads Error for INFO: {0}".format(msg))
         else:
             if jsonData.get('type') == "curr_operator":
                 logger.info(
@@ -220,7 +220,7 @@ class WSHandler(WebSocketHandler):
                 json_data = json.dumps(msg, default=str)
                 self.write_message(json_data)
             elif jsonData.get('type') == "subscribe":
-                logger.debug(f"subscription {jsonData.get('data')}")
+                logger.info(f"subscription {jsonData.get('data')}")
                 for arg in jsonData.get('data'):
                     channel_name, argument = parse_attr_params_n(arg)
                     channel = self.application.data.channelBase.get_by_name(
@@ -238,7 +238,7 @@ class WSHandler(WebSocketHandler):
                     # }
                     msg = self.application.data\
                         .subscriptions.responce([subscription])
-                    logger.debug(f"echo subscription {msg}")
+                    logger.info(f"echo subscription {msg}")
                     self.write_message(json.dumps(msg, default=str))
             elif jsonData.get('type') == "set":
                 if arg := jsonData.get('arg'):
@@ -252,10 +252,10 @@ class WSHandler(WebSocketHandler):
                     channel.set_arg(argument, value)
                     if argument == settings.CAUSEID_ARG:
                         channel.set_arg('args.set_cause_flag', True)
-                    logger.debug(f"set arg: {jsonData.get('arg')} to {value}")
+                    logger.info(f"set arg: {jsonData.get('arg')} to {value}")
 
             else:
-                logger.debug('Unsupported ws message: '+message)
+                logger.info('Unsupported ws INFO: '+msg)
 
     def on_close(self):
         if client := self.application.data.ws_clients.get_client(self):
@@ -339,7 +339,7 @@ class GatherRequestHtmlHandler(BaseHandler):
             date = request['params']['date']
             project_id = request['params']['project']
             date1 = datetime.strptime(date, '%Y-%m-%d')
-            logger.debug(
+            logger.info(
                 f"client request idles Data id={machine_id} date={date}, project_id {project_id}")
             time1 = date1-timedelta(minutes=30)
             time2 = date1+timedelta(hours=6, minutes=59)
@@ -369,7 +369,7 @@ class AdmRequestHtmlHandler(BaseHandler):
             if new_cause and new_cause != '' and new_cause != 'underfined':
                 logics.addCause(new_cause)
                 logger.log(
-                    'MESSAGE', f'client {self.user.get("login")} from ip:{self.request.remote_ip} add cause {new_cause}.')
+                    'INFO', f'client {self.user.get("login")} from ip:{self.request.remote_ip} add cause {new_cause}.')
                 self.write(json.dumps(200, default=str))
             else:
                 self.write(json.dumps(400, default=str))
@@ -380,7 +380,7 @@ class AdmRequestHtmlHandler(BaseHandler):
             cmd = request.get('cmd')
             if cmd and cmd != '' and cmd != 'underfined':
                 logger.log(
-                    'MESSAGE', f'{self.user.get("login")} send command {cmd} from ip:{self.request.remote_ip}')
+                    'INFO', f'{self.user.get("login")} send command {cmd} from ip:{self.request.remote_ip}')
                 if cmd == 'resetClient':
                     for client in self.application.data.ws_clients:
                         client.write_message(json.dumps({'cmd': 'reload'}))
@@ -398,7 +398,7 @@ class TestHtmlHandler(BaseHandler):
         # print(request)
         # if request.get('type') == 'te':
         # logger.log(
-        #     'MESSAGE', f'client {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
+        #     'INFO', f'client {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
         self.write(json.dumps(200, default=str))
 
 
@@ -423,25 +423,25 @@ class MEmulRequestHtmlHandler(BaseHandler):
         # print(request)
         if request.get('type') == 'get_ch':
             logger.log(
-                'MESSAGE', f'client {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
+                'INFO', f'client {self.user.get("login")} do get_ch from ip:{self.request.remote_ip}.')
             self.write(json.dumps(self.application.data.channelBase.get_by_name(
                 request.get('ch_name')).to_dict(), default=str))
         elif request.get('type') == 'get_ch_arg':
             logger.log(
-                'MESSAGE', f'client {self.user.get("login")} do get_ch_arg from ip:{self.request.remote_ip}.')
+                'INFO', f'client {self.user.get("login")} do get_ch_arg from ip:{self.request.remote_ip}.')
             print(
                 f"result: {self.application.data.channelBase.get_by_name(request.get('ch_name')).get_arg(request.get('arg'))}")
             self.write(json.dumps(self.application.data.channelBase.get_by_name(
                 request.get('ch_name')).get_arg(request.get('arg')), default=str))
         elif request.get('type') == 'set_ch':
             logger.log(
-                'MESSAGE', f'client {self.user.get("login")} do set_ch from ip:{self.request.remote_ip}.')
+                'INFO', f'client {self.user.get("login")} do set_ch from ip:{self.request.remote_ip}.')
             self.application.data.channelBase.get_by_name(request.get('ch_name')).set_arg(
                 request.get('arg'), request.get('value'))
             self.write(json.dumps(200, default=str))
         elif request.get('type') == 'set_ch_arg':
             logger.log(
-                'MESSAGE', f'client {self.user.get("login")} do set_ch_arg from ip:{self.request.remote_ip}.')
+                'INFO', f'client {self.user.get("login")} do set_ch_arg from ip:{self.request.remote_ip}.')
             name, arg = parse_attr_params_n(request.get('arg'))
 
             self.application.data.channelBase.get_by_name(
@@ -482,14 +482,14 @@ class MEWSHandler(WebSocketHandler):
         #         logger.log ('LOGIN',f'websocket user {tornado.escape.xhtml_escape(self.get_secure_cookie("user"))} not autirized , IP:{self.request.remote_ip}')
         #         self.close()
 
-    def on_message(self, message):
+    def on_message(self, msg):
         try:
-            jsonData = json.loads(message)
+            jsonData = json.loads(msg)
         except json.JSONDecodeError:
-            logger.error("json loads Error for message: {0}".format(message))
+            logger.error("json loads Error for INFO: {0}".format(msg))
         else:
             if jsonData.get('type') == "allStateQuerry":
-                logger.debug("ws_message: allStateQuerry")
+                logger.info("ws_message: allStateQuerry")
                 msg = {'type': 'mb_data', 'data': None}
                 json_data = json.dumps(msg, default=str)
                 self.write_message(json_data)
@@ -508,14 +508,14 @@ class MEWSHandler(WebSocketHandler):
                     self.write_message(json.dumps(msg, default=str))
                 # print (f'in ws:{self.application.data.subscriptions}')
             elif jsonData.get('type') == "msg":
-                logger.debug(f"ws_message: {jsonData.get('data')}")
+                logger.info(f"ws_message: {jsonData.get('data')}")
             elif jsonData.get('cmd') == "ws_reload":
-                logger.debug(f"get command: reload websocket clients")
+                logger.info(f"get command: reload websocket clients")
                 for client in self.application.data.ws_clients:
                     client.write_message(json.dumps({'cmd': 'reload'}))
 
             else:
-                logger.debug('Unsupported ws message: '+message)
+                logger.info('Unsupported ws INFO: '+msg)
 
     def on_close(self):
         # if self.request.headers['User-Agent'] != 'UTHMBot':  #не логгируем запросы от бота
@@ -601,11 +601,11 @@ class ReportsWSHandler(WebSocketHandler):
             project_globals.states_buffer = []
             project_globals.idles_buffer = []
 
-    def on_message(self, message):
+    def on_message(self, msg):
         try:
-            jsonData = json.loads(message)
+            jsonData = json.loads(msg)
         except json.JSONDecodeError:
-            logger.error("json loads Error for message: {0}".format(message))
+            logger.error("json loads Error for INFO: {0}".format(msg))
         else:
             if jsonData.get('type') == "first_read":
                 data = {'states': dc.db_get_all_states(jsonData.get('id')),
@@ -614,7 +614,7 @@ class ReportsWSHandler(WebSocketHandler):
                         }
                 msg = {'type': 'first_read', 'data': data}
                 json_data = json.dumps(msg, default=str)
-                logger.debug(f"ws_message: first_read")
+                logger.info(f"ws_message: first_read")
                 self.write_message(json_data)
             elif jsonData.get('type') == "subscribe":
                 for arg in jsonData.get('data'):
@@ -631,7 +631,7 @@ class ReportsWSHandler(WebSocketHandler):
                     self.write_message(json.dumps(msg, default=str))
             elif jsonData.get('type') == "update_data":
                 if len(project_globals.states_buffer) > 0:
-                    # logger.debug(
+                    # logger.info(
                     #     f"update states{project_globals.states_buffer}")
                     data = project_globals.states_buffer
                     project_globals.states_buffer = []
@@ -639,21 +639,21 @@ class ReportsWSHandler(WebSocketHandler):
                     json_data = json.dumps(msg, default=str)
                     self.write_message(json_data)
                 if len(project_globals.idles_buffer) > 0:
-                    # logger.debug(f"update idles{project_globals.idles_buffer}")
+                    # logger.info(f"update idles{project_globals.idles_buffer}")
                     data = project_globals.idles_buffer
                     project_globals.idles_buffer = []
                     msg = {'type': 'update_idles_db', 'data': data}
                     json_data = json.dumps(msg, default=str)
                     self.write_message(json_data)
                 if len(project_globals.operators_buffer) > 0:
-                    # logger.debug(f"update operators{project_globals.idles_buffer}")
+                    # logger.info(f"update operators{project_globals.idles_buffer}")
                     data = project_globals.operators_buffer
                     project_globals.operators_buffer = []
                     msg = {'type': 'update_operators_db', 'data': data}
                     json_data = json.dumps(msg, default=str)
                     self.write_message(json_data)
             elif jsonData.get('type') == 'get_ch_arg':
-                logger.debug(
+                logger.info(
                     f'client do get_ch_arg from ip:{self.request.remote_ip}.')
                 try:
                     result = self.application.data.channelBase.get_by_name(
@@ -667,7 +667,7 @@ class ReportsWSHandler(WebSocketHandler):
                 self.write_message(json_data)
                 # self.write(json.dumps([], default=str))
             else:
-                logger.debug('Unsupported ws message: '+message)
+                logger.info('Unsupported ws INFO: '+msg)
 
     def on_close(self):
         if client := self.application.data.ws_clients.get_client(self):
@@ -684,7 +684,7 @@ class LoginHandler(BaseHandler):
         for user in self.application.data.users:
             if user['login'] == username:
                 logger.log(
-                    'DEBUG', f"Try login {username}, user ok, ip:{self.request.remote_ip}")
+                    'INFO', f"Try login {username}, user ok, ip:{self.request.remote_ip}")
                 # self.set_secure_cookie("user", username, expires_days=180)
                 self.set_secure_cookie("user", str(
                     user.get('id')), expires_days=400)
@@ -692,7 +692,7 @@ class LoginHandler(BaseHandler):
                 return
         # no such user
         logger.log(
-            'DEBUG', f"Try login {username}, user wrong , ip:{self.request.remote_ip}")
+            'INFO', f"Try login {username}, user wrong , ip:{self.request.remote_ip}")
         self.redirect("/login")
 
 

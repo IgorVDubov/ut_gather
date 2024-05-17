@@ -1215,6 +1215,7 @@
 
   function changeState() {
     setStatus(currentState.state, moment(currentState.stateTime).format('DD.MM.YY HH:mm:ss'))
+    updateStatusTimer()
     if (currentState.state == WORK_STATE) {
       currentState.bufferCause = currentState.cause
       currentState.bufferCauseTime = currentState.causeTime
@@ -1245,6 +1246,7 @@
   }
 
   function changeCause() {
+    updateCauseTimer()
     switch (currentState.cause) {
       case undefined:
       case NO_CAUSE_ID: displayWaitCauseMode();

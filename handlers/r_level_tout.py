@@ -161,6 +161,7 @@ def r_level_timeout(vars):
             # подвешиваем запись и ждем не изменится ли статус в течении таймаута (min_length): ожидание записи
             vars.buffered = True
             if (time_now - vars.current_state_time).total_seconds() <= vars.tech_timeout:
+            # если закончившийся отрезок меньше таймаута
                 # saved_state не меняется
                 # saved_time не меняется
                 # увеличиваем длину подвешенного отрезка на длину текущего
@@ -174,7 +175,9 @@ def r_level_timeout(vars):
                     vars.current_state = state  # обновляем статус и
                     vars.current_state_time = time_now  # время текущего отрезка
                     vars.buffered = True  # и подвешиваем- ожидание записи
-            else:													                    # если статус меняется после таймаута
+            else:
+            # если закончившийся отрезок больше таймаута
+            # если статус меняется после таймаута
                 # задаем отрезок для записи (подвешенный): статус
                 vars.saved_state = vars.current_state
                 vars.saved_time = vars.current_state_time  # время
@@ -309,17 +312,24 @@ def r_level_timeout_v2(vars):
 
     # определяем текущий статус
     if not result_in_error and vars.dost:
-        vars.v10 = vars.v9
-        vars.v9 = vars.v8
-        vars.v8 = vars.v7
-        vars.v7 = vars.v6
-        vars.v6 = vars.v5
         vars.v5 = vars.v4
         vars.v4 = vars.v3
         vars.v3 = vars.v2
         vars.v2 = vars.v1
         vars.v1 = vars.result_in
-        vars.result = (vars.v1 + vars.v2 + vars.v3 + vars.v4 + vars.v5 + vars.v6 + vars.v7 + vars.v8 + vars.v9 + vars.v10)/10
+        vars.result = (vars.v1 + vars.v2 + vars.v3 + vars.v4 + vars.v5)/5
+    # if not result_in_error and vars.dost:
+    #     vars.v10 = vars.v9
+    #     vars.v9 = vars.v8
+    #     vars.v8 = vars.v7
+    #     vars.v7 = vars.v6
+    #     vars.v6 = vars.v5
+    #     vars.v5 = vars.v4
+    #     vars.v4 = vars.v3
+    #     vars.v3 = vars.v2
+    #     vars.v2 = vars.v1
+    #     vars.v1 = vars.result_in
+    #     vars.result = (vars.v1 + vars.v2 + vars.v3 + vars.v4 + vars.v5 + vars.v6 + vars.v7 + vars.v8 + vars.v9 + vars.v10)/10
 # !!!! ------------- dev-------------------        
         # vars.result = vars.result_in
 # !!!! ------------- dev-------------------        
@@ -382,63 +392,73 @@ def r_level_timeout_v2(vars):
             else:
                 section_timeout = vars.tech_timeout
             if (time_now - vars.current_state_time).total_seconds() <= section_timeout:
-                if state == 3:  # если сейчас Работа
-                    if vars.saved_state == 3: # если краткий останов (была работа и сейчас работа)
-                        vars.saved_length = vars.saved_length + \
-                            (time_now-vars.current_state_time).total_seconds()
-                        vars.buffered = False  # сбрасыватся буфер, отрезок увелиыивается на длину буфера
-                    else:  # если перед текущей работой был любой простой - он сразу записывается
+            # если закончившийся отрезок меньше таймаута
+            #   статус меняется до таймаута
+                if state == 3:  
+                # если сейчас Работа
+                    if vars.saved_state == 3: 
+                    # если краткий останов (была работа и сейчас работа)
+                    # сохраненный отрезок увеличивается на длину буфера
+                        vars.buffered = False  # сбрасыватся буфер
+                        vars.current_state_time = vars.saved_time  # становится текущим
+                        vars.current_state = vars.saved_state  # подвешенный отрезок
+                        vars.saved_length += (time_now-
+                                    vars.current_state_time).total_seconds()
+                    else:  
+                    # если перед текущей работой был любой простой - он 
+                    # сразу записывается
+                        vars.saved_state = vars.current_state
+                        vars.saved_time = vars.current_state_time
+                        vars.saved_length = (
+                            time_now-vars.current_state_time).total_seconds()
+                        db_write_flag = True        # запись отрезка
+                        vars.buffered = False       # буфер сбрасывается
+                        vars.current_state = state      # формируется буферизированный новый отрезок
+                        vars.current_state_time = time_now
+                else:   
+                # Если сейчас не Работа
+                    if vars.current_state != 3 and vars.saved_state !=3:
+                    # не было работы
+                    # ...-окл_короткий-простой - сразу пишем откл_короткий
                         vars.saved_length = (
                             time_now-vars.current_state_time).total_seconds()
                         vars.saved_state = vars.current_state
                         vars.saved_time = vars.current_state_time
-                        db_write_flag = True        # запись отрезка
-                        vars.buffered = False       # буфер сбрасывается
-                    vars.current_state = state      # формируется буферизированный новый отрезок
-                    vars.current_state_time = time_now
-                else:   # Если сейчас не Работа
-                    # v2
-                        # к сохраненному прибавляется буферизированный 
-                        vars.saved_length = vars.saved_length + \
-                            (time_now-vars.current_state_time).total_seconds()
-                        if vars.saved_state == state: # если вернулось в то же состояние - curent=save
+                        vars.current_state = state # формируется новый буферизированный отрезок
+                        vars.current_state_time = time_now
+                        vars.buffered = False    #  буферизированный отрезок сбрасывается
+                        db_write_flag = True  # сразу пишем отрезок
+                    else:
+                        if vars.saved_state == state: 
+                        # если вернулось в то же состояние - curent=save
+                        # длина 
+                            vars.saved_length = (
+                                time_now-vars.current_state_time).total_seconds()
                             vars.current_state = state
                             vars.current_state_time = vars.saved_time
                             vars.buffered = False
-                        else:   # если состояние изменилось (простой-работа(короткая)-откл)- save=curent+save пишем save
-                            vars.buffered = False # не ждем таймаут,  
-                            db_write_flag = True  # сразу пишем отрезок
+                        else:   
+                        # если состояние изменилось 
+                        # (простой-работа(короткая)-откл)
+                        # save=curent+save пишем save
+                            # к сохраненному прибавляется буферизированный 
+                            vars.saved_length += (
+                                time_now-vars.current_state_time).total_seconds()
                             vars.current_state = state # формируется новый буферизированный отрезок
                             vars.current_state_time = time_now
                             vars.buffered = False    #  буферизированный отрезок сбрасывается
-                    
-                    
-                    # v1
-                    # if vars.current_state == 3:  # в буффере отрезок Работа которая меньше таймаута - отбрасываем
-                        # if vars.saved_state == 3:  # сохраненный отрезок был Работа (работа-работа-откл|простой)
-                        #     # к сохраненному прибавляется буферизированный (работа+работа)
-                        #     vars.saved_length = vars.saved_length + \
-                        #         (time_now-vars.current_state_time).total_seconds()
-                        #     vars.current_state = state # формируется новый буферизированный отрезок
-                        #     vars.current_state_time = time_now
-                        #     vars.buffered = True    # есть буферизированный отрезок (ждем таймаут и пишем его)
-                        # else:                # сохраненный отрезок был НЕ Работа (откл|простой-работа-откл|простой)
-                        #     #  сохраненным отрезком становится буферизированный (работа)
-                        #     vars.saved_length = (
-                        #         time_now-vars.current_state_time).total_seconds()
-                        #     vars.saved_state = vars.current_state
-                        #     vars.saved_time = vars.current_state_time
-                        #     vars.current_state = state  # формируется новый буферизированный отрезок
-                        #     vars.current_state_time = time_now
-                        #     vars.buffered = True  # есть буферизированный отрезок (ждем таймаут и пишем его)
-                    # else:     # в буффере отрезок НЕ Работа (откл|простой-простой|откл-откл|простой)
-                    #     vars.current_state = state  # у буферизированного меняем статус
-                    #     vars.buffered = True # есть буферизированный отрезок (ждем таймаут и пишем его)
-            else:   # Если техпростой закончился и сменился статус
-                # v2
+                            db_write_flag = True  # сразу пишем отрезок
+                            vars.current_state = state # формируется новый буферизированный отрезок
+                            vars.current_state_time = time_now
+                            
+            else:   
+            # если закончившийся отрезок больше таймаута
+            # статус меняется после таймаута
                 vars.saved_state = vars.current_state
-                vars.saved_length = vars.saved_length + \
-                    (time_now-vars.current_state_time).total_seconds()
+                vars.saved_length = (
+                    time_now-vars.current_state_time).total_seconds()
+                # vars.saved_length = vars.saved_length + \
+                #     (time_now-vars.current_state_time).total_seconds()
                 if vars.was_write_init:  # если писали по сигналу write_init обновляем saved_time
                     vars.saved_time = vars.current_state_time
                 
@@ -452,37 +472,6 @@ def r_level_timeout_v2(vars):
                 else: # если с простоя в работу пишем сразу
                     vars.buffered = True # есть буферизированный отрезок (ждем таймаут и пишем его)
                 
-                
-                # v1
-                # if vars.saved_state == 3 and vars.current_state == 3:	# если в работе был простой меньше таймаута и сейчас стал простой ------_----_
-                #      # к сохраненному прибавляется буферизированный (работа+работа)
-                #     vars.saved_state = vars.current_state
-                #     vars.saved_length = vars.saved_length + \
-                #         (time_now-vars.current_state_time).total_seconds()
-                #     if vars.was_write_init:  # если писали по сигналу write_init обновляем saved_time
-                #         vars.saved_time = vars.current_state_time
-                #     vars.buffered = True # есть буферизированный отрезок (ждем таймаут и пишем его)
-                # elif vars.saved_state != 3 and vars.current_state == 3: # работа меньше таймаута после простоя 
-                #     # к сохраненному простою прибавляется буферизированный работа
-                #     vars.saved_length = vars.saved_length + \
-                #         (time_now-vars.current_state_time).total_seconds()
-                #     if vars.was_write_init:  # если писали по сигналу write_init обновляем saved_time
-                #         vars.saved_time = vars.current_state_time
-                #     vars.buffered = False # сброс буфера
-                # else: # в другом случае сохраненным отрезком становится буферизированный 
-                #     vars.saved_state = vars.current_state
-                #     vars.saved_time = vars.current_state_time
-                #     vars.saved_length = (
-                #         time_now-vars.current_state_time).total_seconds()
-                #     vars.buffered = True # есть буферизированный отрезок (ждем таймаут и пишем его)
-                #     # if vars.current_state == 3:
-                #     #     vars.buffered = True # есть буферизированный отрезок (ждем таймаут и пишем его)
-                #     # else: # если с простоя в работу пишем сразу
-                #     #     vars.buffered = False # не ждем таймаут,  
-                #     #     db_write_flag = True  # сразу пишем отрезок
-                
-                
-                # Если техпростой закончился и сменился статус всегда 
             
     if vars.buffered:
         # если есть отрезок ожидающий записи - пишем его по прошествии min_length

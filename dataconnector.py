@@ -53,10 +53,10 @@ def get_machine_causes(db_interface: DBInterface,
         return settings.IDLE_CAUSES
     else:
         reply = dbc.querry_causes(db_interface, machine_id, project_id)
-        return {machine_id: (name, position, color) for machine_id,
-                name,
-                color,
-                position in reply}
+        return {cause_id: (name, position, color) for cause_id,
+                                                    name,
+                                                    color,
+                                                    position in reply}
 
 
 def _get_machine_causes(db_interface: DBInterface,

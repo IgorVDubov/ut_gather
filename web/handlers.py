@@ -277,7 +277,8 @@ class GatherRequestHtmlHandler(BaseHandler):
         request = json.loads(self.request.body)
         # print(request)
 
-        if request.get('type') == 'causesQuerry':
+        if request.get('type') == '_causesQuerry':
+        # move to utserver
             data = {}
             for m_id in request.get('machines', []):
                 machine_channel = self\
@@ -325,7 +326,8 @@ class GatherRequestHtmlHandler(BaseHandler):
                     'cause_time': cause_time,
                     })
             self.write(json.dumps({"allStates": data}, default=str))
-        elif request.get('type') == 'iData':
+        elif request.get('type') == '_iData':
+        # move to utserver
             machine_id = request['params']['id']
             try:
                 if isinstance(machine_id, str):

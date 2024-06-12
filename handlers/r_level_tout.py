@@ -160,7 +160,7 @@ def r_level_timeout(vars):
         else: # Если смена статуса
             # подвешиваем запись и ждем не изменится ли статус в течении таймаута (min_length): ожидание записи
             vars.buffered = True
-            if (time_now - vars.current_state_time).total_seconds() <= vars.tech_timeout:
+            if (time_now - vars.current_state_time).total_seconds() < vars.tech_timeout:
             # если закончившийся отрезок меньше таймаута
                 # saved_state не меняется
                 # saved_time не меняется
@@ -479,7 +479,7 @@ def r_level_timeout_v2(vars):
             section_timeout = vars.work_timeout
         else:
             section_timeout = vars.tech_timeout
-        if (time_now-vars.current_state_time).total_seconds() >= section_timeout:
+        if (time_now-vars.current_state_time).total_seconds() > section_timeout:
             db_write_flag = True
             vars.buffered = False
     

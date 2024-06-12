@@ -29,7 +29,7 @@ def idle(vars):
     '''
     idle = logics.get_current_idle(vars.machine_id)
     try:
-        if (datetime.now() - vars.current_state_time).seconds < vars.min_state_len:
+        if (datetime.now() - vars.current_state_time).seconds <= vars.min_state_len:
             vars.buffer_state = True
         else:
             vars.buffer_state = False

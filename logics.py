@@ -315,24 +315,29 @@ def current_idle_add_cause(machine_id: int,
     '''
     if current_idle := get_current_idle(machine_id):
         set_operator(machine_id, operator_id)
-        if current_idle.cause is not None: # причина была указана (смена причины)
-            print(
-                f'change cause idle to {machine_id}\
-                    from {current_idle.cause} to {cause_id}')
-            # если причина была сброшена через causeid=0 время 
-            # причины оставляем от момента сброса
-            if current_idle.cause != 0:  
-                current_idle_store(machine_id, prj_id, 0, db_quie)
-                current_idle.cause_time = datetime.now()
-            elif current_idle.cause == settings.TECH_IDLE_ID:
-                current_idle_store(machine_id, prj_id, 0, db_quie)
-                if current_idle.calc_length() > current_idle.tech_idle:
-                    current_idle.cause_time = current_idle.cause_time + timedelta(
-                        0, current_idle.tech_idle)
-        else: # причина не была указана (автотехростой)
-            current_idle.cause_time = current_idle.begin_time
-
-        print(f'add cause idle to {machine_id} cause:{cause_id}')
+        
+        if current_idle.cause!=cause_id:
+            if current_idle.cause is not None and current_idle.cause!=cause_id:
+                # причина была указана и смена причины
+                logger.log('PROG', 
+                    f'change cause idle to {machine_id}\
+                        from {current_idle.cause} to {cause_id}')
+                # если причина была сброшена через causeid=0 время 
+                # причины оставляем от момента сброса
+                if current_idle.cause != 0:  
+                    current_idle_store(machine_id, prj_id, 0, db_quie)
+                    current_idle.cause_time = datetime.now()
+                elif current_idle.cause == settings.TECH_IDLE_ID:
+                    current_idle_store(machine_id, prj_id, 0, db_quie)
+                    if current_idle.calc_length() > current_idle.tech_idle:
+                        current_idle.cause_time = current_idle.cause_time + timedelta(
+                            0, current_idle.tech_idle)
+            else: # причина не была указана (автотехростой)
+                current_idle.cause_time = current_idle.begin_time
+        else: # причина была указана повторно
+            logger.log('PROG', 
+                    f'''{machine_id} SKIPPED change cause idle from {current_idle.cause} to {cause_id}''')
+            return
         current_idle.cause = cause_id
         current_idle.cause_set_time = cause_set_time
         save_machine_idle(db_quie, machine_id, prj_id)

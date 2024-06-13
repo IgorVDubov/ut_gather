@@ -355,7 +355,8 @@ def r_level_timeout_v2(vars):
         
     # если меняется интервал или принудительная инициализации записи
     if state != vars.current_state or vars.write_init or dostChangeFlag:
-        print(f'------------------------{ vars.m_id} change state to {state}, processing...-----------')
+        logger.log('PROG', 
+                   f'{vars.m_id} change state to {state}, signal={result} processing...')
         if na_state:
             state = 0  # NA
         # выставляем биты состояния статуса для доступа по модбас для внешних клиентов
@@ -499,6 +500,8 @@ def r_level_timeout_v2(vars):
                 state: {vars.saved_state},\
                 length: {int(round(vars.saved_length))}\
                 {colors.CEND}')
+                logger.log('PROG',
+                f'{vars.m_id} to DB_{vars.project_id}, time: {vars.saved_time.strftime("%y-%m-%d %H:%M:%S")}, state: {vars.saved_state}, length: {int(round(vars.saved_length))}')
             
                 dc.db_put_state(vars.db_quie,
                                 {'id': vars.m_id,

@@ -40,6 +40,9 @@ class Idle():
     cause_set_time: datetime | None    # время установки причины
     length: int | None                 # длительность нахождения в текущей причине простоя
 
+    def __str__(self):
+        return f'''state={self.state} from {self.begin_time.strftime('%y/%m/%d %H:%M:%S') if self.begin_time is not None else '-'}, {self.cause=} from {self.cause_time.strftime('%y/%m/%d %H:%M:%S') if self.cause_time is not None else '-'} length={self.length}'''
+        
     def calc_length(self) -> int:
         '''
         return cause length in seconds

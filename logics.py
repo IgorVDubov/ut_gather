@@ -280,6 +280,7 @@ def current_idle_set(db_quie,
                      state: int,
                      tech_idle_length: int,
                      operator: int | None = None,
+                     begin_time: datetime | None = None,
                      cause: int | None = None,
                      cause_time: datetime | None = None,
                      cause_set_time: datetime | None = None):
@@ -287,7 +288,6 @@ def current_idle_set(db_quie,
     пишем в таблицу temp_idles текущий начавшийся простой 
     '''
     print(f'set idle to {machine_id} with state {state}')
-    begin_time = datetime.now()
     idle_data = {
                 machine_id: Idle(
                                 state,
@@ -314,33 +314,61 @@ def current_idle_add_cause(machine_id: int,
     добавляем причину в сохраненный простой
     '''
     if current_idle := get_current_idle(machine_id):
+    # простой был зафиксирован
         set_operator(machine_id, operator_id)
         
         if current_idle.cause!=cause_id:
-            if current_idle.cause is not None and current_idle.cause!=cause_id:
-                # причина была указана и смена причины
-                logger.log('PROG', 
-                    f'change cause idle to {machine_id}\
-                        from {current_idle.cause} to {cause_id}')
-                # если причина была сброшена через causeid=0 время 
-                # причины оставляем от момента сброса
-                if current_idle.cause != 0:  
-                    current_idle_store(machine_id, prj_id, 0, db_quie)
+        # исключение дублирования причины
+            if current_idle.cause is not None:
+                # произошла смена причины - сохраняем предыдущю
+                
+                
+                
+                # формируем новую причину 
+                
+                #
+                #   техпростой после останова, если вернулись в работу
+                #   если другая причина - заменяем ей техпростой
+                #
+                if current_idle.cause == settings.TECH_IDLE_ID:
+                # если предыдущая причина техпростой - прибавляем его к новой
+                    logger.log('PROG', 
+                        f'{machine_id} add cause {cause_id} to tech timeout') 
+                    # current_idle.cause_time  не меняется
+                    # current_idle.cause_time = current_idle.begin_time
+                elif  current_idle.cause == settings.NOT_CHEKED_CAUSE:
+                # если предыдущая причина "не указана" - прибавляем её к новой
+                # время квитации текущее
+                    logger.log('PROG', 
+                        f'{machine_id} add cause {cause_id} to NOT_CHEKED_CAUSE') 
+                    # current_idle.cause_time  не меняется
+                else:
+                # Если смена с других причин - сохраняем предыдущюю, формируем новую
+                    logger.log('PROG', 
+                        f'change cause idle to {machine_id}\
+                        from {current_idle.cause} to {cause_id}') 
+                    save_current_idle(machine_id, prj_id, 0, db_quie)
                     current_idle.cause_time = datetime.now()
-                elif current_idle.cause == settings.TECH_IDLE_ID:
-                    current_idle_store(machine_id, prj_id, 0, db_quie)
-                    if current_idle.calc_length() > current_idle.tech_idle:
-                        current_idle.cause_time = current_idle.cause_time + timedelta(
-                            0, current_idle.tech_idle)
+                #
+                #   техпростой после каждого останова, потом другая причина
+                #
+                # if current_idle.cause != 0: 
+                # если указывается причина устанавляваем ей текущее время 
+                    # current_idle.cause_time = datetime.now()
+                # if current_idle.cause == settings.TECH_IDLE_ID:
+                #     if current_idle.calc_length() > current_idle.tech_idle:
+                #         current_idle.cause_time = current_idle.cause_time + timedelta(
+                #             0, current_idle.tech_idle)
             else: # причина не была указана (автотехростой)
                 current_idle.cause_time = current_idle.begin_time
+            current_idle.cause = cause_id
+            current_idle.cause_set_time = cause_set_time
+            
+            save_machine_idle(db_quie, machine_id, prj_id)
         else: # причина была указана повторно
             logger.log('PROG', 
                     f'''{machine_id} SKIPPED change cause idle from {current_idle.cause} to {cause_id}''')
             return
-        current_idle.cause = cause_id
-        current_idle.cause_set_time = cause_set_time
-        save_machine_idle(db_quie, machine_id, prj_id)
     else:
         print(project_globals.machines_idle)
         raise KeyError(
@@ -353,7 +381,7 @@ def current_idle_reset(db_quie, machine_id: int, project_id: int):
     save_machine_idle(db_quie, machine_id, project_id)
 
 
-def current_idle_store(machine_id: int,
+def save_current_idle(machine_id: int,
                        prj_id: int,
                        buffer_time: int,
                        db_quie: DBInterface):
@@ -363,13 +391,14 @@ def current_idle_store(machine_id: int,
     '''
     if idle := get_current_idle(machine_id):
         idle.set_length()
-        idle.length -= buffer_time
-        if idle.length < settings.MIN_STORED_IDLE_LENGTH:
-            print(
-                f'{colors.CREDBG}machime {machine_id} \
-                    idle.length < settings.MIN_STORED_IDLE_LENGTH, \
-                    causeid:{idle.cause}, length {idle.length} {colors.CEND}')
-            return
+        if idle.length is not None:
+            idle.length -= buffer_time
+            if idle.length < settings.MIN_STORED_IDLE_LENGTH:
+                print(
+                    f'{colors.CREDBG}machime {machine_id} \
+                        idle.length < settings.MIN_STORED_IDLE_LENGTH, \
+                        causeid:{idle.cause}, length {idle.length} {colors.CEND}')
+                return
         print(
             f'{colors.CGREENBG}Store machime {machine_id} \
                 Idle to DB: {settings.STATES[idle.state]}, \

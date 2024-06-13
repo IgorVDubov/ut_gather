@@ -277,26 +277,7 @@ class GatherRequestHtmlHandler(BaseHandler):
         request = json.loads(self.request.body)
         # print(request)
 
-        if request.get('type') == '_causesQuerry':
-        # move to utserver
-            data = {}
-            for m_id in request.get('machines', []):
-                machine_channel = self\
-                    .application.data\
-                    .channelBase\
-                    .get_by_arg_value('args.m_id', m_id)[0]
-                if machine_channel is None:
-                    raise ValueError(
-                        f"Can't find machine_channel for machine id {m_id}\
-                                from {self.request.remote_ip}")
-                data.update(dc.get_machine_causes(
-                            self.application
-                                .data.databus
-                            .get_object('db_interface'),
-                            m_id,
-                            machine_channel.get_arg('args.project_id')))
-            self.write(json.dumps({"causes": data}, default=str))
-        elif request.get('type') == 'stateQuerry':
+        if request.get('type') == 'stateQuerry':
             data = []
             for m_id in request.get('machines', []):
                 machine_channel = self\
@@ -326,39 +307,7 @@ class GatherRequestHtmlHandler(BaseHandler):
                     'cause_time': cause_time,
                     })
             self.write(json.dumps({"allStates": data}, default=str))
-        elif request.get('type') == '_iData':
-        # move to utserver
-            machine_id = request['params']['id']
-            try:
-                if isinstance(machine_id, str):
-                    machine_id = int(machine_id)
-            except ValueError:
-                logger.error(f'Wrong machine_id in request: {machine_id}')
-                return
-            dbi = self.application\
-                .data.databus\
-                .get_object('db_interface')
-            date = request['params']['date']
-            project_id = request['params']['project']
-            date1 = datetime.strptime(date, '%Y-%m-%d')
-            logger.info(
-                f"client request idles Data id={machine_id} date={date}, project_id {project_id}")
-            time1 = date1-timedelta(minutes=30)
-            time2 = date1+timedelta(hours=6, minutes=59)
-            idels_1 = dc.get_idels_data(
-                dbi, machine_id, time1, time2, project_id)
-            time1 = date1+timedelta(hours=7, minutes=0)
-            time2 = date1+timedelta(hours=15, minutes=29)
-            idels_2 = dc.get_idels_data(
-                dbi, machine_id, time1, time2, project_id)
-            time1 = date1+timedelta(hours=15, minutes=30)
-            time2 = date1+timedelta(hours=23, minutes=29)
-            idels_3 = dc.get_idels_data(
-                dbi, machine_id, time1, time2, project_id)
-
-            msg = [{"machine_id": machine_id}, {
-                "date": date}, idels_1, idels_2, idels_3]
-            self.write(json.dumps(msg))
+        
 
 
 class AdmRequestHtmlHandler(BaseHandler):

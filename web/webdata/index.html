@@ -1481,7 +1481,7 @@
     for (idle of causeArr) {
       let id = idle[0]
       let cause = idle[1]
-      button = block(cause, ['h100 w20rem flex_center databox dataLable fnt_2'], 'buttonsContainer');
+      button = block(cause, ['h100 w20rem flex_center databox dataLable fnt_2'], 'button_'+id);
       button.dataset.id = id
       button.addEventListener('click', clickHandler);
       causeButtonsContainer.append(button)

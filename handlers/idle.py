@@ -6,6 +6,8 @@ from loguru import logger
 
 
 def idle(vars):
+    # техпростой после останова, если вернулись в работу
+    # если другая причина - заменяем техпростой
     '''
         idle serving programm (обработка простоев)
         vars:
@@ -27,9 +29,10 @@ def idle(vars):
             'buffer_state': True,                             флаг True если статус еще меньше минималоьного
 
     '''
+    current_time = datetime.now()
     idle = logics.get_current_idle(vars.machine_id)
     try:
-        if (datetime.now() - vars.current_state_time).seconds <= vars.min_state_len:
+        if (current_time - vars.current_state_time).seconds <= vars.min_state_len:
             vars.buffer_state = True
         else:
             vars.buffer_state = False
@@ -38,12 +41,12 @@ def idle(vars):
     
     #   если через АПИ установили причину простоя записываем в текущий простой причину
     if vars.set_cause_flag:
-        logger.log('PROG', f'{vars.machine_id} set_cause_flag: cause_id={vars.current_cause}  time={datetime.now()}')
+        logger.log('PROG', f'{vars.machine_id} set_cause_flag: cause_id={vars.current_cause}  time={current_time}')
         vars.set_cause_flag = False
         logics.current_idle_add_cause(vars.machine_id,
                                       vars.operator_id,
                                       vars.current_cause,
-                                      datetime.now(),
+                                      current_time,
                                       vars.project_id,
                                       vars.db_quie)
         return
@@ -56,7 +59,7 @@ def idle(vars):
             current_cause = idle.cause
             logger.log('PROG', f'{vars.machine_id} split_idle_flag to {idle.cause}  {idle.cause_time}')
         
-            logics.current_idle_store(vars.machine_id,
+            logics.save_current_idle(vars.machine_id,
                                     vars.project_id,
                                     0,
                                     vars.db_quie)
@@ -69,13 +72,14 @@ def idle(vars):
                                     vars.state,
                                     vars.techidle_lenhth,
                                     vars.operator_id,
+                                    current_time,
                                     current_cause,
-                                    datetime.now(),
-                                    datetime.now())
+                                    current_time,
+                                    current_time)
             # logics.current_idle_add_cause(vars.machine_id,
             #                             vars.operator_id,
             #                             idle.cause,
-            #                             datetime.now(),
+            #                             current_time,
             #                             vars.project_id,
             #                             vars.db_quie)
         return
@@ -90,7 +94,7 @@ def idle(vars):
                                   vars.project_id)
         return
     
-    # если текущий статус является простем
+    # если текущий статус является простоем
     if vars.state in settings.IDLE_STATES:
         if idle is not None:             # простой уже зафиксирован
             if idle.cause is not None:  # уже есть причина
@@ -104,13 +108,13 @@ def idle(vars):
                     logics.current_idle_add_cause(vars.machine_id,
                                                   vars.operator_id,
                                                   settings.NOT_CHEKED_CAUSE,
-                                                  datetime.now(),
+                                                  current_time,
                                                   vars.project_id,
                                                   vars.db_quie)
             # else:            # простой зафиксирован и нет причины
             #    # здесь реакция если оператор не успел подтвердить простой за
             #    # необходимое время
-            #    if (datetime.now()-idle.begin_time).total_seconds(
+            #    if (current_time-idle.begin_time).total_seconds(
                 #   ) >=settings.CAUSE_CHECK_TIMEOUT:
             #        ...      # нe указана причина за отведенное время
 
@@ -121,7 +125,7 @@ def idle(vars):
                                                                 # была дольше минимума
             if not vars.buffer_state:   # когда минимальное время состояния вышло
                                         # записываем техпростой вычитая min_state_len из тек времени
-                logger.log('PROG', f'{vars.machine_id} buffer_state off, current_idle_set new Idle with TECH_IDLE cause')
+                logger.log('PROG', f'{vars.machine_id} buffer_state off, current_idle_set new Idle with TECH_IDLE cause curr time {current_time.strftime("%H:%M:%S")} dt={vars.min_state_len} begin {(current_time-timedelta(seconds=vars.min_state_len)).strftime("%H:%M:%S")}')
                 logics.current_idle_set(
                                     vars.db_quie,
                                     vars.machine_id,
@@ -129,9 +133,10 @@ def idle(vars):
                                     vars.state,
                                     vars.techidle_lenhth,
                                     vars.operator_id,
+                                    current_time-timedelta(seconds=vars.min_state_len),
                                     settings.TECH_IDLE_ID,
-                                    datetime.now()-timedelta(seconds=vars.min_state_len),
-                                    datetime.now()-timedelta(seconds=vars.min_state_len),
+                                    current_time-timedelta(seconds=vars.min_state_len),
+                                    current_time-timedelta(seconds=vars.min_state_len),
                                     # vars.current_state_time,
                                     # vars.current_state_time
                 )
@@ -146,15 +151,16 @@ def idle(vars):
                 logics.current_idle_add_cause(vars.machine_id,
                                               vars.operator_id,
                                               settings.NOT_CHEKED_CAUSE,
-                                              datetime.now(),
+                                              current_time,
                                               vars.project_id,
                                               vars.db_quie
                                               )
             if not vars.buffer_state:
-                logger.log('PROG', f'{vars.machine_id} переход в работу, отрезок > {vars.min_state_len} current_idle_store {idle}, current_idle_reset')
-                logics.current_idle_store(
+                logger.log('PROG', f'{vars.machine_id} переход в работу, отрезок > {vars.min_state_len} save_current_idle {idle}, current_idle_reset')
+                logics.save_current_idle(
                     vars.machine_id,
                     vars.project_id,
+                    # 0,
                     vars.min_state_len,
                     vars.db_quie
                     )
@@ -175,4 +181,3 @@ def idle(vars):
     else:
         vars.current_cause = None
         vars.current_cause_time = None
-        

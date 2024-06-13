@@ -22,7 +22,7 @@ except (ModuleNotFoundError | ImportError):
     project_init_func = None
 
 def main():
-    loggerLib.loggerInit('DEBUG','error', ('LOGIN', 'PROG'))
+    loggerLib.loggerInit('DEBUG','error', ('PROG',))
     logger.info('Starting........')
     db_interface = create_db_interface('db_interface',
                                        config.DB_TYPE,

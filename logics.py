@@ -320,11 +320,6 @@ def current_idle_add_cause(machine_id: int,
         if current_idle.cause!=cause_id:
         # исключение дублирования причины
             if current_idle.cause is not None:
-                # произошла смена причины - сохраняем предыдущю
-                
-                
-                
-                # формируем новую причину 
                 
                 #
                 #   техпростой после останова, если вернулись в работу
@@ -370,7 +365,7 @@ def current_idle_add_cause(machine_id: int,
                     f'''{machine_id} SKIPPED change cause idle from {current_idle.cause} to {cause_id}''')
             return
     else:
-        print(project_globals.machines_idle)
+        # print(project_globals.machines_idle)
         raise KeyError(
             f'no machine {machine_id} in project_globals.machines_idle')
 
@@ -383,7 +378,7 @@ def current_idle_reset(db_quie, machine_id: int, project_id: int):
 
 def save_current_idle(machine_id: int,
                        prj_id: int,
-                       buffer_time: int,
+                    #    buffer_time: int,
                        db_quie: DBInterface):
     '''
     сохраняем простой в БД
@@ -392,7 +387,7 @@ def save_current_idle(machine_id: int,
     if idle := get_current_idle(machine_id):
         idle.set_length()
         if idle.length is not None:
-            idle.length -= buffer_time
+            # idle.length -= buffer_time
             if idle.length < settings.MIN_STORED_IDLE_LENGTH:
                 print(
                     f'{colors.CREDBG}machime {machine_id} \

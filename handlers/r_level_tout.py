@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 from loguru import logger
 import dataconnector as dc
 from gathercore.mylib import colors
+import settings
+
 
 def r_level_timeout(vars):
     '''
@@ -331,7 +333,7 @@ def r_level_timeout_v2(vars):
     #     vars.v1 = vars.result_in
     #     vars.result = (vars.v1 + vars.v2 + vars.v3 + vars.v4 + vars.v5 + vars.v6 + vars.v7 + vars.v8 + vars.v9 + vars.v10)/10
 # !!!! ------------- dev-------------------        
-        # vars.result = vars.result_in
+        vars.result = vars.result_in
 # !!!! ------------- dev-------------------        
         result = vars.result
         if result <= vars.gr_stand:  # откл
@@ -480,6 +482,15 @@ def r_level_timeout_v2(vars):
             section_timeout = vars.work_timeout
         else:
             section_timeout = vars.tech_timeout
+            if vars.cause_id is not None and \
+                vars.cause_id != settings.TECH_IDLE_ID and \
+                vars.saved_state==3:
+            # если есть отрезок ожидающий записи и была работа, сейчас не работа
+            # и указана причина не техпростой - пишем буфер
+                logger.log('PROG', f'{vars.m_id} reset buffer  with cause_id={vars.cause_id}')
+                db_write_flag = True
+                vars.buffered = False
+            
         if (time_now-vars.current_state_time).total_seconds() > section_timeout:
             db_write_flag = True
             vars.buffered = False

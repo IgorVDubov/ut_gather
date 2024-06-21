@@ -39,6 +39,7 @@ def main():
                 project_init_func=project_init_func,
                 databus_objects=[db_interface]
                 )
+    app.databus.add_object('machine_WS_client', dict()) # {machine_id: web_socket_client}
     app.start()
 
 

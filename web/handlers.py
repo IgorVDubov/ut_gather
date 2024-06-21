@@ -1,6 +1,8 @@
+from http import client
 import json
 import os.path
 from datetime import datetime, timedelta
+from pydoc import cli
 
 import tornado
 import tornado.escape
@@ -153,13 +155,14 @@ class MainHtmlHandler(BaseHandler):
 
 class WSHandler(WebSocketHandler):
     def open(self):
+        machine_id = None
         try:
             # m_arg = self.request.arguments.get('m')
             if m_arg := self.request.arguments.get('m'):  # запрос с панели
                 machine_id = int(tornado.escape.xhtml_escape(m_arg[0]))
                 logics.check_allowed_machine(
                     machine_id, self.request.remote_ip)
-                logger.info(f'Web Socket open by panel, IP:{self.request.remote_ip} ')
+                logger.info(f'Web Socket open by panel, IP:{self.request.remote_ip} machine {machine_id}')
             else:
                 # запрос с API клиента
                 if m_arg := self.request.arguments.get('prj'):
@@ -172,6 +175,9 @@ class WSHandler(WebSocketHandler):
             self.application.data.ws_clients.append(WSClient(self))
             logger.info(
                 f'add, websocket IP:{self.request.remote_ip} Online {len(self.application.data.ws_clients)} clients')
+            if machine_id is not None:
+                 self.application.data.databus.get_object('machine_WS_client')[machine_id] = WSClient(self)
+            print(self.application.data.databus.get_object('machine_WS_client'))
 
     def on_message(self, msg):
         try:
@@ -307,6 +313,17 @@ class GatherRequestHtmlHandler(BaseHandler):
                     'cause_time': cause_time,
                     })
             self.write(json.dumps({"allStates": data}, default=str))
+        elif request.get('type') == 'reloadPanel':
+            machine_id = request.get('machine_id')
+            logger.log(
+                    'INFO', f'user send reloadPanel command from ip:{self.request.remote_ip}')
+            if ws_client := self.application.data.databus.get_object('machine_WS_client').get(machine_id):
+                ws_client.write_message(json.dumps({'cmd': 'reload'}))
+                result= True
+            else:
+                result= False
+            self.write(json.dumps({"reloadPanel": result}))
+                
         
 
 

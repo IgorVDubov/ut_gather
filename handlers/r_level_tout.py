@@ -159,11 +159,15 @@ def r_level_timeout_v2(vars):
 
         if vars.write_init or na_state:  # если форсированная запись или статус NA
             # задаем отрезок для записи: текущий статус до смены
-            vars.saved_state = vars.current_state
-            vars.saved_time = vars.current_state_time  # аналогично время
-            # и длительность
-            vars.saved_length = (
-                time_now - vars.current_state_time).total_seconds()
+            if vars.buffered:
+                vars.saved_length = (
+                    time_now - vars.saved_time).total_seconds()
+            else:
+                vars.saved_state = vars.current_state
+                vars.saved_time = vars.current_state_time  # аналогично время
+                # и длительность
+                vars.saved_length = (
+                    time_now - vars.current_state_time).total_seconds()
             vars.current_state = state  # задает текущий отрезок: статус
             vars.current_state_time = time_now  # задает текущий отрезок: время
             vars.split_idle = True # сигнал разделить текущий простой
@@ -172,8 +176,6 @@ def r_level_timeout_v2(vars):
         else: # Если смена статуса
              # Если техпростой еще не закончился но сменился статус
             if vars.state == 3:
-            # 24/06 
-            # if vars.current_state == 3:
                 section_timeout = vars.work_timeout
             else:
                 section_timeout = vars.tech_timeout
@@ -190,21 +192,6 @@ def r_level_timeout_v2(vars):
                         vars.current_state = vars.saved_state  # подвешенный отрезок
                         vars.saved_length += (time_now-
                                     vars.current_state_time).total_seconds()
-                    elif vars.saved_state != 3 \
-                        and vars.current_state != 3\
-                        and vars.saved_state != vars.current_state:
-                    # если перед текущей работой был любой простой 
-                    #  в буфер
-                    # он 
-                    # сразу записывается
-                        vars.saved_state = vars.current_state
-                        vars.saved_time = vars.current_state_time
-                        vars.saved_length = (
-                            time_now-vars.current_state_time).total_seconds()
-                        vars.current_state = state      # формируется буферизированный новый отрезок
-                        vars.current_state_time = time_now
-                        db_write_flag = True        # запись отрезка
-                        vars.buffered = False       # буфер сбрасывается
                     else:  
                     # если перед текущей работой был любой простой 
                     # в буфер
@@ -215,8 +202,6 @@ def r_level_timeout_v2(vars):
                         vars.buffered = True       # состояние  буферизируется
                         vars.current_state = state      # формируется буферизированный новый отрезок
                         vars.current_state_time = time_now
-                        # db_write_flag = True        # запись отрезка
-                        # vars.buffered = False       # буфер сбрасывается
                 else:   
                 # Если сейчас не Работа
                     if vars.current_state != 3 and vars.saved_state !=3:

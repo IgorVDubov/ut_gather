@@ -1,5 +1,5 @@
 from .m_emulator import prog1
-from .r_level_tout import r_level_timeout
+from .r_level_tout import r_level_timeout_v2
 from .signal_techtimeout import signal_techtimeout
 from .scheduler import write_init
 from .dbwriter import db_writer

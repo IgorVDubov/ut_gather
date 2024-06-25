@@ -9,48 +9,50 @@ def r_level_timeout_v2(vars):
     обработка аналогового сигнала источника
     по бегущему среднему
     с техпроcтоем
-    -------------------
-    args:
-    'm_id'                                                          id станка
-    'result_in':'канал_станка.resultIn',                            вход от источника
-    'result': 'канал_станка.result',                                значение канала (бегущее среднее)
-    'dost':'канал_станка.dost'                                      достоверность канала к источнику
-    'gr_stand':1                                                    граница откл/простой
-    'gr_work':8                                                     граница простой/работа
-    'dost_timeout':'канал_настроек.args.dost_timeout' или int(cек)  таймаут недостоверности ,с
-    'tech_timeout':'канал_настроек.args.minLength' или int(cек)     техпростой ,с
-    'work_timeout':'канал_настроек.args.min_work_length' или int(cек) минимальный регистрируемый отрезок работы ,с
-    'write_init':'db_writer2.args.writeInit',                       сигнал принудительной записи
-    'was_write_init': False,                                       флаг произошедшей принудительной записи в БД
-    'state_ch_b1':'канал_статуса.args.b1',                         бит1 канала статуса
-    'state_ch_b2':'канал_статуса.args.b2',                         бит2 канала статуса
-    'state':0,                                                     текущий статус
-    'saved_state':0,                                               сохраненный предыдущий отрезок статус
-    'saved_length':0,                                              сохраненный предыдущий отрезок длительность
-    'saved_time':0,                                                сохраненный предыдущий отрезок начало
-    'current_state': 0,                                            текущий отрезок: статус
-    'current_state_time': 0,                                       текущий отрезок: время смены статуса
-    'buffered':False,                                              флаг наличия буферезированный отрезок
-    'state_db': 0,
-    'lengthDB': 0,
-    'time_db': 0,
-    'init':True,                                                    флаг инициализации (выполняется только при первом запуске)
-    'dbQuie':'databus.db_interface',                                связь с очередью записи в БД через объект БД databus-а
-    'idle_handler_name':отбработчик_простоя,                        канал обработчика простоев
-    'project_id': 5,                                                id проекта к которому относится станок
-    'operator_id': None,                                            текущий оператор
-    'cause_id': 'отбработчик_простоя.args.current_cause',           текущая причина id
-    'cause_time': 'отбработчик_простоя.args.current_cause_time',    текущая причина время начала
-    'split_idle': 'отбработчик_простоя.args.split_idle_flag',       флаг разделения отрезка простоя (при переходе смены)
-    'stop_signal': False,                                           сигнал сотановки от ядра для записи текущих отрезков
-    'v1': 0,    переменная текущего среднего
-    'v2': 0,    переменная текущего среднего
-    'v3': 0,    переменная текущего среднего
-    'v4': 0,    переменная текущего среднего
-    'v5': 0,    переменная текущего среднего
-            удалить
-            -vars.na_state = False
     '''
+    # -------------------------
+    #--------- args: ----------
+    # -------------------------
+    # 'm_id'                                                          id станка
+    # 'result_in':'канал_станка.resultIn',                            вход от источника
+    # 'result': 'канал_станка.result',                                значение канала (бегущее среднее)
+    # 'dost':'канал_станка.dost'                                      достоверность канала к источнику
+    # 'gr_stand':1                                                    граница откл/простой
+    # 'gr_work':8                                                     граница простой/работа
+    # 'dost_timeout':'канал_настроек.args.dost_timeout' или int(cек)  таймаут недостоверности ,с
+    # 'tech_timeout':'канал_настроек.args.minLength' или int(cек)     техпростой ,с
+    # 'work_timeout':'канал_настроек.args.min_work_length' или int(cек) минимальный регистрируемый отрезок работы ,с
+    # 'write_init':'db_writer2.args.writeInit',                       сигнал принудительной записи
+    # 'was_write_init': False,                                       флаг произошедшей принудительной записи в БД
+    # 'state_ch_b1':'канал_статуса.args.b1',                         бит1 канала статуса
+    # 'state_ch_b2':'канал_статуса.args.b2',                         бит2 канала статуса
+    # 'state':0,                                                     текущий статус
+    # 'saved_state':0,                                               сохраненный предыдущий отрезок статус
+    # 'saved_length':0,                                              сохраненный предыдущий отрезок длительность
+    # 'saved_time':0,                                                сохраненный предыдущий отрезок начало
+    # 'current_state': 0,                                            текущий отрезок: статус
+    # 'current_state_time': 0,                                       текущий отрезок: время смены статуса
+    # 'buffered':False,                                              флаг наличия буферезированный отрезок
+    # 'state_db': 0,
+    # 'lengthDB': 0,
+    # 'time_db': 0,
+    # 'init':True,                                                    флаг инициализации (выполняется только при первом запуске)
+    # 'dbQuie':'databus.db_interface',                                связь с очередью записи в БД через объект БД databus-а
+    # 'idle_handler_name':отбработчик_простоя,                        канал обработчика простоев
+    # 'project_id': 5,                                                id проекта к которому относится станок
+    # 'operator_id': None,                                            текущий оператор
+    # 'cause_id': 'отбработчик_простоя.args.current_cause',           текущая причина id
+    # 'cause_time': 'отбработчик_простоя.args.current_cause_time',    текущая причина время начала
+    # 'split_idle': 'отбработчик_простоя.args.split_idle_flag',       флаг разделения отрезка простоя (при переходе смены)
+    # 'stop_signal': False,                                           сигнал сотановки от ядра для записи текущих отрезков
+    # 'v1': 0,    переменная текущего среднего
+    # 'v2': 0,    переменная текущего среднего
+    # 'v3': 0,    переменная текущего среднего
+    # 'v4': 0,    переменная текущего среднего
+    # 'v5': 0,    переменная текущего среднего
+    #         удалить
+    #         -vars.na_state = False
+    # ----------------------------------------------------------
 
     time_now = datetime.now()
     dostChangeFlag = False
@@ -112,7 +114,7 @@ def r_level_timeout_v2(vars):
     #     vars.v1 = vars.result_in
     #     vars.result = (vars.v1 + vars.v2 + vars.v3 + vars.v4 + vars.v5 + vars.v6 + vars.v7 + vars.v8 + vars.v9 + vars.v10)/10
 # !!!! ------------- dev-------------------        
-        # vars.result = vars.result_in
+        vars.result = vars.result_in
 # !!!! ------------- dev-------------------        
         result = vars.result
         if result <= vars.gr_stand:  # откл
@@ -169,13 +171,15 @@ def r_level_timeout_v2(vars):
             vars.buffered = False									    		# если отрезок был подвешен - сбрасываем флаг
         else: # Если смена статуса
              # Если техпростой еще не закончился но сменился статус
-            if vars.current_state == 3:
+            if vars.state == 3:
+            # 24/06 
+            # if vars.current_state == 3:
                 section_timeout = vars.work_timeout
             else:
                 section_timeout = vars.tech_timeout
             if (time_now - vars.current_state_time).total_seconds() < section_timeout:
             # если закончившийся отрезок меньше таймаута
-            #   статус меняется до таймаута
+            # статус меняется до таймаута
                 if state == 3:  
                 # если сейчас Работа
                     if vars.saved_state == 3: 
@@ -186,17 +190,33 @@ def r_level_timeout_v2(vars):
                         vars.current_state = vars.saved_state  # подвешенный отрезок
                         vars.saved_length += (time_now-
                                     vars.current_state_time).total_seconds()
-                    else:  
-                    # если перед текущей работой был любой простой - он 
+                    elif vars.saved_state != 3 \
+                        and vars.current_state != 3\
+                        and vars.saved_state != vars.current_state:
+                    # если перед текущей работой был любой простой 
+                    #  в буфер
+                    # он 
                     # сразу записывается
                         vars.saved_state = vars.current_state
                         vars.saved_time = vars.current_state_time
                         vars.saved_length = (
                             time_now-vars.current_state_time).total_seconds()
-                        db_write_flag = True        # запись отрезка
-                        vars.buffered = False       # буфер сбрасывается
                         vars.current_state = state      # формируется буферизированный новый отрезок
                         vars.current_state_time = time_now
+                        db_write_flag = True        # запись отрезка
+                        vars.buffered = False       # буфер сбрасывается
+                    else:  
+                    # если перед текущей работой был любой простой 
+                    # в буфер
+                        vars.saved_state = vars.current_state
+                        vars.saved_time = vars.current_state_time
+                        vars.saved_length = (
+                            time_now-vars.current_state_time).total_seconds()
+                        vars.buffered = True       # состояние  буферизируется
+                        vars.current_state = state      # формируется буферизированный новый отрезок
+                        vars.current_state_time = time_now
+                        # db_write_flag = True        # запись отрезка
+                        # vars.buffered = False       # буфер сбрасывается
                 else:   
                 # Если сейчас не Работа
                     if vars.current_state != 3 and vars.saved_state !=3:
@@ -257,6 +277,8 @@ def r_level_timeout_v2(vars):
             
     if vars.buffered:
         # если есть отрезок ожидающий записи - пишем его по прошествии min_length
+        # if vars.state == 3:
+        # 21/06  
         if vars.current_state == 3:
             section_timeout = vars.work_timeout
         else:
@@ -269,6 +291,8 @@ def r_level_timeout_v2(vars):
                 logger.log('PROG', f'{vars.m_id} reset buffer  with cause_id={vars.cause_id}')
                 db_write_flag = True
                 vars.buffered = False
+                vars.current_state = state
+                
             
         if (time_now-vars.current_state_time).total_seconds() >= section_timeout:
             db_write_flag = True
@@ -281,7 +305,7 @@ def r_level_timeout_v2(vars):
     if db_write_flag:
         
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
-        if vars.saved_length > 10:
+        if vars.saved_length > settings.MIN_STORED_IDLE_LENGTH:
             if vars.saved_state is not None:
                 print(
                 f'{colors.CBEIGEBG2}machime {vars.m_id} \
@@ -300,6 +324,13 @@ def r_level_timeout_v2(vars):
                                     'state': vars.saved_state,
                                     'length': int(round(vars.saved_length))
                                  })
+        else:
+            print(
+            f'{colors.CREDBG}machime {vars.m_id} \
+                seection.length < {settings.MIN_STORED_IDLE_LENGTH}s, \
+                time: {vars.saved_time.strftime("%Y-%m-%d %H:%M:%S")}, \
+                state:{vars.saved_state}, length {int(round(vars.saved_length))} {colors.CEND}')
+                
         vars.saved_length = 0   
         vars.saved_time = vars.current_state_time
         vars.saved_state = vars.current_state

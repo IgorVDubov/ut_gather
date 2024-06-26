@@ -321,6 +321,306 @@ def r_level_timeout_v2(vars):
         vars.saved_state = vars.current_state
         db_write_flag = False
 
+def r_level_timeout_2signal(vars):
+    '''
+    обработка аналогового сигнала источника
+    по 2м входным аналоговыми сигналам
+    1 - простой/откл граница gr_stand
+    2 - простой/работа граница gr_work
+    с техпроcтоем
+    '''
+    # -------------------------
+    #--------- args: ----------
+    # -------------------------
+    # 'm_id'                                                          id станка
+    # 'signal1':'канал_станка.resultIn',                            вход от источника
+    # 'signal2': 'анал 2го источника.resultIn',                                значение канала (бегущее среднее)
+    # 'dost':'канал_станка.dost'                                      достоверность канала к источнику
+    # 'dost2':'канал 2го источника.dost'                                      достоверность канала к источнику
+    # 'gr_stand':1                                                    граница откл/простой
+    # 'gr_work':8                                                     граница простой/работа
+    # 'dost_timeout':'канал_настроек.args.dost_timeout' или int(cек)  таймаут недостоверности ,с
+    # 'tech_timeout':'канал_настроек.args.minLength' или int(cек)     техпростой ,с
+    # 'work_timeout':'канал_настроек.args.min_work_length' или int(cек) минимальный регистрируемый отрезок работы ,с
+    # 'write_init':'db_writer2.args.writeInit',                       сигнал принудительной записи
+    # 'was_write_init': False,                                       флаг произошедшей принудительной записи в БД
+    # 'state_ch_b1':'канал_статуса.args.b1',                         бит1 канала статуса
+    # 'state_ch_b2':'канал_статуса.args.b2',                         бит2 канала статуса
+    # 'state':0,                                                     текущий статус
+    # 'saved_state':0,                                               сохраненный предыдущий отрезок статус
+    # 'saved_length':0,                                              сохраненный предыдущий отрезок длительность
+    # 'saved_time':0,                                                сохраненный предыдущий отрезок начало
+    # 'current_state': 0,                                            текущий отрезок: статус
+    # 'current_state_time': 0,                                       текущий отрезок: время смены статуса
+    # 'buffered':False,                                              флаг наличия буферезированный отрезок
+    # 'state_db': 0,
+    # 'lengthDB': 0,
+    # 'time_db': 0,
+    # 'init':True,                                                    флаг инициализации (выполняется только при первом запуске)
+    # 'dbQuie':'databus.db_interface',                                связь с очередью записи в БД через объект БД databus-а
+    # 'idle_handler_name':отбработчик_простоя,                        канал обработчика простоев
+    # 'project_id': 5,                                                id проекта к которому относится станок
+    # 'operator_id': None,                                            текущий оператор
+    # 'cause_id': 'отбработчик_простоя.args.current_cause',           текущая причина id
+    # 'cause_time': 'отбработчик_простоя.args.current_cause_time',    текущая причина время начала
+    # 'split_idle': 'отбработчик_простоя.args.split_idle_flag',       флаг разделения отрезка простоя (при переходе смены)
+    # 'stop_signal': False,                                           сигнал сотановки от ядра для записи текущих отрезков
+    #         удалить
+    #         -vars.na_state = False
+    # ----------------------------------------------------------
+
+    time_now = datetime.now()
+    dostChangeFlag = False
+    db_write_flag = False
+    result_in_error = False
+    na_state = False
+    dost = vars.dost and vars.dost2
+
+    if vars.stop_signal and vars.saved_state is not None:
+        logger.log(
+            'PROG', f' {vars.m_id}  !!    get stop signal       !!')
+        dc.db_put_state(vars.db_quie,
+                        {'id': vars.m_id,
+                         'project_id': vars.project_id,
+                         'time': vars.current_state_time.strftime("%Y-%m-%d %H:%M:%S"),
+                         'state': vars.current_state,
+                         # 02/08 (was current_state_time)
+                         'length': int(round((time_now-vars.current_state_time).total_seconds()))
+                         })
+
+    #  если нет источника или входящий результат пустой массив
+    if vars.signal1 is None or vars.signal2 is None:
+        result_in_error = True
+
+    if dost == False or result_in_error:
+        vars.not_dost_counter += 1
+        if vars.not_dost_counter > vars.dost_timeout:
+            na_state = True
+            vars.not_dost_counter = vars.dost_timeout+1
+        else:
+            return
+    else:
+        vars.not_dost_counter = 0
+
+    if vars.na_state_before != na_state:
+        dostChangeFlag = True
+        vars.na_state_before = na_state
+    else:
+        dostChangeFlag = False
+
+    # определяем текущий статус
+    if not result_in_error and dost:
+        signal1 = vars.signal1 > vars.gr_stand
+        signal2 = vars.signal2 > vars.gr_work
+    else:
+        if not na_state:                           # если ждем NA_state берем сигналы из предыдущих
+            signal1 = 1 if vars.state != 0 else 0
+            signal2 = 1 if vars.state == 3 else 0
+        else:
+            signal1 = 0
+            signal2 = 0
+    OFF_state = not signal1
+    WORK_state = signal2
+    state = (not na_state) * (OFF_state + (not OFF_state)*(2+WORK_state))
+    # vars.state = state
+
+    if vars.init:
+        vars.init = False
+        vars.current_state = state
+        vars.current_state_time = time_now
+        vars.saved_state = state
+        vars.saved_time = time_now
+        vars.saved_length = 0
+        vars.was_write_init = False
+        
+        
+    # если меняется интервал или принудительная инициализации записи
+    if state != vars.current_state or vars.write_init or dostChangeFlag:
+        logger.log('PROG', 
+                   f'{vars.m_id} change state to {state}, signal2={vars.signal2} processing...')
+        if na_state:
+            state = 0  # NA
+        # выставляем биты состояния статуса для доступа по модбас для внешних клиентов
+        # vars.stateCh=state
+        if state == 0:
+            vars.state_ch_b1 = 0
+            vars.state_ch_b2 = 0
+        elif state == 1:
+            vars.state_ch_b1 = 1
+            vars.state_ch_b2 = 0
+        elif state == 2:
+            vars.state_ch_b1 = 0
+            vars.state_ch_b2 = 1
+        elif state == 3:
+            vars.state_ch_b1 = 1
+            vars.state_ch_b2 = 1
+
+        if vars.write_init or na_state:  # если форсированная запись или статус NA
+            # задаем отрезок для записи: текущий статус до смены
+            if vars.buffered:
+                vars.saved_length = (
+                    time_now - vars.saved_time).total_seconds()
+            else:
+                vars.saved_state = vars.current_state
+                vars.saved_time = vars.current_state_time  # аналогично время
+                # и длительность
+                vars.saved_length = (
+                    time_now - vars.current_state_time).total_seconds()
+            vars.current_state = state  # задает текущий отрезок: статус
+            vars.current_state_time = time_now  # задает текущий отрезок: время
+            vars.split_idle = True # сигнал разделить текущий простой
+            db_write_flag = True
+            vars.buffered = False									    		# если отрезок был подвешен - сбрасываем флаг
+        else: # Если смена статуса
+             # Если техпростой еще не закончился но сменился статус
+            if vars.state == 3:
+                section_timeout = vars.work_timeout
+            else:
+                section_timeout = vars.tech_timeout
+            if (time_now - vars.current_state_time).total_seconds() < section_timeout:
+            # если закончившийся отрезок меньше таймаута
+            # статус меняется до таймаута
+                if state == 3:  
+                # если сейчас Работа
+                    if vars.saved_state == 3: 
+                    # если краткий останов (была работа и сейчас работа)
+                    # сохраненный отрезок увеличивается на длину буфера
+                        vars.buffered = False  # сбрасыватся буфер
+                        vars.current_state_time = vars.saved_time  # становится текущим
+                        vars.current_state = vars.saved_state  # подвешенный отрезок
+                        vars.saved_length += (time_now-
+                                    vars.current_state_time).total_seconds()
+                    else:  
+                    # если перед текущей работой был любой простой 
+                    # в буфер
+                        vars.saved_state = vars.current_state
+                        vars.saved_time = vars.current_state_time
+                        vars.saved_length = (
+                            time_now-vars.current_state_time).total_seconds()
+                        vars.buffered = True       # состояние  буферизируется
+                        vars.current_state = state      # формируется буферизированный новый отрезок
+                        vars.current_state_time = time_now
+                else:   
+                # Если сейчас не Работа
+                    if vars.current_state != 3 and vars.saved_state !=3:
+                    # не было работы
+                    # ...-окл_короткий-простой - сразу пишем откл_короткий
+                        vars.saved_length = (
+                            time_now-vars.current_state_time).total_seconds()
+                        vars.saved_state = vars.current_state
+                        vars.saved_time = vars.current_state_time
+                        vars.current_state = state # формируется новый буферизированный отрезок
+                        vars.current_state_time = time_now
+                        vars.buffered = False    #  буферизированный отрезок сбрасывается
+                        db_write_flag = True  # сразу пишем отрезок
+                    else:
+                        if vars.saved_state == state: 
+                        # если вернулось в то же состояние - curent=save
+                        # длина 
+                            vars.current_state = state
+                            vars.current_state_time = vars.saved_time
+                            vars.saved_length = (
+                                time_now-vars.current_state_time).total_seconds()
+                            vars.buffered = False
+                        else:   
+                        # если состояние изменилось 
+                        # (простой-работа(короткая)-откл)
+                        # save=curent+save пишем save
+                            # к сохраненному прибавляется буферизированный 
+                            vars.saved_length += (
+                                time_now-vars.current_state_time).total_seconds()
+                            vars.current_state = state # формируется новый буферизированный отрезок
+                            vars.current_state_time = time_now
+                            vars.buffered = False    #  буферизированный отрезок сбрасывается
+                            db_write_flag = True  # сразу пишем отрезок
+                            vars.current_state = state # формируется новый буферизированный отрезок
+                            vars.current_state_time = time_now
+                            
+            else:   
+            # если закончившийся отрезок больше таймаута
+            # статус меняется после таймаута
+                vars.saved_state = vars.current_state
+                vars.saved_length = (
+                    time_now-vars.current_state_time).total_seconds()
+                # vars.saved_length = vars.saved_length + \
+                #     (time_now-vars.current_state_time).total_seconds()
+                if vars.was_write_init:  # если писали по сигналу write_init обновляем saved_time
+                    vars.saved_time = vars.current_state_time
+                
+                vars.current_state = state          # формируется новый буферизированный отрезок
+                vars.current_state_time = time_now  # формируется новый буферизированный отрезок
+                vars.was_write_init = False
+                # пишем сразу если откл - хх
+                if vars.current_state in [0, 1, 2] and vars.saved_state in [0, 1, 2]:
+                    vars.buffered = False # не ждем таймаут,  
+                    db_write_flag = True  # сразу пишем отрезок
+                else: # если с простоя в работу пишем сразу
+                    vars.buffered = True # есть буферизированный отрезок (ждем таймаут и пишем его)
+                
+            
+    if vars.buffered:
+        # если есть отрезок ожидающий записи - пишем его по прошествии min_length
+        # if vars.state == 3:
+        # 21/06  
+        if vars.current_state == 3:
+            section_timeout = vars.work_timeout
+        else:
+            section_timeout = vars.tech_timeout
+            if vars.cause_id is not None and \
+                vars.cause_id != settings.TECH_IDLE_ID and \
+                vars.saved_state==3:
+            # если есть отрезок ожидающий записи и была работа, сейчас не работа
+            # и указана причина не техпростой - пишем буфер
+                logger.log('PROG', f'{vars.m_id} reset buffer  with cause_id={vars.cause_id}')
+                db_write_flag = True
+                vars.buffered = False
+                vars.current_state = state
+                
+            
+        if (time_now-vars.current_state_time).total_seconds() >= section_timeout:
+            db_write_flag = True
+            vars.buffered = False
+    
+    # пока оставить для совместимости аргументов, потом убрать
+    vars.state = vars.current_state
+    # vars.state = state
+    
+    if db_write_flag:
+        
+        vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
+        if vars.saved_length > settings.MIN_STORED_IDLE_LENGTH:
+            if vars.saved_state is not None:
+                print(
+                f'{colors.CBEIGEBG2}machime {vars.m_id} \
+                project_id: {vars.project_id},\
+                time: {vars.saved_time.strftime("%Y-%m-%d %H:%M:%S")},\
+                state: {vars.saved_state},\
+                length: {int(round(vars.saved_length))}\
+                {colors.CEND}')
+                logger.log('PROG',
+                f'{vars.m_id} to DB_{vars.project_id}, time: {vars.saved_time.strftime("%y-%m-%d %H:%M:%S")}, state: {vars.saved_state}, length: {int(round(vars.saved_length))}')
+            
+                dc.db_put_state(vars.db_quie,
+                                {'id': vars.m_id,
+                                    'project_id': vars.project_id,
+                                    'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
+                                    'state': vars.saved_state,
+                                    'length': int(round(vars.saved_length))
+                                 })
+        else:
+            print(
+            f'{colors.CREDBG}machime {vars.m_id} \
+                seection.length < {settings.MIN_STORED_IDLE_LENGTH}s, \
+                time: {vars.saved_time.strftime("%Y-%m-%d %H:%M:%S")}, \
+                state:{vars.saved_state}, length {int(round(vars.saved_length))} {colors.CEND}')
+                
+        vars.saved_length = 0   
+        vars.saved_time = vars.current_state_time
+        vars.saved_state = vars.current_state
+        db_write_flag = False
+
+
+
 def db_logger(vars):
     sql = 'insert into db_logger values (%s, %s, %s, %s, %s)'
     params = (

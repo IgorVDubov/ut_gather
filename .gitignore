@@ -9,5 +9,7 @@ __pycache__/*.pyc
 
 config.py
 scadaconfig*.py*
+.env
+sandbox.py
 
 /gathercore/

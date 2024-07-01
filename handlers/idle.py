@@ -41,10 +41,14 @@ def idle(vars):
     
     #   если через АПИ установили причину простоя записываем в текущий простой причину
     if vars.set_cause_flag:
-        logger.log('PROG', f'{vars.machine_id} set_cause_flag: cause_id={vars.current_cause}  time={current_time}')
+        logger.log('PROG', f'{vars.machine_id} API set cause: cause_id={vars.current_cause}  time={current_time}')
         vars.set_cause_flag = False
-        if vars.buffer_state:
-            logger.log('PROG', f'{vars.machine_id} set_cause_flag: buffer_state current_idle_set with current_state_time= {vars.current_state_time.strftime("%H:%M:%S")}')
+        # if vars.buffer_state:
+        # есди это происходит пока ждем минимальную длительность состояния (vars.buffer_state=true)
+        if idle is  None:
+        # если простой еще не зафиксирован - создаем новый простой (идет техпростой, таймаут состояния еще не кончился, выбрали причину)
+            logger.log('PROG', f'{vars.machine_id} API set cause: idle is  None, set Idle with cause {vars.current_cause} current_state_time= {vars.current_state_time.strftime("%H:%M:%S")}')
+            # logger.log('PROG', f'{vars.machine_id} set_cause_flag: buffer_state current_idle_set with current_state_time= {vars.current_state_time.strftime("%H:%M:%S")}')
             logics.current_idle_set(
                                     vars.db_quie,
                                     vars.machine_id,
@@ -53,10 +57,10 @@ def idle(vars):
                                     vars.techidle_lenhth,
                                     vars.operator_id,
                                     vars.current_state_time,
-                                    settings.TECH_IDLE_ID,
+                                    settings.TECH_IDLE_ID if vars.current_cause is None else vars.current_cause,
                                     vars.current_state_time,
                                     vars.current_state_time,
-                                                           )
+                                                        )
         logics.current_idle_add_cause(vars.machine_id,
                                       vars.operator_id,
                                       vars.current_cause,

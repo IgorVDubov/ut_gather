@@ -342,7 +342,7 @@ def current_idle_add_cause(machine_id: int,
                     logger.log('PROG', 
                         f'change cause idle to {machine_id}\
                         from {current_idle.cause} to {cause_id}') 
-                    save_current_idle(machine_id, prj_id, 0, db_quie)
+                    save_current_idle(machine_id, prj_id, db_quie)
                     current_idle.cause_time = datetime.now()
                 #
                 #   техпростой после каждого останова, потом другая причина

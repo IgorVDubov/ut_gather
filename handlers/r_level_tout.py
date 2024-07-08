@@ -482,7 +482,9 @@ def r_level_timeout_2signal(vars):
                 section_timeout = vars.work_timeout
             else:
                 section_timeout = vars.tech_timeout
-            if (time_now - vars.current_state_time).total_seconds() <= section_timeout:
+            if round(
+                    (time_now - vars.current_state_time).total_seconds()
+                    ) <= section_timeout:
             # если закончившийся отрезок меньше таймаута
             # статус меняется до таймаута
                 if state == 3:  
@@ -583,7 +585,9 @@ def r_level_timeout_2signal(vars):
                 vars.current_state = state
                 
             
-        if (time_now-vars.current_state_time).total_seconds() >= section_timeout:
+        if round(
+                (time_now-vars.current_state_time).total_seconds()
+                ) >= section_timeout:
             db_write_flag = True
             vars.buffered = False
     

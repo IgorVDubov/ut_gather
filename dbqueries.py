@@ -89,3 +89,13 @@ def querry_idels(db_interface: DBInterface, machine_id, time1, time2, project_id
     params = (machine_id, time1, time2)
     reply = db_interface.direct_call(DBSelect(sql, params))
     return reply
+
+def querry_settings(db_interface: DBInterface):
+    sql = 'SELECT * FROM settings'
+    reply = db_interface.direct_call(DBSelect(sql))
+    return reply
+
+def update_arg_setting(db_quie, arg, val):
+    sql = 'UPDATE settings SET value = %s WHERE arg = %s'  
+    params = (str(val), arg)
+    db_quie.put(DBInsert(sql, params))

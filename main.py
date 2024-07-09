@@ -15,6 +15,7 @@ import settings
 import scadaconfig as scada_config
 from gathercore.interfaces.db import create_db_interface
 import web.handlers as project_webserver_handlers
+from init import init_args
 
 try:
     from init import init as project_init_func
@@ -40,6 +41,10 @@ def main():
                 databus_objects=[db_interface]
                 )
     app.databus.add_object('machine_WS_client', dict()) # {machine_id: web_socket_client}
+    init_args(
+        app.databus.get_object('db_interface'),
+        app.channel_base
+        )
     app.start()
 
 

@@ -24,6 +24,7 @@ import logics
 import dataconnector as dc
 import settings
 import projectglobals as project_globals
+import dbqueries as db_queries
 
 RequestHandlerClass = BaseRequestHandler
 StaticFileHandler = tornado.web.StaticFileHandler
@@ -323,7 +324,33 @@ class GatherRequestHtmlHandler(BaseHandler):
             else:
                 result= False
             self.write(json.dumps({"reloadPanel": result}))
-                
+        elif request.get('type') == 'update_arg_setting':
+            arg = request.get('arg_name')
+            value = request.get('value')
+            result= False
+            if arg is not None and value is not None:
+                logger.log(
+                        'INFO',
+                        f'API update {arg} with {value} from ip:{self.request.remote_ip}')
+                if channel := self.application.data.channelBase\
+                            .get_by_argname(arg):
+                    channel.set_channel_arg_name(arg, value)
+                    db_queries.update_arg_setting(
+                        self.application.data.databus.get_object('db_interface'),
+                        arg,
+                        value)
+                    result= True
+            self.write(json.dumps({"update_arg_setting": result}))
+        elif request.get('type') == 'get_channel_arg':
+            logger.log(
+                'INFO', f'API do get_channel_arg from ip:{self.request.remote_ip}.')
+            self.write(
+                json.dumps(
+                    self.application\
+                    .data.channelBase\
+                    .get_value_by_channel_argname(request.get('arg_name')),
+                default=str)
+            )        
         
 
 

@@ -11,5 +11,6 @@ config.py
 scadaconfig*.py*
 .env
 sandbox.py
+todo.txt
 
 /gathercore/

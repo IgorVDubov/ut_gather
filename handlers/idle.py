@@ -142,7 +142,7 @@ def idle(vars):
                                                                 # было работа и она 
                                                                 # была дольше минимума
             if not vars.buffer_state:   # если минимальное время состояния вышло
-                                        # записываем техпростой вычитая min_state_len из тек времени
+                                        # фиксируем техпростой вычитая min_state_len из тек времени
                 logger.log('PROG', f'{vars.machine_id} buffer_state off, current_idle_set new Idle with TECH_IDLE cause curr time {current_time.strftime("%H:%M:%S")} dt={vars.min_state_len} begin {(current_time-timedelta(seconds=vars.min_state_len)).strftime("%H:%M:%S")}')
                 logics.current_idle_set(
                                     vars.db_quie,
@@ -161,7 +161,7 @@ def idle(vars):
                 )
     else:               # если был простой и переход в работу
         
-        if idle:    # если простой был сохранен
+        if idle:    # если простой был зафиксирован
             
             if idle.cause is not None:      # если указана причина
                 pass
@@ -175,6 +175,9 @@ def idle(vars):
                                               vars.project_id,
                                               vars.db_quie
                                               )
+            # считаем длительность простоя при переходе в работу здесь чтобы не добавлялось время буфера
+            if idle.length == None:
+                idle.set_length()
             # if True:
             if not vars.buffer_state:
                 logger.log('PROG', f'{vars.machine_id} переход в работу, отрезок > {vars.min_state_len}с save_current_idle {idle}, current_idle_reset')

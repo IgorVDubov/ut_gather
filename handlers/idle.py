@@ -176,8 +176,8 @@ def idle(vars):
                                               vars.db_quie
                                               )
             # считаем длительность простоя при переходе в работу здесь чтобы не добавлялось время буфера
-            if idle.length == None:
-                idle.set_length()
+            # if idle.length == None:
+            #     idle.set_length()
             # if True:
             if not vars.buffer_state:
                 logger.log('PROG', f'{vars.machine_id} переход в работу, отрезок > {vars.min_state_len}с save_current_idle {idle}, current_idle_reset')

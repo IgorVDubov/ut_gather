@@ -385,8 +385,9 @@ def save_current_idle(machine_id: int,
     buffer_time - время ожидания сброса состояния по мин времени
     '''
     if idle := get_current_idle(machine_id):
-        if idle.length == None: # если не посчитали при переходе в работы
-            idle.set_length()
+        # if idle.length == None: # если не посчитали при переходе в работы
+        #     idle.set_length()
+        idle.set_length()
         if idle.length is not None:
             # idle.length -= buffer_time
             if idle.length < settings.MIN_STORED_IDLE_LENGTH:

@@ -735,12 +735,17 @@ def r_level_timeout_OROX(vars):
 
     # определяем текущий статус
     if not result_in_error and vars.dost:
+        vars.v10 = vars.v9
+        vars.v9 = vars.v8
+        vars.v8 = vars.v7
+        vars.v7 = vars.v6
+        vars.v6 = vars.v5
         vars.v5 = vars.v4
         vars.v4 = vars.v3
         vars.v3 = vars.v2
         vars.v2 = vars.v1
         vars.v1 = vars.result_in
-        result1 = vars.k1 * (vars.v1 + vars.v2 + vars.v3 + vars.v4 + vars.v5)/5
+        result1 = vars.k1 * (vars.v1 + vars.v2 + vars.v3 + vars.v4 + vars.v5 + vars.v6 + vars.v7 + vars.v8 + vars.v9 + vars.v10)/10
         
         vars.v2_5 = vars.v2_4
         vars.v2_4 = vars.v2_3

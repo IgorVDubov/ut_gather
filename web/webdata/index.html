@@ -1450,7 +1450,10 @@
     //NY
     NYBlock = document.createElement('div');
     NYBlock.classList = ['NY']
-    NYBlock.innerHTML = '<img src= "/images/NY.png">'
+    
+    if ([51, 52, 1, 2 ].includes(moment().week())){
+      NYBlock.innerHTML = '<img src= "/images/NY.png">'
+    }
     // state block
     let stateBlock = block('', ['databox w_v80 gridState'], 'stateBlock');
     // stateBlock.append(NYBlock);

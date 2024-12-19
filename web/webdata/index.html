@@ -601,6 +601,13 @@
       font-weight: bold;
     }
   </style>
+  <style> /*NY*/
+    .NY {
+      position: fixed;
+      top: 20px;
+      left: 75vw;
+    }
+  </style>
 </head>
 
 <body>
@@ -742,6 +749,7 @@
   var progressElem
   var serverTimeElem
   var infoElem
+  var NYBlock
 
 
   var ws
@@ -1387,7 +1395,7 @@
     hideCauseButtons();
     hideCauseStatusContainer();
     hideChangeCauseButton();
-    displayBigStaus();
+    displayBigStatus();
   }
 
   function displayIdleMode() {
@@ -1408,11 +1416,12 @@
     }
   }
 
-  function displayBigStaus() {
+  function displayBigStatus() {
     stateBlockElem.classList.remove('h_v20')
     stateBlockElem.classList.remove('fnt_3')
     stateBlockElem.classList.add('h_v80')
     stateBlockElem.classList.add('fnt_5')
+    stateBlockElem.appendChild(NYBlock)
   }
 
   function displaySmallStaus() {
@@ -1420,6 +1429,8 @@
     stateBlockElem.classList.remove('fnt_5')
     stateBlockElem.classList.add('h_v20')
     stateBlockElem.classList.add('fnt_3')
+    if ((NYBlock.parentElement === stateBlockElem))
+    stateBlockElem.removeChild(NYBlock)
   }
 
   function clickHandler(event) {
@@ -1436,9 +1447,15 @@
     let container = document.createElement('div');
     container.classList = ['mainContainer'];
     page.append(container);
-    //        state block
+    //NY
+    NYBlock = document.createElement('div');
+    NYBlock.classList = ['NY']
+    NYBlock.innerHTML = '<img src= "/images/NY.png">'
+    // state block
     let stateBlock = block('', ['databox w_v80 gridState'], 'stateBlock');
+    // stateBlock.append(NYBlock);
     let stateValue = block('', ['dataLable aSlfEnd'], 'state_' + MACHINE_ID)
+
     let stateTimerValue = block('', ['dataLable gr2CellsLftCntr'], 'stateTimer_' + MACHINE_ID)
     let stateTimeValue = block('', ['dataLable aSlfStart fnt_0_5 '], 'stateTime_' + MACHINE_ID)
     stateBlock.append(stateValue, stateTimerValue, stateTimeValue)
@@ -1502,6 +1519,7 @@
     let changeCauseButton = block('изменить причину простоя', ['buttonBox flex_center w_v80 h_v20 fnt_3 bold cWhite'], 'changeCauseButton')
     changeCauseButton.addEventListener('click', changeCauseclickHandler);
     container.append(changeCauseButton);
+    
   }
 
   function firstCurrentStateInit() {

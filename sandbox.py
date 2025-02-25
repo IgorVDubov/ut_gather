@@ -1,27 +1,20 @@
-def run_middle_5():
-    v1 = 0
-    v2 = 0
-    v3 = 0
-    v4 = 0
-    v5 = 0
-    def inner(v):
-        nonlocal v1, v2, v3, v4, v5
-        v_middle = (v + v1 + v2 + v3 + v4) / 5 
-        v4 = v3
-        v3 = v2
-        v2 = v1
-        v1 = v
-        return v_middle
-    return inner
+import schedule
+import time
 
-c = run_middle_5()
-b = run_middle_5()
 
-print(f'C:{c(1)}')
-print(f'C:{c(1)}')
-print(f'C:{c(1)}')
-print(f'C:{c(1)}')
-print(f'C:{c(1)}')
-print(f'b:{b(2)}')
-print(f'C:{c(1)}')
-print(f'b:{b(2)}')
+def job():
+    print("I'm working...")
+
+
+# Run job every 3 second/minute/hour/day/week,
+# Starting 3 second/minute/hour/day/week from now
+schedule.every(3).seconds.do(job)
+# schedule.every(3).minutes.do(job)
+# schedule.every(3).hours.do(job)
+# schedule.every(3).days.do(job)
+# schedule.every(3).weeks.do(job)
+
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)

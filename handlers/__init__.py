@@ -6,7 +6,8 @@ from .dbwriter import db_writer
 from .idle import idle
 from .ai2021 import ai2021
 from .signal_tout_2_counters import signal_tout_2_counters
-from .test import test
+from .middle_v import running_middle
+# from .test import test
 
 __all__ = [
     "prog1", 
@@ -16,5 +17,6 @@ __all__ = [
     "idle",
     'ai2021',
     'signal_tout_2_counters',
-    'test',
+    # 'test',
+    'running_middle'
 ]

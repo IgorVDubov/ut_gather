@@ -6,13 +6,14 @@
 
 def ai2021(vars):
     '''
-    result 
-	result_in
-	in_dost 
-	counter 
-	reset_counter 
-	k 
-	min_ai=10
+    vars:
+        result 
+        result_in
+        in_dost 
+        counter 
+        reset_counter 
+        k 
+        min_ai=10
     '''
     if vars.result_in is not None:
         result = vars.result_in

@@ -12,7 +12,7 @@ sys.path.append("/gathercore")
 
 import config
 import settings
-import scadaconfig as scada_config
+import scadaconfig_V as scada_config
 from gathercore.interfaces.db import create_db_interface
 import web.handlers as project_webserver_handlers
 from init import init_args
@@ -23,7 +23,7 @@ except (ModuleNotFoundError | ImportError):
     project_init_func = None
 
 def main():
-    loggerLib.loggerInit('DEBUG','error', ('PROG',))
+    loggerLib.loggerInit('DEBUG', 'error', ('PROG',))
     logger.info('Starting........')
     db_interface = create_db_interface('db_interface',
                                        config.DB_TYPE,

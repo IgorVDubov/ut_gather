@@ -23,7 +23,7 @@ def idle(vars):
             'split_idle_flag' -                                 текущая причина записывается с 
                                                                 временной меткой и создается 
                                                                 такая же длящаяся далее
-            'db_quie': 'databus.db_interface',                  БД интерфейс
+            'db_queue': 'databus.db_interface',                  БД интерфейс
             'project_id': 'канал_станка.args.project_id'        id проекта
             'min_state_len': 20,                                минимальная длительность состояния (в сек) по которому инициируется простой
             'buffer_state': True,                             флаг True если статус еще меньше минималоьного
@@ -50,7 +50,7 @@ def idle(vars):
             logger.log('PROG', f'{vars.machine_id} API set cause: idle is  None, set Idle with cause {vars.current_cause} current_state_time= {vars.current_state_time.strftime("%H:%M:%S")}')
             # logger.log('PROG', f'{vars.machine_id} set_cause_flag: buffer_state current_idle_set with current_state_time= {vars.current_state_time.strftime("%H:%M:%S")}')
             logics.current_idle_set(
-                                    vars.db_quie,
+                                    vars.db_queue,
                                     vars.machine_id,
                                     vars.project_id,
                                     vars.state,
@@ -66,7 +66,7 @@ def idle(vars):
                                       vars.current_cause,
                                       current_time,
                                       vars.project_id,
-                                      vars.db_quie)
+                                      vars.db_queue)
         return
     
     # записываем текущий простой и начинаем новый с текущего
@@ -80,11 +80,11 @@ def idle(vars):
             logics.save_current_idle(vars.machine_id,
                                     vars.project_id,
                                     # 0,
-                                    vars.db_quie)
-            logics.current_idle_reset(vars.db_quie,
+                                    vars.db_queue)
+            logics.current_idle_reset(vars.db_queue,
                                   vars.machine_id,
                                   vars.project_id)
-            logics.current_idle_set(vars.db_quie,
+            logics.current_idle_set(vars.db_queue,
                                     vars.machine_id,
                                     vars.project_id,
                                     vars.state,
@@ -99,7 +99,7 @@ def idle(vars):
             #                             idle.cause,
             #                             current_time,
             #                             vars.project_id,
-            #                             vars.db_quie)
+            #                             vars.db_queue)
         return
 
     # принудительный сброс текущего простоя без записи
@@ -107,7 +107,7 @@ def idle(vars):
         vars.reset_idle_flag = False
         logger.log('PROG', 
                    f'{vars.machine_id} takes current_idle_reset signal Idle:{idle}')
-        logics.current_idle_reset(vars.db_quie,
+        logics.current_idle_reset(vars.db_queue,
                                   vars.machine_id,
                                   vars.project_id)
         return
@@ -128,7 +128,7 @@ def idle(vars):
                                                   settings.NOT_CHEKED_CAUSE,
                                                   current_time,
                                                   vars.project_id,
-                                                  vars.db_quie)
+                                                  vars.db_queue)
             # else:            # простой зафиксирован и нет причины
             #    # здесь реакция если оператор не успел подтвердить простой за
             #    # необходимое время
@@ -145,7 +145,7 @@ def idle(vars):
                                         # фиксируем техпростой вычитая min_state_len из тек времени
                 logger.log('PROG', f'{vars.machine_id} buffer_state off, current_idle_set new Idle with TECH_IDLE cause curr time {current_time.strftime("%H:%M:%S")} dt={vars.min_state_len} begin {(current_time-timedelta(seconds=vars.min_state_len)).strftime("%H:%M:%S")}')
                 logics.current_idle_set(
-                                    vars.db_quie,
+                                    vars.db_queue,
                                     vars.machine_id,
                                     vars.project_id,
                                     vars.state,
@@ -173,7 +173,7 @@ def idle(vars):
                                               settings.NOT_CHEKED_CAUSE,
                                               current_time,
                                               vars.project_id,
-                                              vars.db_quie
+                                              vars.db_queue
                                               )
             # считаем длительность простоя при переходе в работу здесь чтобы не добавлялось время буфера
             # if idle.length == None:
@@ -188,9 +188,9 @@ def idle(vars):
                     vars.project_id,
                     # 0,
                     # vars.min_state_len,
-                    vars.db_quie
+                    vars.db_queue
                     )
-                logics.current_idle_reset(vars.db_quie,
+                logics.current_idle_reset(vars.db_queue,
                                         vars.machine_id,
                                         vars.project_id
                                         )

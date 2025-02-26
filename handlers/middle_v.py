@@ -1,6 +1,5 @@
-
-from handlers.lib import middle
-
+from datetime import datetime
+import dataconnector as dc
 
 # def running_middle(vars):
 #     '''
@@ -36,7 +35,7 @@ def running_middle(vars):
     значение->среднее за 5минут->среднее за 30 минут-среднее за 1 час
     вызов часового среднего сбрасывает 30мин среднее и тп
     VARS:
-        result - текущее среднее значение за время подсчета
+        result - текущее среднее значение источника за время подсчета
         data - входящее значение
         middle - текущее собственное среднее значение
         summ - аккумулятор собственного среднего
@@ -44,12 +43,16 @@ def running_middle(vars):
         min_V - мин порог скорости для подсчета среднего
         reset_signal - исходящий сигнал сброс среднего
         reset - входящий сигнал сброс среднего
+        m_id - id станка
+        project_id - id проекта
+        db_quae - очередь записи в базу данных
     '''
     vars.reset_signal = True
     
-    if vars.result is None:
-        vars.result = vars.data
-        return
+    vars.result = vars.data
+    
+    # if vars.result is None:
+    #     return
     
     # vars.result = vars.middle
     
@@ -62,3 +65,10 @@ def running_middle(vars):
         vars.summ += vars.data
         vars.n += 1
         vars.middle = vars.summ / vars.n
+    if vars.db_queue is not None:
+        dc.db_put_middle(vars.db_queue, {
+            'm_id': vars.m_id,
+            'project_id': vars.project_id,
+            'date_time': datetime.now(),
+            'value': vars.result
+            })

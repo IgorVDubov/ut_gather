@@ -11,8 +11,8 @@ from models import Operator
 from gathercore.gtyping import DBInterface
 import dbqueries as db_queries
 
-def insert_sql(db_quie, sql: str, params: tuple):
-    dbc.insert_sql(db_quie, sql, params)
+def insert_sql(db_queue, sql: str, params: tuple):
+    dbc.insert_sql(db_queue, sql, params)
     
     
 def db_get_all_states(machine_id: int):
@@ -163,7 +163,7 @@ def jsdb_put_state(state_rec: dict):
         project_globals.states_buffer.append(state_rec)
 
 
-def db_put_state(db_quie: DBInterface, state_rec: dict):
+def db_put_state(db_queue: DBInterface, state_rec: dict):
     print(f'in dc: db_put_state {state_rec}')
     if state_rec['state'] != 7 and state_rec['length'] == 0:  # если не запись счетчика
         return
@@ -171,16 +171,24 @@ def db_put_state(db_quie: DBInterface, state_rec: dict):
         if state_rec.get('project_id') == 0:
             jsdb_put_state(state_rec)
         else:
-            db_queries.insert_state(db_quie, state_rec)
+            db_queries.insert_state(db_queue, state_rec)
 
-# def _db_put_counter(db_quie: DBQuie, state_rec: dict):
+def db_put_middle(db_queue: DBInterface, middle_rec: dict):
+    print(f'in dc: db_put_middle {middle_rec}')
+    if middle_rec.get('project_id') == 0:
+        return
+        jsdb_put_state(middlle_rec)
+    else:
+        db_queries.insert_middle(db_queue, middle_rec)
+
+# def _db_put_counter(db_queue: DBQuie, state_rec: dict):
 #     print(f'in dc: db_put_state {state_rec}')
 #     if state_rec.get('length') and state_rec['length'] >= 0:
 #         state_rec.update({'length':0})
 #     if state_rec.get('project_id') == 0:    # memory db for tests
 #         jsdb_put_state(state_rec)
 #     else:
-#         db_queries.insert_state(db_quie, state_rec)
+#         db_queries.insert_state(db_queue, state_rec)
 
 
 if __name__ == '__main__':

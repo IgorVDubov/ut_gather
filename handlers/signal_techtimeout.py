@@ -45,7 +45,7 @@ def signal_techtimeout(vars):
     #           Запись счетчика
     if vars.write_counter:
         vars.write_counter = False
-        dc.db_put_state(vars.db_quie,
+        dc.db_put_state(vars.db_queue,
                                {'id': vars.m_id,
                                 'project_id': vars.project_id,
                                 'time': time_now,
@@ -208,7 +208,7 @@ def signal_techtimeout(vars):
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
         if vars.saved_length > settings.MIN_STORED_STATE_LENGTH:
             if vars.saved_state is not None:
-                dc.db_put_state(vars.db_quie,
+                dc.db_put_state(vars.db_queue,
                                    {'id': vars.m_id,
                                     'project_id': vars.project_id,
                                     'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),

@@ -53,14 +53,14 @@ def signal_tout_2_counters(vars):
         
     if vars.stop_signal:
         # logger.log('PROG', '!!!!!!!!!!!!!!!!!    get stop signal       !!!!!!!!!!!!!!!!!!!!!!!!!')
-        dc.db_put_state(vars.db_quie,
+        dc.db_put_state(vars.db_queue,
                         {'id': vars.counter_1_id,
                          'project_id': vars.project_id,
                          'time': time_now,
                          'state': 7,
                          'length': vars.counter_1
                          })
-        dc.db_put_state(vars.db_quie,
+        dc.db_put_state(vars.db_queue,
                         {'id': vars.counter_2_id,
                          'project_id': vars.project_id,
                          'time': time_now,
@@ -68,7 +68,7 @@ def signal_tout_2_counters(vars):
                          'length': vars.counter_2
                          })
         if vars.saved_state is not None:
-            dc.db_put_state(vars.db_quie,
+            dc.db_put_state(vars.db_queue,
                         {'id': vars.m_id,
                         'project_id': vars.project_id,
                         'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -86,7 +86,7 @@ def signal_tout_2_counters(vars):
     if vars.write_counters:                     #           Запись счетчика
         # logger.log('PROG','write_counters')
         vars.write_counters = False
-        dc.db_put_state(vars.db_quie,
+        dc.db_put_state(vars.db_queue,
                         {'id': vars.counter_1_id,
                          'project_id': vars.project_id,
                          'time': time_now,
@@ -95,7 +95,7 @@ def signal_tout_2_counters(vars):
                          })
         # TODO здесь пишем  со статусом 7, length - счетчик, time_now
         vars.counters_reset = True  # сбрасываем счетчик в контроллере
-        dc.db_put_state(vars.db_quie,
+        dc.db_put_state(vars.db_queue,
                         {'id': vars.counter_2_id,
                          'project_id': vars.project_id,
                          'time': time_now,
@@ -282,7 +282,7 @@ def signal_tout_2_counters(vars):
         vars.write_init = False  # сбрасываем флаг инициализации записи если был 1
         if vars.saved_length > settings.MIN_STORED_STATE_LENGTH:
             if vars.saved_state is not None:
-                dc.db_put_state(vars.db_quie,
+                dc.db_put_state(vars.db_queue,
                             {'id': vars.m_id,
                              'project_id': vars.project_id,
                              'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),

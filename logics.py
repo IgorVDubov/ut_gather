@@ -108,14 +108,14 @@ def load_from_file():
     return records
 
 
-def save_machine_idle(db_quie, machine_id, project_id):
+def save_machine_idle(db_queue, machine_id, project_id):
     if project_id != 0:  # проекты с индексом 0 - демо: не пишем в БД
-        save_to_temp_db(db_quie, machine_id, project_globals.machines_idle)
+        save_to_temp_db(db_queue, machine_id, project_globals.machines_idle)
     # else:
     #     save_to_file(project_globals.machines_idle)
 
 
-def save_to_temp_db(db_quie, machine_id, machines_idle: dict):
+def save_to_temp_db(db_queue, machine_id, machines_idle: dict):
     '''
     saves current idle of machine_id to temp_idle db
     '''
@@ -131,9 +131,9 @@ def save_to_temp_db(db_quie, machine_id, machines_idle: dict):
                         'cause_time': idle.cause_time.strftime(settings.TIME_FORMAT) if idle.cause_time else None,
                         'cause_set_time': idle.cause_set_time.strftime(settings.TIME_FORMAT) if idle.cause_set_time else None,
                         'length': idle.length})
-        db_queries.replace_current_idle_tmp(db_quie, data)
+        db_queries.replace_current_idle_tmp(db_queue, data)
     else:
-        db_queries.delete_current_idle_tmp(db_quie, machine_id)
+        db_queries.delete_current_idle_tmp(db_queue, machine_id)
 
 
 def save_to_file(machines_idle: dict):
@@ -274,7 +274,7 @@ def set_operator(machine_id: int, operator_id: int):
     project_globals.machines_idle[machine_id].operator = operator_id
 
 
-def current_idle_set(db_quie,
+def current_idle_set(db_queue,
                      machine_id: int,
                      project_id: int,
                      state: int,
@@ -300,7 +300,7 @@ def current_idle_set(db_quie,
                                 None)
                 }
     project_globals.machines_idle.update(idle_data)
-    save_machine_idle(db_quie, machine_id, project_id)
+    save_machine_idle(db_queue, machine_id, project_id)
 
 
 def current_idle_add_cause(machine_id: int,
@@ -308,7 +308,7 @@ def current_idle_add_cause(machine_id: int,
                            cause_id: int,
                            cause_set_time: datetime,
                            prj_id: int,
-                           db_quie: DBInterface
+                           db_queue: DBInterface
                            ):
     '''
     добавляем причину в сохраненный простой
@@ -342,7 +342,7 @@ def current_idle_add_cause(machine_id: int,
                     logger.log('PROG', 
                         f'change cause idle to {machine_id}\
                         from {current_idle.cause} to {cause_id}') 
-                    save_current_idle(machine_id, prj_id, db_quie)
+                    save_current_idle(machine_id, prj_id, db_queue)
                     current_idle.cause_time = datetime.now()
                 #
                 #   техпростой после каждого останова, потом другая причина
@@ -359,7 +359,7 @@ def current_idle_add_cause(machine_id: int,
             current_idle.cause = cause_id
             current_idle.cause_set_time = cause_set_time
             
-            save_machine_idle(db_quie, machine_id, prj_id)
+            save_machine_idle(db_queue, machine_id, prj_id)
         else: # причина была указана повторно
             logger.log('PROG', 
                     f'''{machine_id} SKIPPED change cause idle from {current_idle.cause} to {cause_id}''')
@@ -370,16 +370,16 @@ def current_idle_add_cause(machine_id: int,
             f'no machine {machine_id} in project_globals.machines_idle')
 
 
-def current_idle_reset(db_quie, machine_id: int, project_id: int):
+def current_idle_reset(db_queue, machine_id: int, project_id: int):
     print(f'reset idle {machine_id} ')
     project_globals.machines_idle.update({machine_id: None})
-    save_machine_idle(db_quie, machine_id, project_id)
+    save_machine_idle(db_queue, machine_id, project_id)
 
 
 def save_current_idle(machine_id: int,
                        prj_id: int,
                     #    buffer_time: int,
-                       db_quie: DBInterface):
+                       db_queue: DBInterface):
     '''
     сохраняем простой в БД
     buffer_time - время ожидания сброса состояния по мин времени
@@ -408,9 +408,9 @@ def save_current_idle(machine_id: int,
                 store_dict.update(
                     {key: val.strftime('%Y-%m-%d %H:%M:%S')})  # type: ignore
 
-        print(f'{colors.CYELLOWBG}db_quie:{store_dict} {colors.CEND}')
-        logger.log('PROG', f' {machine_id} db_quie:{store_dict}')
+        print(f'{colors.CYELLOWBG}db_queue:{store_dict} {colors.CEND}')
+        logger.log('PROG', f' {machine_id} db_queue:{store_dict}')
         if prj_id == 0:
             jsdb_put_idle(store_dict)  # локально для демо проекта с инд 0!!!
         else:
-            db_queries.insert_idle(db_quie, store_dict)
+            db_queries.insert_idle(db_queue, store_dict)

@@ -6,24 +6,30 @@ from gathercore.interfaces.db.dbcommands import (
 )
 from models import Idle
 
-def insert_sql(db_quie, sql: str, params: tuple):
-    db_quie.put(DBInsert(sql, params))
+def insert_sql(db_queue, sql: str, params: tuple):
+    db_queue.put(DBInsert(sql, params))
 
-def insert_state(db_quie, state_rec: dict):
-    #print(f'db_put_state {state_rec}')
+
+def insert_state(db_queue, state_rec: dict):
     sql = f'''insert into track_{state_rec.get(
         "project_id", "")} values  (%s,%s,%s,%s)'''
     params = (state_rec.get('id'),
               state_rec.get('time'),
               state_rec.get('state'),
               state_rec.get('length'))
-    db_quie.put(DBInsert(sql, params))
-    # db_quie.put({
-    #     'func':DBInterface.commit_sql_querry,
-    #     'sql':sql, 'params':params})
+    db_queue.put(DBInsert(sql, params))
 
 
-def insert_idle(db_quie, ilde_rec):
+def insert_middle(db_queue, rec: dict):
+    sql = f'''insert into middle_{rec.get(
+        "project_id", "")} values  (%s,%s,%s)'''
+    params = (rec.get('m_id'),
+              rec.get('date_time'),
+              rec.get('value'))
+    db_queue.put(DBInsert(sql, params))
+
+
+def insert_idle(db_queue, ilde_rec):
     sql = f'''insert into idles_{ilde_rec.get(
         "project_id", "")} values  (%s,%s,%s,%s,%s,%s)'''
     params = (ilde_rec.get('id'),
@@ -32,11 +38,11 @@ def insert_idle(db_quie, ilde_rec):
               ilde_rec.get('cause_time'),
               ilde_rec.get('cause_set_time'),
               ilde_rec.get('length'))
-    db_quie.put(DBInsert(sql, params))
+    db_queue.put(DBInsert(sql, params))
 
 
 
-def replace_current_idle_tmp(db_quie, tmp_ilde_rec):
+def replace_current_idle_tmp(db_queue, tmp_ilde_rec):
     sql = 'replace into temp_idles values  (%s,%s,%s,%s,%s,%s,%s,%s,%s)'
     params = (tmp_ilde_rec.get('machine_id'),
               tmp_ilde_rec.get('state'),
@@ -48,15 +54,15 @@ def replace_current_idle_tmp(db_quie, tmp_ilde_rec):
               tmp_ilde_rec.get('cause_set_time'),
               tmp_ilde_rec.get('length')
               )
-    db_quie.put(DBCommit(sql, params))
+    db_queue.put(DBCommit(sql, params))
 
 
-def delete_current_idle_tmp(db_quie, machine_id):
+def delete_current_idle_tmp(db_queue, machine_id):
     sql = 'delete from temp_idles where machine_id = %s'
     params = (
         machine_id,
     )
-    db_quie.put(DBCommit(sql, params))
+    db_queue.put(DBCommit(sql, params))
 
 
 def select_temp_idles(db_interface: DBInterface) -> list:
@@ -95,7 +101,7 @@ def querry_settings(db_interface: DBInterface):
     reply = db_interface.direct_call(DBSelect(sql))
     return reply
 
-def update_arg_setting(db_quie, arg, val):
+def update_arg_setting(db_queue, arg, val):
     sql = 'UPDATE settings SET value = %s WHERE arg = %s'  
     params = (str(val), arg)
-    db_quie.put(DBInsert(sql, params))
+    db_queue.put(DBInsert(sql, params))

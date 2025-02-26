@@ -64,7 +64,7 @@ def r_level_timeout_v2(vars):
     if vars.stop_signal and vars.saved_state is not None:
         logger.log(
             'PROG', f' {vars.m_id}  !!    get stop signal       !!')
-        dc.db_put_state(vars.db_quie,
+        dc.db_put_state(vars.db_queue,
                         {'id': vars.m_id,
                          'project_id': vars.project_id,
                          'time': vars.current_state_time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -307,7 +307,7 @@ def r_level_timeout_v2(vars):
                 logger.log('PROG',
                 f'{vars.m_id} to DB_{vars.project_id}, time: {vars.saved_time.strftime("%y-%m-%d %H:%M:%S")}, state: {vars.saved_state}, length: {int(round(vars.saved_length))}')
             
-                dc.db_put_state(vars.db_quie,
+                dc.db_put_state(vars.db_queue,
                                 {'id': vars.m_id,
                                     'project_id': vars.project_id,
                                     'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -384,7 +384,7 @@ def r_level_timeout_2signal(vars):
     if vars.stop_signal and vars.saved_state is not None:
         logger.log(
             'PROG', f' {vars.m_id}  !!    get stop signal       !!')
-        dc.db_put_state(vars.db_quie,
+        dc.db_put_state(vars.db_queue,
                         {'id': vars.m_id,
                          'project_id': vars.project_id,
                          'time': vars.current_state_time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -610,7 +610,7 @@ def r_level_timeout_2signal(vars):
                 logger.log('PROG',
                 f'{vars.m_id} to DB_{vars.project_id}, time: {vars.saved_time.strftime("%y-%m-%d %H:%M:%S")}, state: {vars.saved_state}, length: {int(round(vars.saved_length))}')
             
-                dc.db_put_state(vars.db_quie,
+                dc.db_put_state(vars.db_queue,
                                 {'id': vars.m_id,
                                     'project_id': vars.project_id,
                                     'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -640,7 +640,7 @@ def db_logger(vars):
         vars.result,
         vars.current_state
     )
-    dc.insert_sql(vars.db_quie, sql, params)
+    dc.insert_sql(vars.db_queue, sql, params)
     
     
 def r_level_timeout_OROX(vars):
@@ -704,7 +704,7 @@ def r_level_timeout_OROX(vars):
     if vars.stop_signal and vars.saved_state is not None:
         logger.log(
             'PROG', f' {vars.m_id}  !!    get stop signal       !!')
-        dc.db_put_state(vars.db_quie,
+        dc.db_put_state(vars.db_queue,
                         {'id': vars.m_id,
                          'project_id': vars.project_id,
                          'time': vars.current_state_time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -965,7 +965,7 @@ def r_level_timeout_OROX(vars):
                 logger.log('PROG',
                 f'{vars.m_id} to DB_{vars.project_id}, time: {vars.saved_time.strftime("%y-%m-%d %H:%M:%S")}, state: {vars.saved_state}, length: {int(round(vars.saved_length))}')
             
-                dc.db_put_state(vars.db_quie,
+                dc.db_put_state(vars.db_queue,
                                 {'id': vars.m_id,
                                     'project_id': vars.project_id,
                                     'time': vars.saved_time.strftime("%Y-%m-%d %H:%M:%S"),

@@ -12,7 +12,7 @@ sys.path.append("/gathercore")
 
 import config
 import settings
-import scadaconfig_V as scada_config
+import scadaconfig as scada_config
 from gathercore.interfaces.db import create_db_interface
 import web.handlers as project_webserver_handlers
 from init import init_args

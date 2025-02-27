@@ -51,20 +51,17 @@ def running_middle(vars):
     
     vars.result = vars.data
     
-    # if vars.result is None:
-    #     return
-    
-    # vars.result = vars.middle
-    
     if vars.reset:
         vars.summ = 0
         vars.n = 0
         vars.reset = False
+        vars.middle = 0
     
     if vars.data > vars.min_V:
         vars.summ += vars.data
         vars.n += 1
         vars.middle = vars.summ / vars.n
+    
     if vars.db_queue is not None:
         dc.db_put_middle(vars.db_queue, {
             'm_id': vars.m_id,

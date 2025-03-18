@@ -17,6 +17,11 @@ from gathercore.interfaces.db import create_db_interface
 import web.handlers as project_webserver_handlers
 from init import init_args
 
+# project_init_func - функция инициализации проекта, 
+# которая запускается после формирования
+# базы каналов и databus перед стартом основного цикла, 
+# параметром в функцию передается databus
+
 try:
     from init import init as project_init_func
 except (ModuleNotFoundError | ImportError):
@@ -25,10 +30,12 @@ except (ModuleNotFoundError | ImportError):
 def main():
     loggerLib.loggerInit('DEBUG', 'error', ('PROG',))
     logger.info('Starting........')
+    # создаем интерфейс к базе данных
     db_interface = create_db_interface('db_interface',
                                        config.DB_TYPE,
                                        config.DB_PARAMS
                                        )
+    # создаем приложение
     app = app_builder(
                 source_list=scada_config.source_list,
                 channels_config=scada_config.channels_config,
@@ -40,11 +47,15 @@ def main():
                 project_init_func=project_init_func,
                 databus_objects=[db_interface]
                 )
-    app.databus.add_object('machine_WS_client', dict()) # {machine_id: web_socket_client}
+    # добавляем словарь websocket клиентов для панелей оператора на станках
+    # {machine_id: web_socket_client}
+    app.databus.add_object('machine_WS_client', dict()) 
+    # Инициализация необходимых аргументов через БД settings
     init_args(
         app.databus.get_object('db_interface'),
         app.channel_base
         )
+    # запуск app
     app.start()
 
 

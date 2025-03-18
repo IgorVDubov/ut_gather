@@ -48,8 +48,9 @@ def running_middle(vars):
         db_quae - очередь записи в базу данных
     '''
     vars.reset_signal = True
-    
     vars.result = vars.data
+    if vars.data is None:
+        return
     
     if vars.reset:
         vars.summ = 0

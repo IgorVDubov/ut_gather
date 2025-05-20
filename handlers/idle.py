@@ -144,6 +144,7 @@ def idle(vars):
             if not vars.buffer_state:   # если минимальное время состояния вышло
                                         # фиксируем техпростой вычитая min_state_len из тек времени
                 logger.log('PROG', f'{vars.machine_id} buffer_state off, current_idle_set new Idle with TECH_IDLE cause curr time {current_time.strftime("%H:%M:%S")} dt={vars.min_state_len} begin {(current_time-timedelta(seconds=vars.min_state_len)).strftime("%H:%M:%S")}')
+                set_time = current_time-timedelta(seconds=vars.min_state_len)
                 logics.current_idle_set(
                                     vars.db_queue,
                                     vars.machine_id,
@@ -151,13 +152,10 @@ def idle(vars):
                                     vars.state,
                                     vars.techidle_lenhth,
                                     vars.operator_id,
-                                    # vars.current_state_time-timedelta(seconds=vars.min_state_len),
-                                    current_time-timedelta(seconds=vars.min_state_len),
+                                    set_time,
                                     settings.TECH_IDLE_ID,
-                                    # vars.current_state_time-timedelta(seconds=vars.min_state_len),
-                                    # vars.current_state_time-timedelta(seconds=vars.min_state_len),
-                                    current_time-timedelta(seconds=vars.min_state_len),
-                                    current_time-timedelta(seconds=vars.min_state_len),
+                                    set_time,
+                                    set_time,
                 )
     else:               # если был простой и переход в работу
         
@@ -183,13 +181,13 @@ def idle(vars):
                 logger.log('PROG', f'{vars.machine_id} переход в работу, отрезок > {vars.min_state_len}с save_current_idle {idle}, current_idle_reset')
                 # logger.log('PROG', f'current_state_time={vars.current_state_time.strftime("%H:%M:%S")} ')
                 # logger.log('PROG', f'current_time={current_time.strftime("%H:%M:%S")} ')
-                logics.save_current_idle(
-                    vars.machine_id,
-                    vars.project_id,
-                    # 0,
-                    # vars.min_state_len,
-                    vars.db_queue
-                    )
+                # 20/05/25 вернул вычитание vars.min_state_len в расчет длительности
+                logics.save_current_idle_v2(
+                                        vars.machine_id,
+                                        vars.project_id,
+                                        vars.min_state_len,
+                                        vars.db_queue
+                                        )
                 logics.current_idle_reset(vars.db_queue,
                                         vars.machine_id,
                                         vars.project_id

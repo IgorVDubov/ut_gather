@@ -414,3 +414,46 @@ def save_current_idle(machine_id: int,
             jsdb_put_idle(store_dict)  # локально для демо проекта с инд 0!!!
         else:
             db_queries.insert_idle(db_queue, store_dict)
+
+
+def save_current_idle_v2(
+                        machine_id: int,
+                        prj_id: int,
+                        buffer_time: int,
+                        db_queue: DBInterface):
+    '''
+    сохраняем простой в БД
+    buffer_time - время ожидания стабилизации состояния по мин времени
+    
+    '''
+    if idle := get_current_idle(machine_id):
+        # if idle.length == None: # если не посчитали при переходе в работы
+        #     idle.set_length()
+        idle.set_length()
+        if idle.length is not None:
+             # убираем время ожидания стабилизации из длительности отрезка
+            idle.length -= buffer_time
+            if idle.length < settings.MIN_STORED_IDLE_LENGTH:
+                print(
+                    f'{colors.CREDBG}machime {machine_id} \
+                        idle.length < settings.MIN_STORED_IDLE_LENGTH, \
+                        causeid:{idle.cause}, length {idle.length} {colors.CEND}')
+                return
+        print(
+            f'{colors.CGREENBG}Store machime {machine_id} \
+                Idle to DB: {settings.STATES[idle.state]}, \
+                causeid:{idle.cause}, length {idle.length} {colors.CEND}')
+        store_dict = {'id': machine_id}
+        store_dict.update(project_id=prj_id)
+        store_dict.update(asdict(idle))
+        for key, val in store_dict.items():
+            if isinstance(store_dict[key], datetime):
+                store_dict.update(
+                    {key: val.strftime('%Y-%m-%d %H:%M:%S')})  # type: ignore
+
+        print(f'{colors.CYELLOWBG}db_queue:{store_dict} {colors.CEND}')
+        logger.log('PROG', f' {machine_id} db_queue:{store_dict}')
+        if prj_id == 0:
+            jsdb_put_idle(store_dict)  # локально для демо проекта с инд 0!!!
+        else:
+            db_queries.insert_idle(db_queue, store_dict)

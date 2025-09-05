@@ -148,7 +148,7 @@ def set_operator_logout(macine_id, operator_id):
     try:
         rec = get_logged_operator(macine_id)
         rec['logout'] = datetime.now().strftime(
-            Formats.DATE_FORMAT_DB)
+            settings.DATE_FORMAT_DB)
     except (KeyError, TypeError):
         print(f'no logout operators at {macine_id}')
     rec.update({'operator': settings.OPERATORS[operator_id]['name']})

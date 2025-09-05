@@ -1,5 +1,6 @@
 
 CLIENT_VERSION = 0.1
+DATE_FORMAT_DB = '%Y-%d-%m %H:%M:%S'
 STATE_ARG = 'args.state'
 STATE_TIME_ARG = 'args.current_state_time'
 TECH_IDLE_ARG = 'args.tech_timeout'

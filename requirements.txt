@@ -1,0 +1,1 @@
+gathercore @ git+https://github.com/IgorVDubov/gathercore.git@dev

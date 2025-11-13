@@ -1,20 +1,18 @@
 from datetime import datetime
 
-import config
-# TODO move Consts.DATE_FORMAT_DB from Consts
-from gathercore.consts import Formats
-
-import dbqueries as dbc
-import settings
-import projectglobals as project_globals
-from models import Operator
 from gathercore.gtyping import DBInterface
+
+import config
 import dbqueries as db_queries
+import dbqueries as dbc
+import projectglobals as project_globals
+import settings
+
 
 def insert_sql(db_queue, sql: str, params: tuple):
     dbc.insert_sql(db_queue, sql, params)
-    
-    
+
+
 def db_get_all_states(machine_id: int):
     return [rec for rec in project_globals.states_db]
 
@@ -26,51 +24,64 @@ def db_get_all_idles(machine_id: int):
 
 def db_get_all_operators():
     result = [rec for rec in project_globals.operators_db]
-    [rec.update({'operator': (settings.OPERATORS[rec['operator_id']]['name'])})
-     for rec in result]
+    [
+        rec.update({"operator": (settings.OPERATORS[rec["operator_id"]]["name"])})
+        for rec in result
+    ]
     return result
+
 
 def get_idels_data(db_interface: DBInterface, machine_id, time1, time2, project_id):
     reply = dbc.querry_idels(db_interface, machine_id, time1, time2, project_id)
     if reply is not None:
         data = []
-        for m_id, cause_id, operator_id, cause_time, cause_set_time, cause_length in reply:
-            data.append({
-                'm_id':m_id, 
-                'cause_id':cause_id, 
-                'operator_id':operator_id, 
-                'cause_time':cause_time.strftime('%Y-%m-%dT%H:%M:%S'), 
-                'cause_set_time':cause_set_time.strftime('%Y-%m-%dT%H:%M:%S'), 
-                'cause_length':cause_length
-                })
-        
+        for (
+            m_id,
+            cause_id,
+            operator_id,
+            cause_time,
+            cause_set_time,
+            cause_length,
+        ) in reply:
+            data.append(
+                {
+                    "m_id": m_id,
+                    "cause_id": cause_id,
+                    "operator_id": operator_id,
+                    "cause_time": cause_time.strftime("%Y-%m-%dT%H:%M:%S"),
+                    "cause_set_time": cause_set_time.strftime("%Y-%m-%dT%H:%M:%S"),
+                    "cause_length": cause_length,
+                }
+            )
+
     return data
 
-def get_machine_causes(db_interface: DBInterface,
-                       machine_id: int,
-                       project_id: int) -> dict:
+
+def get_machine_causes(
+    db_interface: DBInterface, machine_id: int, project_id: int
+) -> dict:
     if project_id == settings.DEMO_PROJECT or db_interface is None:
         return settings.IDLE_CAUSES
     else:
         reply = dbc.querry_causes(db_interface, machine_id, project_id)
-        return {cause_id: (name, position, color) for cause_id,
-                                                    name,
-                                                    color,
-                                                    position in reply}
+        return {
+            cause_id: (name, position, color)
+            for cause_id, name, color, position in reply
+        }
 
 
-def _get_machine_causes(db_interface: DBInterface,
-                       machine_id: int,
-                       project_id: int) -> dict:
+def _get_machine_causes(
+    db_interface: DBInterface, machine_id: int, project_id: int
+) -> dict:
     if project_id == settings.DEMO_PROJECT or db_interface is None:
-        return {machine_id: name for machine_id,
-                (name,
-                position) in settings.IDLE_CAUSES.items()}
+        return {
+            machine_id: name
+            for machine_id, (name, position) in settings.IDLE_CAUSES.items()
+        }
     else:
         reply = dbc.querry_causes(db_interface, machine_id, project_id)
-        return {machine_id: name for machine_id,
-                name,
-                position in reply}
+        return {machine_id: name for machine_id, name, position in reply}
+
 
 def get_allowed_machines() -> dict:
     if config.DEMO_DB:
@@ -80,9 +91,9 @@ def get_allowed_machines() -> dict:
 
 
 def get_machine_operators(machine_id):
-    '''
+    """
     список доступных операторов по id станка
-    '''
+    """
     if config.DEMO_DB:
         return settings.OPERATORS
 
@@ -95,7 +106,12 @@ def get_operator_data(operator_id):
 def get_current_operator(machine_id: int):
     if operator := get_logged_operator(machine_id):
         try:
-            return {'id': operator['operator_id'], 'name': get_machine_operators(machine_id)[operator['operator_id']]['name']}
+            return {
+                "id": operator["operator_id"],
+                "name": get_machine_operators(machine_id)[operator["operator_id"]][
+                    "name"
+                ],
+            }
         except KeyError:
             return None
     else:
@@ -104,14 +120,21 @@ def get_current_operator(machine_id: int):
 
 def get_default_operator(machine_id: int):
     return {
-        'id': settings.DEFAILT_OPERATOR,
-        'name': get_machine_operators(machine_id)[settings.DEFAILT_OPERATOR]['name']}
+        "id": settings.DEFAILT_OPERATOR,
+        "name": get_machine_operators(machine_id)[settings.DEFAILT_OPERATOR]["name"],
+    }
 
 
 def get_operator(machine_id, operator_id):
-    if oper_id := next((oper for oper in get_machine_operators(machine_id) if oper == operator_id), None):
+    if oper_id := next(
+        (oper for oper in get_machine_operators(machine_id) if oper == operator_id),
+        None,
+    ):
         try:
-            return {'id': oper_id, 'name': get_machine_operators(machine_id)[oper_id]['name']}
+            return {
+                "id": oper_id,
+                "name": get_machine_operators(machine_id)[oper_id]["name"],
+            }
             # return {'id':oper_id, 'name':settings.OPERATORS[oper_id]['name']}
         except KeyError:
             return None
@@ -120,66 +143,75 @@ def get_operator(machine_id, operator_id):
 
 
 def get_logged_operator(machine_id: int):
-    return next((oper for oper in project_globals.operators_db
-                 if (oper['machine_id'] == machine_id)
-                 and (oper['logout'] is None)
-                 ), None)
+    return next(
+        (
+            oper
+            for oper in project_globals.operators_db
+            if (oper["machine_id"] == machine_id) and (oper["logout"] is None)
+        ),
+        None,
+    )
 
 
 def set_operator_login(macine_id, operator_id):
-    '''
+    """
     пишем логин оператора на macine_id
-    '''
+    """
     print(
-        f'operator {get_machine_operators(1).get(operator_id, None)} logit to {macine_id}')
-    rec = {'operator_id': operator_id,
-           'machine_id': macine_id,
-           'login': datetime.now().strftime(Formats.DATE_FORMAT_DB),
-           'logout': None}
+        f"operator {get_machine_operators(1).get(operator_id, None)} logit to {macine_id}"
+    )
+    rec = {
+        "operator_id": operator_id,
+        "machine_id": macine_id,
+        "login": datetime.now().strftime(settings.DATE_FORMAT_DB),
+        "logout": None,
+    }
     project_globals.operators_db.append(rec)
-    rec.update({'operator': settings.OPERATORS[operator_id]['name']})
+    rec.update({"operator": settings.OPERATORS[operator_id]["name"]})
     project_globals.operators_buffer.append(rec)
 
 
 def set_operator_logout(macine_id, operator_id):
-    '''
+    """
     ищем у macine_id незакрытую сессию и пишем туда время окончания
-    '''
+    """
     try:
         rec = get_logged_operator(macine_id)
-        rec['logout'] = datetime.now().strftime(
-            settings.DATE_FORMAT_DB)
+        rec["logout"] = datetime.now().strftime(settings.DATE_FORMAT_DB)
     except (KeyError, TypeError):
-        print(f'no logout operators at {macine_id}')
-    rec.update({'operator': settings.OPERATORS[operator_id]['name']})
+        print(f"no logout operators at {macine_id}")
+    rec.update({"operator": settings.OPERATORS[operator_id]["name"]})
     project_globals.operators_buffer.append(rec)
     print(
-        f'operator {get_machine_operators(1).get(operator_id, None)} logout to {macine_id}')
+        f"operator {get_machine_operators(1).get(operator_id, None)} logout to {macine_id}"
+    )
 
 
 def jsdb_put_state(state_rec: dict):
-    if state_rec.get('length') and state_rec['length'] > 0:
+    if state_rec.get("length") and state_rec["length"] > 0:
         project_globals.states_db.append(state_rec)
         project_globals.states_buffer.append(state_rec)
 
 
 def db_put_state(db_queue: DBInterface, state_rec: dict):
-    print(f'in dc: db_put_state {state_rec}')
-    if state_rec['state'] != 7 and state_rec['length'] == 0:  # если не запись счетчика
+    print(f"in dc: db_put_state {state_rec}")
+    if state_rec["state"] != 7 and state_rec["length"] == 0:  # если не запись счетчика
         return
     else:
-        if state_rec.get('project_id') == 0:
+        if state_rec.get("project_id") == 0:
             jsdb_put_state(state_rec)
         else:
             db_queries.insert_state(db_queue, state_rec)
 
+
 def db_put_middle(db_queue: DBInterface, middle_rec: dict):
-    print(f'in dc: db_put_middle {middle_rec}')
-    if middle_rec.get('project_id') == 0:
+    print(f"in dc: db_put_middle {middle_rec}")
+    if middle_rec.get("project_id") == 0:
         return
         jsdb_put_state(middlle_rec)
     else:
         db_queries.insert_middle(db_queue, middle_rec)
+
 
 # def _db_put_counter(db_queue: DBQuie, state_rec: dict):
 #     print(f'in dc: db_put_state {state_rec}')
@@ -191,12 +223,10 @@ def db_put_middle(db_queue: DBInterface, middle_rec: dict):
 #         db_queries.insert_state(db_queue, state_rec)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from gathercore.interfaces.db import create_db_interface
-    db_interface = create_db_interface('db_interface',
-                                       config.DB_TYPE,
-                                       config.DB_PARAMS
-                                       )
+
+    db_interface = create_db_interface("db_interface", config.DB_TYPE, config.DB_PARAMS)
     result = get_machine_causes(db_interface, 1416, 2)
     print(result)
     # [print(_) for _ in result]

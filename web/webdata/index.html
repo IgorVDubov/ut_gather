@@ -208,6 +208,7 @@
       grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr 1fr;
     }
+
     .gridCauseButtons_2x3 {
       display: grid;
       grid-gap: 1em;
@@ -215,6 +216,7 @@
       grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr 1fr 1fr;
     }
+
     .gridCauseButtons_3x2 {
       display: grid;
       grid-gap: 1em;
@@ -222,6 +224,7 @@
       grid-template-columns: 1fr 1fr 1fr;
       grid-template-rows: 1fr 1fr;
     }
+
     .gridCauseButtons_3x3 {
       display: grid;
       grid-gap: 1em;
@@ -576,12 +579,12 @@
       margin: 0 1em;
       height: 1.5em;
       text-align: center;
-      }
-      
-      .progress {
-        background-color: aquamarine;
-        border-radius: 5px;
-        height: 100%;
+    }
+
+    .progress {
+      background-color: aquamarine;
+      border-radius: 5px;
+      height: 100%;
     }
 
     .progressValue {
@@ -601,7 +604,8 @@
       font-weight: bold;
     }
   </style>
-  <style> /*NY*/
+  <style>
+    /*NY*/
     .NY {
       position: fixed;
       top: 20px;
@@ -716,13 +720,13 @@
   currentOperator.name = undefined;
 
   var currentState = Object()
-    currentState.state = initState.state;
-    currentState.stateTime = (initState.begin_time != null) ? initState.begin_time : undefined;
-    currentState.cause = (initState.cause_id != null) ? initState.cause_id : undefined;
-    currentState.causeTime = (initState.cause_time != null) ? initState.cause_time : undefined;
-    currentState.preadStateTime = (initState.begin_time != null) ? initState.begin_time : undefined;
-    currentState.bufferCause = currentState.cause
-    currentState.bufferCauseTime = currentState.causeTime
+  currentState.state = initState.state;
+  currentState.stateTime = (initState.begin_time != null) ? initState.begin_time : undefined;
+  currentState.cause = (initState.cause_id != null) ? initState.cause_id : undefined;
+  currentState.causeTime = (initState.cause_time != null) ? initState.cause_time : undefined;
+  currentState.preadStateTime = (initState.begin_time != null) ? initState.begin_time : undefined;
+  currentState.bufferCause = currentState.cause
+  currentState.bufferCauseTime = currentState.causeTime
   var progressBar
 
   var operatorElem
@@ -946,6 +950,7 @@
     })
     return await response.json()
   }
+
   function wsConnect(wsServer) {
     var webSocket
     function connect(wsServer) {
@@ -996,7 +1001,7 @@
               console.log(response)
               data = response.allStates[0]
               console.log(data)
-              if (currentState.preadStateTime != data.status_time){
+              if (currentState.preadStateTime != data.status_time) {
                 currentState.preadStateTime = currentState.stateTime
               }
               currentState.stateTime = data.status_time
@@ -1236,10 +1241,10 @@
       displayWorkMode();
     } else {
       displayIdleMode();
-      if (currentState.stateTime == currentState.preadStateTime){
+      if (currentState.stateTime == currentState.preadStateTime) {
         currentState.cause = currentState.bufferCause
         currentState.causeTime = currentState.bufferCauseTime
-      } 
+      }
       if (currentState.cause == undefined) {
         if (TECH_IDLE_LENGTH > 0 &&
           moment.duration(serverTime.diff(currentState.stateTime, 'seconds')).seconds() < TECH_IDLE_LENGTH) {
@@ -1305,7 +1310,7 @@
     if (currentState.cause == TECH_IDLE_ID) {
       resetTechIdle();
     }
-    if(ADD_NOCAUSE_WHEN_CHANGE_CAUSE){
+    if (ADD_NOCAUSE_WHEN_CHANGE_CAUSE) {
       sendCause(NO_CAUSE_ID);
     }
     currentState.cause = NO_CAUSE_ID;
@@ -1430,7 +1435,7 @@
     stateBlockElem.classList.add('h_v20')
     stateBlockElem.classList.add('fnt_3')
     if ((NYBlock.parentElement === stateBlockElem))
-    stateBlockElem.removeChild(NYBlock)
+      stateBlockElem.removeChild(NYBlock)
   }
 
   function clickHandler(event) {
@@ -1450,8 +1455,8 @@
     //NY
     NYBlock = document.createElement('div');
     NYBlock.classList = ['NY']
-    
-    if ([51, 52, 1, 2 ].includes(moment().week())){
+
+    if ([51, 52, 1, 2].includes(moment().week())) {
       NYBlock.innerHTML = '<img src= "/images/NY.png">'
     }
     // state block
@@ -1484,10 +1489,10 @@
 
     let displayCauseCount = Object.keys(IDLE_COUSES).length - 2;
     let gridClass
-    if (displayCauseCount <= 4) {gridClass = 'gridCauseButtons_2x2'}
-    if (displayCauseCount > 4 &&  displayCauseCount <= 6) {gridClass = 'gridCauseButtons_2x3'}
-    if (displayCauseCount > 6 &&  displayCauseCount <= 9) {gridClass = 'gridCauseButtons_3x3'}
-    if (displayCauseCount > 9 ) {gridClass = 'gridCauseButtons_3x3'}
+    if (displayCauseCount <= 4) { gridClass = 'gridCauseButtons_2x2' }
+    if (displayCauseCount > 4 && displayCauseCount <= 6) { gridClass = 'gridCauseButtons_2x3' }
+    if (displayCauseCount > 6 && displayCauseCount <= 9) { gridClass = 'gridCauseButtons_3x3' }
+    if (displayCauseCount > 9) { gridClass = 'gridCauseButtons_3x3' }
 
 
     const causeButtonsContainer = block('', [gridClass], 'causeButtonsContainer');
@@ -1502,7 +1507,7 @@
     for (idle of causeArr) {
       let id = idle[0]
       let cause = idle[1]
-      button = block(cause, ['h100 w20rem flex_center databox dataLable fnt_2'], 'button_'+id);
+      button = block(cause, ['h100 w20rem flex_center databox dataLable fnt_2'], 'button_' + id);
       button.dataset.id = id
       button.addEventListener('click', clickHandler);
       causeButtonsContainer.append(button)
@@ -1522,7 +1527,7 @@
     let changeCauseButton = block('изменить причину простоя', ['buttonBox flex_center w_v80 h_v20 fnt_3 bold cWhite'], 'changeCauseButton')
     changeCauseButton.addEventListener('click', changeCauseclickHandler);
     container.append(changeCauseButton);
-    
+
   }
 
   function firstCurrentStateInit() {

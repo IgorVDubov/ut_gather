@@ -10,6 +10,8 @@ def db_writer(vars):
     'write_counter_2120': False,
     'write_init_2040': False,
     'write_counter_2040': False,
+    'write_init_2100': False,
+    'write_counter_2100': False,
     """
     if vars.scheduller_write_states:
         print("!!!!!!!!!!    sheduller write states  !!!!!!")

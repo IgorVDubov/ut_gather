@@ -1,0 +1,40 @@
+/* my styles lib*/
+    .flex_milldle_row{
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+    .fnt_1_5{
+      font-size: 1.5em;
+    }
+    .fnt_0_75{
+      font-size: 0.75em;
+    }
+    .bold{
+      font-weight: bold;
+    }
+    .pl1{
+      padding-left: 1em;
+    }
+    .pl0_5{
+      padding-left: 0.5em;
+    }
+    .pr1{
+      padding-right: 1em;
+    }
+    .img_invert {
+      -webkit-filter: invert(1);
+      filter: invert(1);
+      }
+    .fl_r{
+      float: right;
+    }
+    .fl_l{
+      float: left;
+    }
+    .s1em{
+      width: 1em;
+      height: 1em;
+    }
+    

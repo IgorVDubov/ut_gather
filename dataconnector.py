@@ -1,12 +1,11 @@
 from datetime import datetime
 
-from gathercore.gtyping import DBInterface
-
 import config
 import dbqueries as db_queries
 import dbqueries as dbc
 import projectglobals as project_globals
 import settings
+from gathercore.gtyping import DBInterface
 
 
 def insert_sql(db_queue, sql: str, params: tuple):
@@ -65,22 +64,9 @@ def get_machine_causes(
     else:
         reply = dbc.querry_causes(db_interface, machine_id, project_id)
         return {
-            cause_id: (name, position, color)
-            for cause_id, name, color, position in reply
+            rec["cause_id"]: (rec["NAME"], rec["position"], rec["color"])
+            for rec in reply
         }
-
-
-def _get_machine_causes(
-    db_interface: DBInterface, machine_id: int, project_id: int
-) -> dict:
-    if project_id == settings.DEMO_PROJECT or db_interface is None:
-        return {
-            machine_id: name
-            for machine_id, (name, position) in settings.IDLE_CAUSES.items()
-        }
-    else:
-        reply = dbc.querry_causes(db_interface, machine_id, project_id)
-        return {machine_id: name for machine_id, name, position in reply}
 
 
 def get_allowed_machines() -> dict:

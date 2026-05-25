@@ -31,6 +31,8 @@ def db_writer(vars):
         vars.write_init_2111 = True
         vars.write_init_2114 = True
         vars.write_init_2117 = True
+        vars.write_init_2103 = True
+        vars.write_init_2106 = True
         vars.write_init_1416 = True
         vars.write_init_1501 = True
         vars.write_init_2901 = True
@@ -43,6 +45,8 @@ def db_writer(vars):
         vars.write_counter_2111 = True
         vars.write_counter_2114 = True
         vars.write_counter_2117 = True
+        vars.write_counter_2103 = True
+        vars.write_counter_2106 = True
 
     if vars.mb_write_init and not vars.mb_write_runs_flag:
         vars.mb_write_runs_flag = True
@@ -58,6 +62,10 @@ def db_writer(vars):
         vars.write_counter_2114 = True
         vars.write_init_2117 = True
         vars.write_counter_2117 = True
+        vars.write_init_2103 = True
+        vars.write_counter_2103 = True
+        vars.write_init_2106 = True
+        vars.write_counter_2106 = True
         vars.write_init_1416 = True
         vars.write_init_1501 = True
         vars.write_init_2901 = True

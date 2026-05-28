@@ -11,7 +11,7 @@ import tornado.escape
 import tornado.web
 import tornado.websocket
 from config import http_server_params
-from gathercore.channels.channels import parse_attr_params_n
+from gathercore.channels.channel import parse_attr_params_n
 from gathercore.classes import SubscriptChannelArg
 from gathercore.webserver.classes import WSClient
 from gathercore.webserver.webconnector import BaseRequestHandler, BaseWSHandler

@@ -13,6 +13,35 @@ def db_writer(vars):
     'write_init_2100': False,
     'write_counter_2100': False,
     """
+
+    def write_counters_ON():
+        vars.write_counter_2120 = True
+        vars.write_counter_2040 = True
+        vars.write_counter_2100 = True
+        vars.write_counter_2111 = True
+        vars.write_counter_2114 = True
+        vars.write_counter_2117 = True
+        vars.write_counter_2103 = True
+        vars.write_counter_2106 = True
+
+    def write_init_ON():
+        vars.write_init_2120 = True
+        vars.write_init_2040 = True
+        vars.write_init_2100 = True
+        vars.write_init_2111 = True
+        vars.write_init_2114 = True
+        vars.write_init_2117 = True
+        vars.write_init_2103 = True
+        vars.write_init_2106 = True
+        vars.write_init_1416 = True
+        vars.write_init_1501 = True
+        vars.write_init_2901 = True
+        vars.write_init_2902 = True
+        vars.write_init_2903 = True
+        vars.write_init_2904 = True
+        vars.write_init_2905 = True
+        vars.write_init_2906 = True
+
     if vars.scheduller_write_states:
         print("!!!!!!!!!!    sheduller write states  !!!!!!")
     if vars.scheduller_write_counters:
@@ -25,51 +54,15 @@ def db_writer(vars):
         vars.mb_write_runs_flag = False
 
     if vars.scheduller_write_states:
-        vars.write_init_2120 = True
-        vars.write_init_2040 = True
-        vars.write_init_2100 = True
-        vars.write_init_2111 = True
-        vars.write_init_2114 = True
-        vars.write_init_2117 = True
-        vars.write_init_2103 = True
-        vars.write_init_2106 = True
-        vars.write_init_1416 = True
-        vars.write_init_1501 = True
-        vars.write_init_2901 = True
-        vars.write_init_2902 = True
+        write_init_ON()
 
     if vars.scheduller_write_counters:
-        vars.write_counter_2120 = True
-        vars.write_counter_2040 = True
-        vars.write_counter_2100 = True
-        vars.write_counter_2111 = True
-        vars.write_counter_2114 = True
-        vars.write_counter_2117 = True
-        vars.write_counter_2103 = True
-        vars.write_counter_2106 = True
+        write_counters_ON()
 
     if vars.mb_write_init and not vars.mb_write_runs_flag:
         vars.mb_write_runs_flag = True
-        vars.write_init_2120 = True
-        vars.write_counter_2120 = True
-        vars.write_init_2040 = True
-        vars.write_counter_2040 = True
-        vars.write_init_2100 = True
-        vars.write_counter_2100 = True
-        vars.write_init_2111 = True
-        vars.write_counter_2111 = True
-        vars.write_init_2114 = True
-        vars.write_counter_2114 = True
-        vars.write_init_2117 = True
-        vars.write_counter_2117 = True
-        vars.write_init_2103 = True
-        vars.write_counter_2103 = True
-        vars.write_init_2106 = True
-        vars.write_counter_2106 = True
-        vars.write_init_1416 = True
-        vars.write_init_1501 = True
-        vars.write_init_2901 = True
-        vars.write_init_2902 = True
+        write_init_ON()
+        write_counters_ON()
 
     if vars.scheduller_write_states:
         vars.scheduller_write_states = False

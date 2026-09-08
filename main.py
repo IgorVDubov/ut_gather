@@ -11,12 +11,11 @@ if sys.platform == "win32":  # Если запускаем из под win
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 sys.path.append("/gathercore")
 
-from gathercore.interfaces.db import create_db_interface
-
 import config
 import scadaconfig as scada_config
 import settings
 import web.handlers as project_webserver_handlers
+from gathercore.interfaces.db import create_db_interface
 from init import init_args
 
 # project_init_func - функция инициализации проекта,
@@ -52,7 +51,9 @@ def main():
     # {machine_id: web_socket_client}
     app.databus.add_object("machine_WS_client", dict())
     # Инициализация необходимых аргументов через БД settings
-    init_args(app.databus.get_object("db_interface"), app.channel_base)
+    init_args(
+        app.databus.get_object("db_interface"), app.channel_base, settings.PROJECTS_IDS
+    )
     # запуск app
     app.start()
 

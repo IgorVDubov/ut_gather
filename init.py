@@ -10,8 +10,11 @@ def init(databus):
     logics.load_machines_idle(db_interface)
 
 
-def init_args(db_interface: DBInterface, channels_base: ChannelsBase):
-    settings = db_queries.querry_settings(db_interface)
+def init_args(db_interface: DBInterface, channels_base: ChannelsBase, project_ids: set):
+    settings = []
+    for id in project_ids:
+        s = db_queries.querry_settings(db_interface, id)
+        settings.extend(s)
     for setting in settings:
         arg, val_type, value, name = setting.values()
         if channel := channels_base.get_by_argname(arg):

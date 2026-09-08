@@ -361,6 +361,7 @@ class GatherRequestHtmlHandler(BaseHandler):
         elif request.get("type") == "update_arg_setting":
             arg = request.get("arg_name")
             value = request.get("value")
+            project_id = request.get("value")
             result = False
             if arg is not None and value is not None:
                 logger.log(
@@ -373,6 +374,7 @@ class GatherRequestHtmlHandler(BaseHandler):
                         self.application.data.databus.get_object("db_interface"),
                         arg,
                         value,
+                        project_id,
                     )
                     result = True
             self.write(json.dumps({"update_arg_setting": result}))
